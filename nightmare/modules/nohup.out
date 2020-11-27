@@ -1,0 +1,61 @@
+Discord 0.0.12
+Starting app.
+Starting updater.
+[Modules] Modules initializing
+[Modules] Distribution: remote
+[Modules] Host updates: enabled
+[Modules] Module updates: enabled
+[Modules] Module install path: /root/.config/discord/0.0.12/modules
+[Modules] Module installed file path: /root/.config/discord/0.0.12/modules/installed.json
+[Modules] Module download path: /root/.config/discord/0.0.12/modules/pending
+[3026:1003/233749.985845:ERROR:buffer_manager.cc(488)] [.DisplayCompositor]GL ERROR :GL_INVALID_OPERATION : glBufferData: <- error from previous GL command
+[Modules] No updates to install
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[3026:1003/233751.399285:ERROR:buffer_manager.cc(488)] [.DisplayCompositor]GL ERROR :GL_INVALID_OPERATION : glBufferData: <- error from previous GL command
+[Modules] Starting to install discord_krisp...
+[Modules] Fetching discord_krisp@0 from https://discord.com/api/modules/stable/discord_krisp/0
+[Modules] Streaming discord_krisp@0 to /root/.config/discord/0.0.12/modules/pending/discord_krisp-0.zip
+Error downloading with electron net: HTTP Error: Status Code 403
+Falling back to node net library..
+[Modules] Failed fetching module discord_krisp@0: Error: HTTP Error: Status Code 403
+[Modules] Finished module downloads. [success: 0] [failure: 1]
+(electron) 'setBadgeCount function' is deprecated and will be removed. Please use 'badgeCount property' instead.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
+[Modules] Checking for host updates.
+[Modules] Host is up to date.
+[Modules] Checking for module updates at https://discord.com/api/modules/stable/versions.json
+[Modules] No module updates available.
