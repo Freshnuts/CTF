@@ -1,2 +1,8 @@
 # CTF
-ctf stuff
+CTF stuff:
+
+- Exercises
+- Tutorials
+- Wargames
+- Notes
+
