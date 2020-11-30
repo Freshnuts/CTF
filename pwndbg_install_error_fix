@@ -1,0 +1,9 @@
+pwndbg install error.
+
+
+- install python3.7-dev
+- configure
+- make
+- make install
+- pip install python3-dev
+- ./setup.py
