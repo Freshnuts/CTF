@@ -1,9 +1,11 @@
-pwndbg install error.
+pwndbg install fix
 
 
-- install python3.7-dev
+1. download, extract, & install python3.7-dev
 - configure
 - make
 - make install
-- pip install python3-dev
-- ./setup.py
+
+2. pip install python3-dev
+
+3. (pwndbg) ./setup.sh

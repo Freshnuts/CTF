@@ -1,3 +1,52 @@
+Error
+
+1.
+----------------------------------------------------------
+
+ERROR: Command errored out with exit status 1:
+   command: /usr/bin/python3.9 -u -c 'import sys, setuptools, tokenize; sys.argv[0] = '"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"'; __file__='"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"';f=getattr(tokenize, '"'"'open'"'"', open)(__file__);code=f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' bdist_wheel -d /tmp/pip-wheel-stlxmt69
+E
+
+
+2.
+-------------------------------------------------------------------------------------------
+
+x86_64-linux-gnu-gcc -pthread -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -g -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -fPIC -DPSUTIL_POSIX=1 -DPSUTIL_SIZEOF_PID_T=4 -DPSUTIL_VERSION=573 -DPSUTIL_LINUX=1 -I/usr/include/python3.9 -c psutil/_psutil_common.c -o build/temp.linux-x86_64-3.9/psutil/_psutil_common.o                                                                                                                   
+  psutil/_psutil_common.c:9:10: fatal error: Python.h: No such file or directory                                                                                                               
+      9 | #include <Python.h>                                                                                                                                                                  
+        |          ^~~~~~~~~~                                                                                                                                                                  
+  compilation terminated.                                                                                                                                                                      
+  error: command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1                                                                                                                       
+  ----------------------------------------                                                                                                                                                     
+  ERROR: Failed building wheel for psutil
+  Running setup.py clean for psutil
+Successfully built future
+Failed to build psutil
+Installing collected packages: future, isort, pip, psutil, pycparser, pyelftools, python-ptrace, capstone, ROPgadget, six, pygments, enum34, attrs, py, toml, pyparsing, packaging, pluggy, iniconfig, pytest, pbr, testresources, unicorn
+    Running setup.py install for psutil ... error
+    ERROR: Command errored out with exit status 1:
+     command: /usr/bin/python3.9 -u -c 'import sys, setuptools, tokenize; sys.argv[0] = '"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"'; __file__='"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"';f=getattr(tokenize, '"'"'open'"'"', open)(__file__);code=f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' install --record /tmp/pip-record-cjpr76qo/install-record.txt --single-version-externally-managed --home /tmp/pip-target-macfc9dg --compile --install-headers /tmp/pip-target-macfc9dg/include/python/psutil
+
+
+
+
+3.
+--------------------------------------------------------------------------------------------
+
+x86_64-linux-gnu-gcc -pthread -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -g -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -fPIC -DPSUTIL_POSIX=1 -DPSUTIL_SIZEOF_PID_T=4 -DPSUTIL_VERSION=573 -DPSUTIL_LINUX=1 -I/usr/include/python3.9 -c psutil/_psutil_common.c -o build/temp.linux-x86_64-3.9/psutil/_psutil_common.o                                                                                                                 
+    psutil/_psutil_common.c:9:10: fatal error: Python.h: No such file or directory                                                                                                             
+        9 | #include <Python.h>                                                                                                                                                                
+          |          ^~~~~~~~~~                                                                                                                                                                
+    compilation terminated.                                                                                                                                                                    
+    error: command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1                                                                                                                     
+    ----------------------------------------                                                                                                                                                   
+ERROR: Command errored out with exit status 1: /usr/bin/python3.9 -u -c 'import sys, setuptools, tokenize; sys.argv[0] = '"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"'; __file__='"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"';f=getattr(tokenize, '"'"'open'"'"', open)(__file__);code=f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' install --record /tmp/pip-record-cjpr76qo/install-record.txt --single-version-externally-managed --home /tmp/pip-target-macfc9dg --compile --install-headers /tmp/pip-target-macfc9dg/include/python/psutil Check the logs for full command output.
+--------------------------------------------------------------------------------------------
+
+
+Error logs below
+=====================================================================================================================
+
 ERROR: Command errored out with exit status 1:
    command: /usr/bin/python3.9 -u -c 'import sys, setuptools, tokenize; sys.argv[0] = '"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"'; __file__='"'"'/tmp/pip-install-h7jojyxy/psutil/setup.py'"'"';f=getattr(tokenize, '"'"'open'"'"', open)(__file__);code=f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' bdist_wheel -d /tmp/pip-wheel-stlxmt69           
        cwd: /tmp/pip-install-h7jojyxy/psutil/                                                                                                                                                                
