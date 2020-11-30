@@ -2,7 +2,7 @@ pwndbg install fix
 
 
 1. download, extract, & install python3.7-dev
-- configure
+- ./configure
 - make
 - make install
 
