@@ -1,0 +1,105 @@
+QCoreApplication::applicationDirPath: Please instantiate the QApplication object first
+Crashdump ENABLED,  directory is: /home/fresh/.ts3client/crashdumps
+DUMP defined! Dumpdir is: /home/fresh/.ts3client/crashdumps
+2021-03-19 23:47:17.882509|INFO    |              |   |TeamSpeak Client 3.5.5 (2020-11-04 09:57:47)
+2021-03-19 23:47:17.882554|INFO    |              |   |SystemInformation: Linux 5.9.0-kali5-amd64 #1 SMP Debian 5.9.15-1kali1 (2020-12-18) x86_64 Binary: 64bit
+2021-03-19 23:47:17.882570|INFO    |              |   |Using hardware aes
+2021-03-19 23:47:17.915931|DEBUG   |PulseAudio    |   |connected to pulse audio server - 
+2021-03-19 23:47:17.933199|INFO    |ClientUI      |   |OpenGL Info: LibGL, Vendor: Intel, Renderer: Mesa Intel(R) HD Graphics 530 (SKL GT2), Version: 4.6 (Compatibility Profile) Mesa 20.3.2
+2021-03-19 23:47:17.967643|INFO    |Addons        |   |Checking for addon updates...
+2021-03-19 23:47:18.024059|INFO    |Plugins       |   |Loading plugin: libclientquery_plugin_linux_amd64.so
+2021-03-19 23:47:18.025254|INFO    |Query         |   |listening on 127.0.0.1:25639
+ClientQueryPlugin: currentServerConnectionChanged 1 (0)
+2021-03-19 23:47:18.205519|INFO    |              |   |*** Time [MAINWINDOW]: 280
+2021-03-19 23:47:18.205578|INFO    |              |   |*** Time [INIT]: 280
+2021-03-19 23:47:18.207694|INFO    |ClientUI      |   |Failed to init text to speech engine
+2021-03-19 23:47:18.207888|INFO    |ClientUI      |   |Qt version: 5.12.1
+2021-03-19 23:47:18.207917|INFO    |ClientUI      |   |Using configuration location: /home/fresh/.ts3client/settings.db
+2021-03-19 23:47:18.301705|INFO    |Addon         |   |Addon up to date.
+2021-03-19 23:47:18.706456|INFO    |Bookmarks     |   |Collecting autoconnect bookmarks
+2021-03-19 23:47:18.707112|INFO    |ClientUI      |   |Last update check was: Fri Mar 19 16:47:09 2021
+2021-03-19 23:47:18.707786|INFO    |              |   |Statistics report: User previously denied participation
+2021-03-19 23:47:19.151136|INFO    |              |   |successfully downloaded revocation list for accounting
+2021-03-19 23:47:19.206982|INFO    |Newsticker    |   |Newsticker next check: Sat Mar 20 23:47:09 2021 GMT
+2021-03-19 23:47:19.363809|INFO    |              |   |successfully downloaded revocation list for myteamspeak id
+2021-03-19 23:47:29.487438|INFO    |ClientUI      |1  |Connect to server: divineaberration.com
+2021-03-19 23:47:29.492264|INFO    |ClientUI      |1  |Trying to resolve divineaberration.com
+2021-03-19 23:47:29.514932|INFO    |TSDNS         |   |SRV DNS resolve unsuccessful, "_tsdns._tcp.divineaberration.com" Domain name not found
+2021-03-19 23:47:29.515314|INFO    |TSDNS         |   |A/AAAA DNS resolve for possible TSDNS successful, "divineaberration.com" =(h: 192.241.249.194 p:0)
+2021-03-19 23:47:29.536439|INFO    |TSDNS         |   |SRV DNS resolve unsuccessful, "_ts3._udp.divineaberration.com" Domain name not found
+2021-03-19 23:47:29.537323|INFO    |TSDNS         |   |A/AAAA DNS resolve successful, "divineaberration.com" =(h: 192.241.249.194 p:0)
+2021-03-19 23:47:29.571586|INFO    |TSDNS         |   |TSDNS queried unsuccessfully 192.241.249.194:41144
+2021-03-19 23:47:29.571758|INFO    |TSDNS         |   |No TSDNS found
+2021-03-19 23:47:29.571955|INFO    |ClientUI      |1  |Lookup finished: ip=192.241.249.194 port=9987 query=divineaberration.com error=0
+2021-03-19 23:47:29.572085|INFO    |ClientUI      |1  |Resolve successful: 192.241.249.194:9987
+2021-03-19 23:47:29.572161|INFO    |ClientUI      |1  |Initiating connection: 192.241.249.194:9987
+2021-03-19 23:47:29.758851|INFO    |ClientUI      |1  |Connect status: Connecting
+2021-03-19 23:47:29.878670|DEVELOP |PktHandler    |1  |Puzzle solve time: 8
+2021-03-19 23:47:30.118258|INFO    |ClientUI      |1  |Connect status: Connected
+2021-03-19 23:47:30.132977|INFO    |              |   |Failed to read image /home/fresh/.ts3client/cache/remote/tf3l4izsDsbq58UhFZrl2pjIK929VIIdv02Fd6OVdhL079HqeEqgc1APrfWs9SiCZ2+vfyp8agasWVeMxx_WIg==
+2021-03-19 23:47:30.170224|INFO    |              |   |Failed to read image /home/fresh/.ts3client/cache/remote/tf3l4izsDsbq58UhFZrl2pjIK929VIIdv02Fd6OVdhL079HqeEqgc1APrfWs9SiCZ2+vfyp8agasWVeMxx_WIg==
+2021-03-19 23:47:30.170431|INFO    |              |   |No image, refusing to display
+2021-03-19 23:47:30.174430|INFO    |ClientUI      |1  |Connect status: Establishing connection
+2021-03-19 23:47:30.239815|INFO    |ClientUI      |1  |Connect status: Connection established
+2021-03-19 23:52:52.962779|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 00:05:19.798517|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 00:05:46.290832|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 00:09:48.490725|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 01:04:53.036675|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 01:05:45.294811|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+QMetaObject::connectSlotsByName: No matching signal for on_queued_open_dialog()
+QMetaObject::connectSlotsByName: No matching signal for on_account_created(QString,QString)
+2021-03-20 01:08:37.250267|INFO    |              |   |tried to request user integration info without valid session
+QLayout: Attempting to add QLayout "" to ProfileManager "", which already has a layout
+QLayout: Attempting to add QLayout "" to ProfileManager "", which already has a layout
+QLayout: Attempting to add QLayout "" to ProfileManager "", which already has a layout
+Installed Qt WebEngine locales directory not found at location /opt/TeamSpeak3-Client-linux_amd64/translations/qtwebengine_locales. Trying application directory...
+Installed Qt WebEngine locales directory not found at location /opt/TeamSpeak3-Client-linux_amd64/translations/qtwebengine_locales. Trying application directory...
+2021-03-20 01:29:28.736139|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 01:29:37.650480|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:19:07.458497|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:19:14.138799|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:06.654513|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:08.326056|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:10.043608|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:12.395063|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:13.435040|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:15.157388|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:42.290515|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:44.758754|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:44.942474|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:47.837080|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:20:49.083852|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:26:20.770429|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:26:20.830164|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:26:59.437118|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:27:39.988237|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:27:45.262649|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:28:10.860075|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 02:38:03.465502|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:04:03.299831|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:09:22.794753|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:09:32.586907|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:09:34.955586|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:10:24.622070|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:10:41.498536|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:16:32.202555|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:18:15.924744|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:18:24.454013|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:18:24.754438|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:18:25.277738|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:22:03.414412|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:22:15.974857|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:22:17.598459|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 03:23:07.266648|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:36.437640|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:42.774949|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:42.817523|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:42.837620|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:42.965381|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:43.028832|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:43.165344|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:27:43.165474|DEBUG   |PulseAudio    |   |Underflow occurred on device ts3.pa.dummy.playbackdefault - 
+2021-03-20 04:42:44.852768|INFO    |ClientUI      |1  |Connect status: Disconnected
+2021-03-20 04:42:44.867591|INFO    |ClientUI      |1  |Disconnected or forced to leave, want autoreconnect = 0
+pool dtor

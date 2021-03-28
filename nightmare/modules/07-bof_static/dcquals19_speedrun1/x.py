@@ -2,7 +2,7 @@ from pwn import *
 context.terminal = ['tmux' , 'splitw', '-h']
 
 p = process('./speedrun-001')
-gdb.attach(p,'''break *0x400ba6''')
+# gdb.attach(p,'''break *0x400ba6''')
 
 pop_rax = 0x415664
 pop_rdi = 0x400686
