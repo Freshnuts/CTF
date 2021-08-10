@@ -1,0 +1,66 @@
+Challenge # 15 Program Flow
+===========================
+
+
+
+
+1. 
+
+// 0x004017c6 837d0801       cmp dword [arg_8h], 1
+0040124A  |. 83F8 01        |CMP EAX,1
+// 0x004017ca 7e28           jle 0x4017f4;[gb]
+0040124D     0F84 F1010000  JE ch15.00401444
+
+
+If True:
+
+  0x004017f4 8b450c         mov eax, dword [arg_ch]
+  0x004017d7 e894100000     call sub.msvcrt.dll_strlen_870;[gd]
+  0x004017ed e834ffffff     call fcn.00401726;[ge]-
+  0x004017f2 eb0d           jmp 0x401801;[gf] 
+
+
+else:
+
+  0x004017cc 8b450c         mov eax, dword [arg_ch]
+  0x004017fc e8fffeffff     call fcn.00401700;[gh]
+  0x004017ed e834ffffff     call fcn.00401726;[ge]-
+  0x004017f2 eb0d           jmp 0x401801;[gf] 
+
+
+
+Leave();
+
+
+
+Functions
+=========
+
+00401727  |. 89E5           MOV EBP,ESP
+
+>>> '53'.decode('hex')
+'S'
+>>> '50'.decode('hex')
+'P'
+>>> '61'.decode('hex')
+'a'
+>>> '43'.decode('hex')
+'C'
+>>> '6f'.decode('hex')
+'o'
+>>> '53'.decode('hex')
+'S'
+>>> '50'.decode('hex')
+'P'
+>>> '61'.decode('hex')
+'a'
+>>> '43'.decode('hex')
+'C'
+>>> '49'.decode('hex')
+'I'
+>>> '6f'.decode('hex')
+'o'
+>>> '53'.decode('hex')
+'S'
+
+Flag: SPaCIoS

@@ -1,0 +1,54 @@
+root-me: Cracking: Challenge 6
+------------------------------
+
+1. Fire up gdb
+
+root@kali gdb ./Exploit_me(if you can)
+
+
+2. Set to intel flavor.
+=======================
+
+(gdb) set disassembly-intel flavor
+
+
+3. Break at main()
+==================
+
+(gdb) break *main
+
+
+4. Break at 1st cmp. (Don't change anything).
+=============================================
+
+=> 0x0804864b <+23>:	cmp    DWORD PTR [eax],0x2
+
+
+5. Step to [0x0804864e].
+========================
+
+(gdb) ni
+=> 0x0804864e <+26>:	je     0x8048674 <main+64>
+
+
+6. Change EIP to address of '<_asm_>' function.
+===============================================
+
+Original:
+
+eip            0x804864e	0x804864e <main+26>
+
+Manipulated:
+(gdb) set $eip=0x8048731
+
+eip            0x8048731	0x804864e <main+26>
+
+
+7. Success
+==========
+(gdb) continue
+Continuing.
+[+] Felicitation password de validation de l'épreuve:: 25260060504_VE_T25_*t*_
+
+[Inferior 1 (process 3626) exited with code 01]
+

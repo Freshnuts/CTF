@@ -1,0 +1,88 @@
+Dump of assembler code for function main:
+   0x08048554 <+0>:	lea    ecx,[esp+0x4]
+   0x08048558 <+4>:	and    esp,0xfffffff0
+   0x0804855b <+7>:	push   DWORD PTR [ecx-0x4]
+   0x0804855e <+10>:	push   ebp
+   0x0804855f <+11>:	mov    ebp,esp
+   0x08048561 <+13>:	push   edi
+   0x08048562 <+14>:	push   ecx
+   0x08048563 <+15>:	sub    esp,0xb0
+   0x08048569 <+21>:	mov    eax,DWORD PTR [ecx+0x4]
+   0x0804856c <+24>:	mov    DWORD PTR [ebp-0x9c],eax
+   0x08048572 <+30>:	mov    eax,gs:0x14
+   0x08048578 <+36>:	mov    DWORD PTR [ebp-0xc],eax
+   0x0804857b <+39>:	xor    eax,eax
+   0x0804857d <+41>:	cmp    DWORD PTR [ecx],0x2				; Compare # of command line args.
+   0x08048580 <+44>:	je     0x80485ae <main+90>
+   0x08048582 <+46>:	xor    eax,eax
+   0x08048584 <+48>:	xor    ebx,ebx
+   0x08048586 <+50>:	xor    ecx,ecx
+   0x08048588 <+52>:	xor    edx,edx
+   0x0804858a <+54>:	mov    eax,DWORD PTR [ebp-0x9c]
+   0x08048590 <+60>:	mov    eax,DWORD PTR [eax]
+   0x08048592 <+62>:	mov    DWORD PTR [esp+0x4],eax
+   0x08048596 <+66>:	mov    DWORD PTR [esp],0x80488f0
+   0x0804859d <+73>:	call   0x804843c <printf@plt>			; printf() usage:
+   0x080485a2 <+78>:	mov    DWORD PTR [esp],0x0
+   0x080485a9 <+85>:	call   0x804848c <exit@plt>				; Terminate Program
+   0x080485ae <+90>:	mov    DWORD PTR [esp],0x1d
+   0x080485b5 <+97>:	call   0x804844c <malloc@plt>			; Allocate Memory
+   0x080485ba <+102>:	mov    DWORD PTR [ebp-0x94],eax
+   0x080485c0 <+108>:	mov    DWORD PTR [esp+0x8],0x1f
+   0x080485c8 <+116>:	mov    DWORD PTR [esp+0x4],0x8048910
+   0x080485d0 <+124>:	mov    eax,DWORD PTR [ebp-0x94]
+   0x080485d6 <+130>:	mov    DWORD PTR [esp],eax
+   0x080485d9 <+133>:	call   0x804841c <memcpy@plt>			; Copy memory from Allocated Memory
+   0x080485de <+138>:	lea    edx,[ebp-0x8e]
+   0x080485e4 <+144>:	mov    DWORD PTR [ebp-0xa4],edx
+   0x080485ea <+150>:	mov    DWORD PTR [ebp-0xa8],0x0
+   0x080485f4 <+160>:	mov    eax,0x64
+   0x080485f9 <+165>:	cmp    eax,0x4							; Compare the password
+   0x080485fc <+168>:	jb     0x804861c <main+200>				;JB - Jump Below to address if equal is true
+   0x080485fe <+170>:	mov    DWORD PTR [ebp-0xac],0x19
+   0x08048608 <+180>:	mov    edi,DWORD PTR [ebp-0xa4]
+   0x0804860e <+186>:	mov    ecx,DWORD PTR [ebp-0xac]
+   0x08048614 <+192>:	mov    eax,DWORD PTR [ebp-0xa8]
+   0x0804861a <+198>:	rep stos DWORD PTR es:[edi],eax
+   0x0804861c <+200>:	mov    DWORD PTR [esp+0x8],0xd
+   0x08048624 <+208>:	mov    DWORD PTR [esp+0x4],0x804892f
+   0x0804862c <+216>:	lea    eax,[ebp-0x8e]
+   0x08048632 <+222>:	mov    DWORD PTR [esp],eax
+   0x08048635 <+225>:	call   0x804841c <memcpy@plt>			; Copy memory from Allocated Memory
+   0x0804863a <+230>:	mov    eax,DWORD PTR [ebp-0x94]
+---Type <return> to continue, or q <return> to quit---
+   0x08048640 <+236>:	add    eax,0x5
+   0x08048643 <+239>:	mov    BYTE PTR [eax],0x63
+   0x08048646 <+242>:	mov    eax,DWORD PTR [ebp-0x94]
+   0x0804864c <+248>:	add    eax,0x16
+   0x0804864f <+251>:	mov    BYTE PTR [eax],0x0
+   0x08048652 <+254>:	mov    DWORD PTR ds:0x804a038,0x80486c4
+   0x0804865c <+264>:	mov    eax,DWORD PTR [ebp-0x9c]
+   0x08048662 <+270>:	add    eax,0x4
+   0x08048665 <+273>:	mov    eax,DWORD PTR [eax]
+   0x08048667 <+275>:	mov    DWORD PTR [esp+0x4],eax
+   0x0804866b <+279>:	lea    eax,[ebp-0x2a]
+   0x0804866e <+282>:	mov    DWORD PTR [esp],eax
+   0x08048671 <+285>:	call   0x804842c <strcpy@plt>			; Call strcpy() for strings in Allocated Memory
+   0x08048676 <+290>:	mov    eax,DWORD PTR [ebp-0x94]
+   0x0804867c <+296>:	add    eax,0x8
+   0x0804867f <+299>:	mov    BYTE PTR [eax],0x5f
+   0x08048682 <+302>:	mov    eax,DWORD PTR [ebp-0x94]
+   0x08048688 <+308>:	add    eax,0x9
+   0x0804868b <+311>:	mov    BYTE PTR [eax],0x2e
+   0x0804868e <+314>:	mov    edx,DWORD PTR ds:0x804a038
+   0x08048694 <+320>:	mov    eax,DWORD PTR [ebp-0x94]
+   0x0804869a <+326>:	mov    DWORD PTR [esp+0x4],eax
+   0x0804869e <+330>:	lea    eax,[ebp-0x2a]
+   0x080486a1 <+333>:	mov    DWORD PTR [esp],eax
+=> 0x080486a4 <+336>:	call   edx								; printf "You Failed" in French
+   0x080486a6 <+338>:	mov    edx,DWORD PTR [ebp-0xc]
+   0x080486a9 <+341>:	xor    edx,DWORD PTR gs:0x14
+   0x080486b0 <+348>:	je     0x80486b7 <main+355>
+   0x080486b2 <+350>:	call   0x804845c <__stack_chk_fail@plt>	; *** stack smashing detected ***
+   0x080486b7 <+355>:	add    esp,0xb0
+   0x080486bd <+361>:	pop    ecx
+   0x080486be <+362>:	pop    edi
+   0x080486bf <+363>:	pop    ebp
+   0x080486c0 <+364>:	lea    esp,[ecx-0x4]
+   0x080486c3 <+367>:	ret										; Exit Program

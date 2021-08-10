@@ -1,0 +1,3 @@
+[Parent 3759, Gecko_IOThread] WARNING: pipe error (122): Connection reset by peer: file /build/firefox-esr-SNKf5O/firefox-esr-68.7.0esr/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 358
+[Parent 3759, Gecko_IOThread] WARNING: pipe error (170): Connection reset by peer: file /build/firefox-esr-SNKf5O/firefox-esr-68.7.0esr/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 358
+[Parent 3759, Gecko_IOThread] WARNING: pipe error (99): Connection reset by peer: file /build/firefox-esr-SNKf5O/firefox-esr-68.7.0esr/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 358

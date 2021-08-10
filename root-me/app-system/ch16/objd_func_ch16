@@ -1,0 +1,82 @@
+
+./ch16:     file format elf32-i386
+
+SYMBOL TABLE:
+00000154 l    d  .interp	00000000              .interp
+00000168 l    d  .note.ABI-tag	00000000              .note.ABI-tag
+00000188 l    d  .note.gnu.build-id	00000000              .note.gnu.build-id
+000001ac l    d  .gnu.hash	00000000              .gnu.hash
+000001cc l    d  .dynsym	00000000              .dynsym
+000002cc l    d  .dynstr	00000000              .dynstr
+0000039e l    d  .gnu.version	00000000              .gnu.version
+000003c0 l    d  .gnu.version_r	00000000              .gnu.version_r
+000003f0 l    d  .rel.dyn	00000000              .rel.dyn
+00000440 l    d  .rel.plt	00000000              .rel.plt
+00000480 l    d  .init	00000000              .init
+000004b0 l    d  .plt	00000000              .plt
+00000540 l    d  .plt.got	00000000              .plt.got
+00000550 l    d  .text	00000000              .text
+00000844 l    d  .fini	00000000              .fini
+00000858 l    d  .rodata	00000000              .rodata
+0000088c l    d  .eh_frame_hdr	00000000              .eh_frame_hdr
+000008d0 l    d  .eh_frame	00000000              .eh_frame
+00001eec l    d  .init_array	00000000              .init_array
+00001ef0 l    d  .fini_array	00000000              .fini_array
+00001ef4 l    d  .dynamic	00000000              .dynamic
+00001fe4 l    d  .got	00000000              .got
+00002000 l    d  .got.plt	00000000              .got.plt
+0000202c l    d  .data	00000000              .data
+00002034 l    d  .bss	00000000              .bss
+00000000 l    d  .comment	00000000              .comment
+00000000 l    df *ABS*	00000000              crtstuff.c
+000005a0 l     F .text	00000000              deregister_tm_clones
+000005e0 l     F .text	00000000              register_tm_clones
+00000630 l     F .text	00000000              __do_global_dtors_aux
+00002034 l     O .bss	00000001              completed.6586
+00001ef0 l     O .fini_array	00000000              __do_global_dtors_aux_fini_array_entry
+00000680 l     F .text	00000000              frame_dummy
+00001eec l     O .init_array	00000000              __frame_dummy_init_array_entry
+00000000 l    df *ABS*	00000000              ch16.c
+00000000 l    df *ABS*	00000000              crtstuff.c
+000009e0 l     O .eh_frame	00000000              __FRAME_END__
+00000000 l    df *ABS*	00000000              
+00001ef0 l       .init_array	00000000              __init_array_end
+00001ef4 l     O .dynamic	00000000              _DYNAMIC
+00001eec l       .init_array	00000000              __init_array_start
+0000088c l       .eh_frame_hdr	00000000              __GNU_EH_FRAME_HDR
+00002000 l     O .got.plt	00000000              _GLOBAL_OFFSET_TABLE_
+00000840 g     F .text	00000002              __libc_csu_fini
+00000000       F *UND*	00000000              read@@GLIBC_2.0
+00000000  w      *UND*	00000000              _ITM_deregisterTMCloneTable
+00000590 g     F .text	00000004              .hidden __x86.get_pc_thunk.bx
+0000202c  w      .data	00000000              data_start
+00000000       F *UND*	00000000              printf@@GLIBC_2.0
+00000000       F *UND*	00000000              fflush@@GLIBC_2.0
+00002034 g       .data	00000000              _edata
+00000844 g     F .fini	00000000              _fini
+00000689 g     F .text	00000000              .hidden __x86.get_pc_thunk.dx
+00000000  w    F *UND*	00000000              __cxa_finalize@@GLIBC_2.1.3
+0000202c g       .data	00000000              __data_start
+00000000       F *UND*	00000000              puts@@GLIBC_2.0
+00000000       F *UND*	00000000              system@@GLIBC_2.0
+00000000  w      *UND*	00000000              __gmon_start__
+00002030 g     O .data	00000000              .hidden __dso_handle
+0000085c g     O .rodata	00000004              _IO_stdin_used
+00000000       F *UND*	00000000              __libc_start_main@@GLIBC_2.0
+000007e0 g     F .text	0000005d              __libc_csu_init
+00000000       O *UND*	00000000              stdin@@GLIBC_2.0
+00000000       F *UND*	00000000              putchar@@GLIBC_2.0
+00002038 g       .bss	00000000              _end
+00000550 g     F .text	00000000              _start
+00000000       F *UND*	00000000              fileno@@GLIBC_2.0
+00000858 g     O .rodata	00000004              _fp_hw
+00000000       O *UND*	00000000              stdout@@GLIBC_2.0
+00002034 g       .bss	00000000              __bss_start
+0000068d g     F .text	00000124              main
+000007dc g     F .text	00000000              .hidden __x86.get_pc_thunk.ax
+00002034 g     O .data	00000000              .hidden __TMC_END__
+00000000  w      *UND*	00000000              _ITM_registerTMCloneTable
+000007b1 g     F .text	0000002b              shell
+00000480 g     F .init	00000000              _init
+
+

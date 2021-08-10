@@ -1,0 +1,12 @@
+1. Find a buffer overflow.
+
+
+ch13# python -c 'print "A" * 100' | ./ch13 
+
+[buf]: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[check] 0x41414141
+
+You are on the right way!
+Segmentation fault
+
+2. 

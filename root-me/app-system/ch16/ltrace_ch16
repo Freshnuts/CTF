@@ -1,0 +1,7 @@
+printf("Enter your name: ")                                                     = 17
+fflush(0xf7734d60Enter your name: )                                                              = 0
+fileno(0xf77345a0)                                                              = 0
+read(0AAAA
+, "A", 1)                                                                 = 1
+fileno(0xf77345a0)                                                              = 0
+read(0, "A", 1)                                                                 = 1

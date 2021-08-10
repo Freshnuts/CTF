@@ -1,0 +1,45 @@
+What have I learned?
+====================
+
+1. Strip
+
+Wikipedia - strip(Unix)
+
+In Unix and Unix-like operating systems, the strip program removes inessential information from executable binary programs and object files, thus potentially resulting in better performance and sometimes significantly less disk space usage ('inessential information' means information that is not required for correct functioning of the binary in normal execution). This information may consist of debugging and symbol information; however the standard leaves the scope of changes up to the implementer.
+
+Furthermore, the use of strip can improve the security of the binary against reverse engineering. It will be more difficult to analyze a binary without its information and object's names.
+
+The effect of strip can be achieved directly by the compiler. For instance, in GNU Compiler Collection this option is "-s".
+
+The GNU Project ships an implementation of strip as part of the GNU Binutils package. strip has been ported to other operating systems including Microsoft Windows.
+
+
+2. Functions can be hidden:
+
+Found hidden functions using objdump
+
+I used this function to call a hidden function that encrypts the flag.
+I changed edx from '0x080486c4' to '0x0804872c'
+
+=> 0x080486a4 <+336>:	call   edx
+
+0x080486c4 - function to decrypt the pass in "WPA" encryption
+0x0804872c - function to decrypt the pass in "Blowfish" encryption
+
+Blowfish successful.
+-----------------------------------------------------
+
+'+) Authentification réussie...
+ U'r root! 
+
+ sh 3.0 # password: liberté!
+[Inferior 1 (process 3484) exited normally]
+-----------------------------------------------------
+
+3. gdb doesn't have the capability to change Assembly Code. 
+
+Ex - I wanted to change 'mov eax, 0x64' to 'mov eax, 0x4' for a 
+	 comparison.
+
+Use EDB & Radare2.
+DON't use gdb.

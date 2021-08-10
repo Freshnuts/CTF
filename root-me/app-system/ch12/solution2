@@ -1,0 +1,3 @@
+#term2: while true; do tail -f /tmp/tmp_file.txt 2>/dev/null;done
+
+#term1: ./ch12
