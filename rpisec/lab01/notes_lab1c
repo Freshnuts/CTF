@@ -1,0 +1,14 @@
+Winning value is hardcoded in: 
+
+
+   0x080486f5 <+72>:    call   0x80485a0 <__isoc99_scanf@plt>                      0x080486fa <+77>:    mov    eax,DWORD PTR [esp+0x1c]
+   0x080486fe <+81>:    cmp    eax,0x149a
+
+
+call scanf()
+place user input into [$esp+1c]
+cmp user_input, 5274
+
+
+
+flag: n0_str1ngs_n0_pr0bl3m

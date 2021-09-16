@@ -1,0 +1,158 @@
+The srand() function sets its argument as the seed for a  new  sequence
+       of  pseudo-random  integers  to be returned by rand().  These sequences
+       are repeatable by calling srand() with the same seed value.
+
+[+] SEED
+
+EAX  0x5d43713a (':qC]')
+ ► 0x8048c02 <main+30>    mov    dword ptr [esp], eax
+   0x8048c05 <main+33>    call   srand@plt <0x8048800>
+
+
+
+1337d00d - [user_input]
+result in EDX
+mov result into EAX
+
+   0x08048a7a <+6>:     mov    eax,DWORD PTR [ebp+0x8]
+   0x08048a7d <+9>:     mov    edx,DWORD PTR [ebp+0xc]
+   0x08048a80 <+12>:    sub    edx,eax
+=> 0x08048a82 <+14>:    mov    eax,edx
+
+
+move [Difference] into $ebp-0xc
+compare 0x15(21) with [Difference]
+
+   0x8048a84 <test+16>     mov    dword ptr [ebp - 0xc], eax
+ ► 0x8048a87 <test+19>     cmp    dword ptr [ebp - 0xc], 0x15
+   0x8048a8b <test+23>     ja     test+353 <0x8048bd5>
+
+
+IF JA TRUE:
+jump to random()
+move the result into ESP
+decrypt
+
+   0x08048bd5 <+353>:	call   0x8048830 <rand@plt>
+   0x08048bda <+358>:	mov    DWORD PTR [esp],eax
+   0x08048bdd <+361>:	call   0x80489b7 <decrypt>
+
+
+
+IF JA IS FALSE:
+
+Obtained correct integer for CMP before JA:
+
+>>> int('0x1337d00d',16 );int('0x1337d00d',16 )
+322424845
+322424845
+>>> 322424845 - 322424824
+21
+>>> hex(322424824)
+'0x1337cff8'
+>>> int('0x1337d00d',16 );int('0x1337cff8',16 )
+322424845
+22424824
+>>> int('0x1337d00d',16 ) - int('0x1337cff8',16 )
+21
+>>> int('0x1337cffb', 16)
+322424827
+
+FLAG = 322424827
+
+Multiply [Difference/EAX] * 2, twice.
+
+>>> 21 * 2
+42
+>>> 42 * 2
+84
+
+   0x8048a94 <test+32>     shl    eax, 2
+
+The difference represents a pointer, and is the number of bytes jumped.
+EAX = 84
+
+
+  0x08048bc8 <+340>:	mov    eax,DWORD PTR [ebp-0xc]	; mov eax, 21
+   0x08048bcb <+343>:	mov    DWORD PTR [esp],eax		; mov esp, 21
+   0x08048bce <+346>:	call   0x80489b7 <decrypt>
+   0x08048bd3 <+351>:	jmp    0x8048be2 <test+366>		
+   0x08048bd5 <+353>:	call   0x8048830 <rand@plt>
+   0x08048bda <+358>:	mov    DWORD PTR [esp],eax
+   0x08048bdd <+361>:	call   0x80489b7 <decrypt>
+   0x08048be2 <+366>:	leave  
+   0x08048be3 <+367>:	ret
+
+
+
+
+
+
+DECRYPT()
+
+Obtained [strlength] from string1
+compare it to EAX (0),
+JUMP IF EAX IS BELOW 16
+
+
+   0x8048a28 <decrypt+113>    mov    eax, dword ptr [ebp - 0x28]
+   0x8048a2b <decrypt+116>    cmp    eax, dword ptr [ebp - 0x24]
+ ► 0x8048a2e <decrypt+119>  ✔ jb     decrypt+81 <0x8048a08>
+
+-> 0x8048a08 <decrypt+81>     lea    edx, [ebp - 0x1d]
+
+
+
+VARIABLE XOR VARIABLE
+
+"\\=&8" ^ 0x51 = "8&=\r"
+
+
+The reason I went for 1337cff8 was because I initially thought i had to
+bypass it beucase it adjusted the value of my user_input. Not realizing
+that "21" number is what changed the XOR value. I would have found the
+correct string because the result of XOR is placed in EAX. EAX = "\x43" aka C.
+
+>>> int('0x1337d00d',16) - int('0x1337cff8', 16)
+21
+
+
+
+1337d00d = Q}|u`sfg~sf{}|a3
+
+ERRORS:
+
+I had to understand just alittle more about what the result of [Difference]
+in test() & what it did to the stack & registers.
+
+[Difference] changes the value of [argv1] of [Difference] XOR "0x51".
+
+That would've allowed me to see WHAT was changing the XOR valuable, 
+so that I could find "Congratulations!".
+
+[Difference] ^ 0x51 = if "0x43" in EAX is the result, the first char of
+					  "Congratulations!" strings is saved.
+
+[Difference] ^ 0x51 = if NOT "0x43" in EAX, the entire string will result in
+					  junk. Resulting in "invalid password."
+
+
+pwndbg> 
+0x08048a1a in decrypt ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────────[ REGISTERS ]──────────────────────────────
+ EAX  0x42	<-- Result of xor eax[Difference], edx[0x51] PAY ATTENTION
+ EBX  0x0
+ ECX  0xb
+ EDX  0x51
+ EDI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ ESI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ EBP  0xffffd2a8 —▸ 0xffffd2d8 —▸ 0xffffd308 ◂— 0x0
+ ESP  0xffffd270 —▸ 0xffffd28b ◂— 0x757c7d51 ('Q}|u')
+ EIP  0x8048a1a (decrypt+99) ◂— lea    ecx, [ebp - 0x1d]
+───────────────────────────────────────[ DISASM ]───────────────────────────────
+   0x8048a0e <decrypt+87>     add    eax, edx
+   0x8048a10 <decrypt+89>     movzx  eax, byte ptr [eax]
+   0x8048a13 <decrypt+92>     mov    edx, eax
+   0x8048a15 <decrypt+94>     mov    eax, dword ptr [ebp + 8]
+   0x8048a18 <decrypt+97>     xor    eax, edx

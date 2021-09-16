@@ -1,0 +1,105 @@
+Dump of assembler code for function test:
+   0x08048a74 <+0>:	push   ebp
+   0x08048a75 <+1>:	mov    ebp,esp
+   0x08048a77 <+3>:	sub    esp,0x28
+   0x08048a7a <+6>:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048a7d <+9>:	mov    edx,DWORD PTR [ebp+0xc]
+   0x08048a80 <+12>:	sub    edx,eax
+   0x08048a82 <+14>:	mov    eax,edx
+   0x08048a84 <+16>:	mov    DWORD PTR [ebp-0xc],eax
+   0x08048a87 <+19>:	cmp    DWORD PTR [ebp-0xc],0x15
+   0x08048a8b <+23>:	ja     0x8048bd5 <test+353>
+   0x08048a91 <+29>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048a94 <+32>:	shl    eax,0x2
+   0x08048a97 <+35>:	add    eax,0x8048d30
+   0x08048a9c <+40>:	mov    eax,DWORD PTR [eax]
+   0x08048a9e <+42>:	jmp    eax
+   0x08048aa0 <+44>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048aa3 <+47>:	mov    DWORD PTR [esp],eax
+   0x08048aa6 <+50>:	call   0x80489b7 <decrypt>
+   0x08048aab <+55>:	jmp    0x8048be2 <test+366>
+   0x08048ab0 <+60>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048ab3 <+63>:	mov    DWORD PTR [esp],eax
+   0x08048ab6 <+66>:	call   0x80489b7 <decrypt>
+   0x08048abb <+71>:	jmp    0x8048be2 <test+366>
+   0x08048ac0 <+76>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048ac3 <+79>:	mov    DWORD PTR [esp],eax
+   0x08048ac6 <+82>:	call   0x80489b7 <decrypt>
+   0x08048acb <+87>:	jmp    0x8048be2 <test+366>
+   0x08048ad0 <+92>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048ad3 <+95>:	mov    DWORD PTR [esp],eax
+   0x08048ad6 <+98>:	call   0x80489b7 <decrypt>
+   0x08048adb <+103>:	jmp    0x8048be2 <test+366>
+   0x08048ae0 <+108>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048ae3 <+111>:	mov    DWORD PTR [esp],eax
+   0x08048ae6 <+114>:	call   0x80489b7 <decrypt>
+   0x08048aeb <+119>:	jmp    0x8048be2 <test+366>
+   0x08048af0 <+124>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048af3 <+127>:	mov    DWORD PTR [esp],eax
+   0x08048af6 <+130>:	call   0x80489b7 <decrypt>
+   0x08048afb <+135>:	jmp    0x8048be2 <test+366>
+   0x08048b00 <+140>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b03 <+143>:	mov    DWORD PTR [esp],eax
+   0x08048b06 <+146>:	call   0x80489b7 <decrypt>
+   0x08048b0b <+151>:	jmp    0x8048be2 <test+366>
+   0x08048b10 <+156>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b13 <+159>:	mov    DWORD PTR [esp],eax
+   0x08048b16 <+162>:	call   0x80489b7 <decrypt>
+   0x08048b1b <+167>:	jmp    0x8048be2 <test+366>
+   0x08048b20 <+172>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b23 <+175>:	mov    DWORD PTR [esp],eax
+   0x08048b26 <+178>:	call   0x80489b7 <decrypt>
+   0x08048b2b <+183>:	jmp    0x8048be2 <test+366>
+   0x08048b30 <+188>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b33 <+191>:	mov    DWORD PTR [esp],eax
+   0x08048b36 <+194>:	call   0x80489b7 <decrypt>
+   0x08048b3b <+199>:	jmp    0x8048be2 <test+366>
+   0x08048b40 <+204>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b43 <+207>:	mov    DWORD PTR [esp],eax
+   0x08048b46 <+210>:	call   0x80489b7 <decrypt>
+   0x08048b4b <+215>:	jmp    0x8048be2 <test+366>
+   0x08048b50 <+220>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b53 <+223>:	mov    DWORD PTR [esp],eax
+   0x08048b56 <+226>:	call   0x80489b7 <decrypt>
+   0x08048b5b <+231>:	jmp    0x8048be2 <test+366>
+   0x08048b60 <+236>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b63 <+239>:	mov    DWORD PTR [esp],eax
+   0x08048b66 <+242>:	call   0x80489b7 <decrypt>
+   0x08048b6b <+247>:	jmp    0x8048be2 <test+366>
+   0x08048b6d <+249>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b70 <+252>:	mov    DWORD PTR [esp],eax
+   0x08048b73 <+255>:	call   0x80489b7 <decrypt>
+   0x08048b78 <+260>:	jmp    0x8048be2 <test+366>
+   0x08048b7a <+262>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b7d <+265>:	mov    DWORD PTR [esp],eax
+   0x08048b80 <+268>:	call   0x80489b7 <decrypt>
+   0x08048b85 <+273>:	jmp    0x8048be2 <test+366>
+   0x08048b87 <+275>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b8a <+278>:	mov    DWORD PTR [esp],eax
+   0x08048b8d <+281>:	call   0x80489b7 <decrypt>
+   0x08048b92 <+286>:	jmp    0x8048be2 <test+366>
+   0x08048b94 <+288>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048b97 <+291>:	mov    DWORD PTR [esp],eax
+   0x08048b9a <+294>:	call   0x80489b7 <decrypt>
+   0x08048b9f <+299>:	jmp    0x8048be2 <test+366>
+   0x08048ba1 <+301>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048ba4 <+304>:	mov    DWORD PTR [esp],eax
+   0x08048ba7 <+307>:	call   0x80489b7 <decrypt>
+   0x08048bac <+312>:	jmp    0x8048be2 <test+366>
+   0x08048bae <+314>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048bb1 <+317>:	mov    DWORD PTR [esp],eax
+   0x08048bb4 <+320>:	call   0x80489b7 <decrypt>
+   0x08048bb9 <+325>:	jmp    0x8048be2 <test+366>
+   0x08048bbb <+327>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048bbe <+330>:	mov    DWORD PTR [esp],eax
+   0x08048bc1 <+333>:	call   0x80489b7 <decrypt>
+   0x08048bc6 <+338>:	jmp    0x8048be2 <test+366>
+   0x08048bc8 <+340>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048bcb <+343>:	mov    DWORD PTR [esp],eax
+   0x08048bce <+346>:	call   0x80489b7 <decrypt>
+   0x08048bd3 <+351>:	jmp    0x8048be2 <test+366>
+   0x08048bd5 <+353>:	call   0x8048830 <rand@plt>
+   0x08048bda <+358>:	mov    DWORD PTR [esp],eax
+   0x08048bdd <+361>:	call   0x80489b7 <decrypt>
+   0x08048be2 <+366>:	leave  
+   0x08048be3 <+367>:	ret 

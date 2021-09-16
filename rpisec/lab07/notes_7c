@@ -1,0 +1,23 @@
+
+
+=============================================================================================
+
+   0x56556056 <main+785>    mov    eax, dword ptr [esp + 0x38]
+   0x5655605a <main+789>    mov    eax, dword ptr [esp + eax*4 + 0x3c]
+   0x5655605e <main+793>    mov    eax, dword ptr [eax + 0x1c]
+   0x56556061 <main+796>    mov    edx, dword ptr [esp + 0x38]
+   0x56556065 <main+800>    mov    edx, dword ptr [esp + edx*4 + 0x3c]
+   0x56556069 <main+804>    add    edx, 8
+   0x5655606c <main+807>    mov    dword ptr [esp], edx
+-> 0x5655606f <main+810>    call   eax
+
+
+struct data {
+    char reserved[8];
+    char buffer[20];
+    void (* print)(char *); <- 0x5655606f <main+810>    call   eax
+
+};
+
+
+=============================================================================================

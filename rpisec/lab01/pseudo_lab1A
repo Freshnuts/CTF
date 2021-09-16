@@ -1,0 +1,53 @@
+main() {
+
+  puts()
+  puts()
+  puts()
+  puts()
+  puts()
+  puts()
+
+
+  fgets(&user_input, 32, stdin)
+
+
+  puts()
+  puts()
+  puts()
+  puts()
+  puts()
+  scanf("%u", %serial_input)
+
+  auth(usr_input, serl_input, [stdin], /root/lab/rpi_mbe/MBE_release/levels/lab01/lab1A)
+
+  if auth()_return =! 0:
+	exit()
+
+  Authenticated!
+}
+
+
+auth(arg_1) {
+
+  strcspn()
+
+  strnlen()
+
+  if [result_strnlen] =< 5:
+	exit()
+  elif [result_strinlen] > 5:
+	ptrace()
+	[result_strcspn] = [result_strcspn] + 3
+	[result_strcspn] = [result_strcspn] ^ 0x1337
+
+	[result_auth] = [result_strcspn] + 0x5eeded
+
+  if [result_strnlen] < n:
+	[result_strcspn] = [result_strcspn] + n
+	
+  if [al of result_strcspn] > 0:
+	return to main() stack pointer
+
+
+}
+

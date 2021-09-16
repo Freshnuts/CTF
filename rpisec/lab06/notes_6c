@@ -1,0 +1,73 @@
+lab06
+aslr
+
+
+
+What does program do?
+
+-> main()
+-> handle_tweet()
+	memset(save.username, 0, 40):
+	 (save 40 bytes for username inside struct)
+	 (initiate msglen to 140 in struct savestate.)
+->	 set_username(&save):
+		fgets(readbuf, 128, stdin):
+			(read 128 bytes from stdin to readbuf)
+			for(i = 0; i <= 40 && readbuf[i]; i++)
+        		save->username[i] = readbuf[i];
+				(loop if i is less than or equal to 40 and if readbuf isn't NULL.
+->	set_tweet(&save):
+		fgets(readbuf, 128, stdin):
+			(read 128 bytes from stdin to readbuf
+		    strncpy(save->tweet, readbuf, save->msglen);	
+			(safely copy username to savestate using msglen in struct.)
+
+-> exit()
+
+
+===========================================================
+Vulnerability
+
+            for(i = 0; i <= 40 && readbuf[i]; i++)
+                save->username[i] = readbuf[i];
+
+
+i <= 40: 
+
+i is less than or EQUAL to 40. This allows us to place 41 bytes. Why?
+i = 0, starting at 0 if we count to 40 we will get 41.
+i = 1, starting at 1 if we count to 40 we will get 40.
+
+1 byte overflow
+
+
+NULL = \xff
+
+\xff in the 1 byte overflow will segfault. Why?
+
+Overwrites handle_tweet() ret to main()
+0x565557ec <handle_tweet+114>    ret    <0x42424242>
+
+
+BRUTEFORCE ALSR
+
+secret_backdoor = 0x72b
+
+we know that MSB of the address will start with 0x56.
+we know that 0x72b are the ending  3 bytes.
+
+
+0x56|||72b = 3 random bytes.
+    |||
+	|++---------|
+	+           |
+   /			|
+5 or 6 = %50 random
+		 	    | 
+				|
+	 0x0 - 0xf = %100 random
+
+We need to guess 2 bytes  that are %100 random
+we need to guess 1 byte that is a %50 chance. (5 or 6)
+
+

