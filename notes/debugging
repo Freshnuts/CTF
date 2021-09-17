@@ -1,0 +1,4 @@
+Debugging is the process of determining and fixing the cause of a problem in a computer program. Troubleshooting is another word for debugging. Far from being an occasional nuisance, debugging is a core programmer task, like diagnosing is a core medical doctor task. Skill in carrying out a methodical debugging process can improve a programmer's productivity.
+
+
+A common error among new programmers is to try to debug without a methodical process, instead staring at the program, or making random changes to see if the output is improved.
