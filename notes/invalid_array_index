@@ -1,0 +1,5 @@
+A common error is to access an invalid array index, especially one larger than the largest array index or one larger than the string length. Ex: Given char userText[10] = "Hello", reading userText[10] reads a memory location that may belong to another variable, thus yielding a strange value. 
+
+Assigning userText[10] with a value may overwrite the value in some other variable, yielding bizarre program behavior. 
+
+Assigning userText[strlen(userText)] overwrites the null character, so the program no longer knows where the string ends. Such errors can be extremely difficult to debug. 
