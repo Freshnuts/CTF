@@ -1,0 +1,27 @@
+Dump of assembler code for function vuln:
+0x08048454 <vuln+0>:	push   ebp
+0x08048455 <vuln+1>:	mov    ebp,esp
+x08048457 <vuln+3>:	sub    esp,0x218
+0x0804845d <vuln+9>:	mov    eax,ds:0x80496d8
+0x08048462 <vuln+14>:	mov    DWORD PTR [esp+0x8],eax
+0x08048466 <vuln+18>:	mov    DWORD PTR [esp+0x4],0x200
+0x0804846e <vuln+26>:	lea    eax,[ebp-0x208]
+0x08048474 <vuln+32>:	mov    DWORD PTR [esp],eax
+0x08048477 <vuln+35>:	call   0x804835c <fgets@plt>
+0x0804847c <vuln+40>:	lea    eax,[ebp-0x208]
+0x08048482 <vuln+46>:	mov    DWORD PTR [esp],eax
+0x08048485 <vuln+49>:	call   0x804837c <printf@plt>
+0x0804848a <vuln+54>:	mov    eax,ds:0x80496e4
+0x0804848f <vuln+59>:	cmp    eax,0x40
+0x08048492 <vuln+62>:	jne    0x80484a2 <vuln+78>
+0x08048494 <vuln+64>:	mov    DWORD PTR [esp],0x8048590
+0x0804849b <vuln+71>:	call   0x804838c <puts@plt>
+0x080484a0 <vuln+76>:	jmp    0x80484b9 <vuln+101>
+0x080484a2 <vuln+78>:	mov    edx,DWORD PTR ds:0x80496e4
+0x080484a8 <vuln+84>:	mov    eax,0x80485b0
+0x080484ad <vuln+89>:	mov    DWORD PTR [esp+0x4],edx
+0x080484b1 <vuln+93>:	mov    DWORD PTR [esp],eax
+---Type <return> to continue, or q <return> to quit---
+0x080484b4 <vuln+96>:	call   0x804837c <printf@plt>
+0x080484b9 <vuln+101>:	leave  
+0x080484ba <vuln+102>:	ret

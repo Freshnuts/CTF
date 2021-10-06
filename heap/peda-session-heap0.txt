@@ -1,0 +1,22 @@
+break /mnt/root/freshnuts/pentest/binary_x/practice/heap/heap0.c:38
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

