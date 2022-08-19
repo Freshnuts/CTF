@@ -1,0 +1,18 @@
+restaurant: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=34d48877c9e228a7bc7b66b34f0d4fa6353d20b4, not stripped
+
+1. offset 40
+
+
+2. Security:
+[*] '/home/fresh/red_team/htb/resturaunt/pwn_restaurant/restaurant
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+
+
+	- NX 	= Cannot jump to shellcode on stack. rw-
+	- RELRO = Cannot alter GOT
+	- 
+
+1. 
