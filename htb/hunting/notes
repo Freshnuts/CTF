@@ -1,0 +1,4 @@
+Place shellcode to userInput because program executes userInput.
+
+break @ call eax
+Call EAX = userInput
