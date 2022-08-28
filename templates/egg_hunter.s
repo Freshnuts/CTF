@@ -1,7 +1,7 @@
 ; credit to Shakugan for the help.
-; slightly adjusted, I added 'xor eax, eax', eax would go from [0xffffffea] to 
-; [0xffffff21] instead of [0x21] for access() syscall, leading to a crash.
-; Didn't use alarm() syscall, it works for me without it local & remote.
+; slightly adjusted, I added 'xor eax, eax', eax would go from [0xffffffea] to [0xffffff21]
+; instead of [0x21] for access() syscall, leading to a crash.
+; Didn't need SYSCALL alarm() for flag.
 
 ; nasm -f elf32 -o x3.o x3.s
 ; ld -m elf_i386 -s -o x3 x3.o
