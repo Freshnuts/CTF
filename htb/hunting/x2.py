@@ -6,7 +6,7 @@ elf = ELF("./hunting")
 #libc = ELF("./libc.so.6")
 #ld_preload = {"LD_PRELOAD": "/home/fresh/libc.so.6"}
 
-p = remote("206.189.117.48", 32306)
+p = remote("144.126.232.205", 32582)
 #p = process("./hunting")
 #p = gdb.debug("./hunting", '''
 #break *read

