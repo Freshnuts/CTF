@@ -1,0 +1,5 @@
+Repo from 'https://libc.blukat.me/'
+
+- Certain tools didn't have the libraries needed.
+- Downloaded raw text of all library symbolsi with offsets.
+- Includes '/bin/sh' offsets.
