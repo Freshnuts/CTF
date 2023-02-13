@@ -10,8 +10,8 @@ context.binary = "./space"
 binary = ELF("space")
 #libc = ELF("libc.so.6")
 
-p = remote("178.62.88.144", 30677)
-#p = process("./space")
+#p = remote("178.62.88.144", 30677)
+p = process("./space")
 #p = gdb.debug("./space", '''
 #break *main
 #break *vuln
