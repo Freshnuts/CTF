@@ -11,14 +11,13 @@ elf = ELF("./ch94")
 
 
 
-s = ssh(host='challenge03.root-me.org',user='app-systeme-ch94',password='app-systeme-ch94',port=2223)
-p = s.process('./ch94')
-#p = gdb.debug(['./ch94'],ssh=s, gdbscript='''break *main
-#b *main+9
-#b *main+23
-#b *main+106
-#b *checkArg+193
-#''')
+#p = process('./ch94')
+p = gdb.debug('./ch94', '''break *main
+b *main+9
+b *main+23
+b *main+106
+b *checkArg+193
+''')
 
 binsh = b'//bin/sh'
 

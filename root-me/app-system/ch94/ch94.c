@@ -28,8 +28,8 @@ void    checkArg(const char *a)
 
 int     main()
 {
-  char  *arg = malloc(0x20);    // Tcache: 0x20 - 0x410
-  char  *cmd = malloc(0x400);   // Tcache: 0x20 - 0x410
+  char  *arg = malloc(0x20);    // fastbin: 0x20 - 0x410
+  char  *cmd = malloc(0x400);   // fastbin: 0x20 - 0x410
   setreuid(geteuid(), geteuid()); // Set privileged EUID
 
   strcpy(cmd, "/bin/ls -l ");
