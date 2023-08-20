@@ -1,0 +1,43 @@
+<mxfile host="Electron" modified="2023-08-12T20:49:20.006Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.5 Chrome/114.0.5735.243 Electron/25.3.1 Safari/537.36" etag="w_MbfncFd1sSErImUhES" version="21.6.5" type="device">
+  <diagram name="Page-1" id="nP1domPtg6R1LqAXsawL">
+    <mxGraphModel dx="1231" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="hg-VbcHnAOKq5Sj17vsE-2" target="hg-VbcHnAOKq5Sj17vsE-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-2" value="Chunk1" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="360" y="180" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-3" value="Chunk2" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="490" y="180" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.588;entryY=-0.037;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="hg-VbcHnAOKq5Sj17vsE-5" target="hg-VbcHnAOKq5Sj17vsE-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-5" value="PTR 1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-6" value="Bin" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="360" y="420" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="hg-VbcHnAOKq5Sj17vsE-8" target="hg-VbcHnAOKq5Sj17vsE-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-8" value="PTR 2 uses freed chunk 1&lt;br&gt;&lt;br&gt;They now both point to chunk 1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="490" y="40" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hg-VbcHnAOKq5Sj17vsE-11" target="hg-VbcHnAOKq5Sj17vsE-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-11" value="free()" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="310" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hg-VbcHnAOKq5Sj17vsE-16" value="Chunk 1 in bin and PTR 1still pointing to Chunk 1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="520" width="120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
