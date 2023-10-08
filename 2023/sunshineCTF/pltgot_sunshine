@@ -1,0 +1,13 @@
+gef➤  got
+
+GOT protection: Partial RelRO | GOT functions: 9
+
+[0x405000] puts@GLIBC_2.2.5  →  0x7fde8d246b00
+[0x405008] __stack_chk_fail@GLIBC_2.4  →  0x401046
+[0x405010] setbuf@GLIBC_2.2.5  →  0x7fde8d24de40
+[0x405018] system@GLIBC_2.2.5  →  0x401066
+[0x405020] printf@GLIBC_2.2.5  →  0x7fde8d223b30
+[0x405028] fprintf@GLIBC_2.2.5  →  0x401086
+[0x405030] dlsym@GLIBC_2.34  →  0x7fde8d2557f0
+[0x405038] __isoc99_scanf@GLIBC_2.7  →  0x7fde8d2236d0
+[0x405040] exit@GLIBC_2.2.5  →  0x40128f  <======== Flag
