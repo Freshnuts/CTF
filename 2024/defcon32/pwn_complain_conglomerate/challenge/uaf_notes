@@ -1,0 +1,8 @@
+1. Allocate memory with pointer 1
+2. Free pointer 1
+   - data is still inside freed allocated memory
+3. Allocate memory with pointer 2
+   - Glibc uses old pointer 1 allocated memory because it is considered free to use.
+   - data is still in pointer 1
+4. Use pointer 1 allocated memory
+   - Crash

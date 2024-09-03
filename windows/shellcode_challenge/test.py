@@ -1,0 +1,45 @@
+import ctypes, struct
+import binascii
+import os
+import subprocess
+from keystone import *
+
+def main():
+    SHELLCODE = (
+        " start: "
+        "   int3;"                       # Breakpoint
+        "   nop;"
+        "   nop;"
+        "   nop;"
+    )
+
+    # Initialize engine in 64-Bit mode
+    ks = Ks(KS_ARCH_X86, KS_MODE_64)
+    instructions, count = ks.asm(SHELLCODE)
+
+    sh = b""
+    output = ""
+    for opcode in instructions:
+        sh += struct.pack("B", opcode)                          # To encode for execution
+        output += "\\x{0:02x}".format(int(opcode)).rstrip("\n") # For printable shellcode
+
+
+    shellcode = bytearray(sh)
+    print("Shellcode: " + output )
+
+    print("Attaching debugger to " + str(os.getpid()));
+    subprocess.Popen(["WinDbgX", "/g","/p", str(os.getpid())], shell=True)
+    input("Press any key to continue...");
+
+    ctypes.windll.kernel32.VirtualAlloc.restype = ctypes.c_void_p
+    ctypes.windll.kernel32.RtlCopyMemory.argtypes = ( ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t ) 
+    ctypes.windll.kernel32.CreateThread.argtypes = ( ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int) ) 
+
+    space = ctypes.windll.kernel32.VirtualAlloc(ctypes.c_int(0),ctypes.c_int(len(shellcode)),ctypes.c_int(0x3000),ctypes.c_int(0x40))
+    buff = ( ctypes.c_char * len(shellcode) ).from_buffer_copy( shellcode )
+    ctypes.windll.kernel32.RtlMoveMemory(ctypes.c_void_p(space),buff,ctypes.c_int(len(shellcode)))
+    handle = ctypes.windll.kernel32.CreateThread(ctypes.c_int(0),ctypes.c_int(0),ctypes.c_void_p(space),ctypes.c_int(0),ctypes.c_int(0),ctypes.pointer(ctypes.c_int(0)))
+    ctypes.windll.kernel32.WaitForSingleObject(handle, -1);
+
+if __name__ == "__main__":
+    main()

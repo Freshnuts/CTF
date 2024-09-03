@@ -1,0 +1,8 @@
+C:\Users\exploit\Desktop\ctf\shellcode_challenge>python test.py
+Shellcode: \xcc\x89\xe5\x83\xec\x60\x31\xc9\x64\x67\x8b\x71\x30\x67\x8b\x76\x0c\x67\x8b\x76\x1c\x67\x8b\x5e\x08\x67\x8b\x7e\x20\x67\x8b\x36\x67\x66\x39\x4f\x18\x75\xee\xc3
+Traceback (most recent call last):
+  File "C:\Users\exploit\Desktop\ctf\shellcode_challenge\test.py", line 73, in <module>
+    main()
+  File "C:\Users\exploit\Desktop\ctf\shellcode_challenge\test.py", line 56, in main
+    ctypes.windll.kernel32.RtlMoveMemory(
+OSError: exception: access violation writing 0x0000000026780000
