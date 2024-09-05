@@ -1,0 +1,24 @@
+20:27:28.310 › Checking for update
+20:27:29.598 › Update for version 24.1.0 is not available (latest version: 24.1.0, downgrade is disallowed).
+[110949:0407/202729.765711:ERROR:gl_surface_presentation_helper.cc(260)] GetVSyncParametersIfAvailable() failed for 1 times!
+[110949:0407/202729.810825:ERROR:gl_surface_presentation_helper.cc(260)] GetVSyncParametersIfAvailable() failed for 2 times!
+[110949:0407/202729.818274:ERROR:gl_surface_presentation_helper.cc(260)] GetVSyncParametersIfAvailable() failed for 3 times!
+Warning: terminator_CreateInstance: Failed to CreateInstance in ICD 1.  Skipping ICD.
+[110911:0407/203316.152683:ERROR:browser_main_loop.cc(276)] GLib-GObject: invalid cast from 'GtkFileChooserNative' to 'GtkWidget'
+[110911:0407/203329.174295:ERROR:browser_main_loop.cc(276)] GLib-GObject: ../../../gobject/gsignal.c:2777: instance '0x36f801b1e330' has no handler with id '6832'
+[110911:0408/082816.883447:ERROR:browser_main_loop.cc(276)] Gdk: gdk_monitor_get_scale_factor: assertion 'GDK_IS_MONITOR (monitor)' failed
+[110911:0408/082816.884763:ERROR:browser_main_loop.cc(276)] Gdk: gdk_monitor_get_scale_factor: assertion 'GDK_IS_MONITOR (monitor)' failed
+[110953:0408/152426.073888:ERROR:ssl_client_socket_impl.cc(975)] handshake failed; returned -1, SSL error code 1, net_error -107
+[110911:0408/154136.130803:ERROR:network_service_instance_impl.cc(601)] Network service crashed, restarting service.
+[110911:0408/154136.136730:ERROR:zygote_communication_linux.cc(290)] Failed to send GetTerminationStatus message to zygote
+[110911:0408/154136.140770:ERROR:zygote_communication_linux.cc(290)] Failed to send GetTerminationStatus message to zygote
+[110911:0408/154136.141549:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.153673:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.154282:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.154621:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.154932:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.155200:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.155838:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.156203:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.156514:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
+[110911:0408/154136.156522:FATAL:gpu_data_manager_impl_private.cc(448)] GPU process isn't usable. Goodbye.
