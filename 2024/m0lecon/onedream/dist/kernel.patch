@@ -1,0 +1,22 @@
+diff -Naur a/arch/arm64/kernel/patching.c b/arch/arm64/kernel/patching.c
+--- a/arch/arm64/kernel/patching.c
++++ b/arch/arm64/kernel/patching.c
+@@ -196,6 +196,7 @@
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(aarch64_insn_patch_text_nosync);
+ 
+ struct aarch64_insn_patch {
+ 	void		**text_addrs;
+diff -Naur a/kernel/kallsyms.c b/kernel/kallsyms.c
+--- a/kernel/kallsyms.c
++++ b/kernel/kallsyms.c
+@@ -242,6 +242,7 @@
+ 
+ 	return module_kallsyms_lookup_name(name);
+ }
++EXPORT_SYMBOL(kallsyms_lookup_name);
+ 
+ /*
+  * Iterate over all symbols in vmlinux.  For symbols from modules use
