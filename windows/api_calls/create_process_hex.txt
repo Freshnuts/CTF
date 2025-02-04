@@ -1,0 +1,19 @@
+006cf68c  0049161c 0049a054 00000000 00000000
+006cf69c  00000000 00000000 00000000 00000000
+006cf6ac  00000000 006cf6d4 006cf6c4 006cf6f8
+006cf6bc  76217c3d 00000008 00000000 00000000
+006cf6cc  00000000 00000000 00000044 00000000
+006cf6dc  00000000 00000000 00000000 00000000
+006cf6ec  00000000 00000000 00000000 00000000
+006cf6fc  00000000 00000000 00000000 00000000
+
+    push process_info       ; lpProcessInformation
+    push null_ptr           ; lpStartupInfo (NULL)
+    push null_ptr           ; lpCurrentDirectory (NULL)
+    push null_ptr           ; lpEnvironment (NULL)
+    push 0                  ; dwCreationFlags (default = 0)
+    push 0                  ; bInheritHandles (FALSE)
+    push null_ptr           ; lpThreadAttributes (NULL)
+    push null_ptr           ; lpProcessAttributes (NULL)
+    push command_line       ; lpCommandLine (our process path)
+    push null_ptr           ; lpApplicationName (NULL)

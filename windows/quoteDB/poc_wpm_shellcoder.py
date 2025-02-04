@@ -167,7 +167,10 @@ rop = [
                     # All Skeleton values completed
                     # End   of ROP 1
                     # Start of ROP 2
-                    # ROP 2 will encode the shellcode to replace bad characters
+                    # ROP 2 will decode the encoded shellcode to return original bad characters.
+                    # Encoding is done to not break the exploit with bad characters. 
+                    # Encoding breaks the exploit, but allows most of it to pass through.
+                    # Decoding is done to return the shellcode to its functional state again.
                     # bad characters: 0x00 0x0a 0x20 0x28 0x80 0x81 0x86
 
 

