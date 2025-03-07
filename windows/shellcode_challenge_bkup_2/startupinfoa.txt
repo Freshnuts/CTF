@@ -1,0 +1,21 @@
+    " create_startupinfo:                           "  #
+    "   sub   esp, 0x68                     ;" # Allocate space for STARTUPINFOA
+    "   mov   [esp], 68                     ;" # cb = sizeof(STARTUPINFOA)
+    "   xor   eax, eax                      ;"
+    "   mov   [esp+0x4], eax                ;" # lpReserved
+    "   mov   [esp+0x8], eax                ;" # lpDesktop
+    "   mov   [esp+0x12], eax               ;" # lpTitle
+    "   mov   [esp+0x16], eax               ;" # dwX
+    "   mov   [esp+0x20], eax               ;" # dwY
+    "   mov   [esp+0x24], eax               ;" # dwXSize
+    "   mov   [esp+0x28], eax               ;" # dwYSize
+    "   mov   [esp+0x32], eax               ;" # dwXCountChars
+    "   mov   [esp+0x36], eax               ;" # dwYCountChars
+    "   mov   [esp+0x40], eax               ;" # dwFillAttribute
+    "   mov   [esp+0x44], eax               ;" # dwFlags
+    "   mov   [esp+0x48], eax               ;" # wShowWindow
+    "   mov   [esp+0x52], eax               ;" # cbReserved2
+    "   mov   [esp+0x56], eax               ;" # lpReserved2
+    "   mov   [esp+0x60], eax               ;" # hStdInput
+    "   mov   [esp+0x64], eax               ;" # hStdOutput
+    "   mov   [esp+0x68], eax               ;" # hStdError

