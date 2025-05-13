@@ -22,3 +22,4 @@ Warning: terminator_CreateInstance: Failed to CreateInstance in ICD 1.  Skipping
 [110911:0408/154136.156203:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
 [110911:0408/154136.156514:ERROR:gpu_process_host.cc(987)] GPU process launch failed: error_code=1002
 [110911:0408/154136.156522:FATAL:gpu_data_manager_impl_private.cc(448)] GPU process isn't usable. Goodbye.
+Core(error): Failed to read password or pin from stdin

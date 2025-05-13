@@ -1,0 +1,5 @@
+services:
+  challenge:
+    build: .
+    ports:
+      - 4444:4444
